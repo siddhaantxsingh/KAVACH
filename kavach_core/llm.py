@@ -131,7 +131,8 @@ def validate(raw: str, transcript: str, type_ids: list[str]) -> tuple[Verdict | 
 
     scam = d.get("scam")
     if isinstance(scam, str):
-        scam = scam.strip().lower() in ("true", "yes", "1")
+        low = scam.strip().lower()
+        scam = True if low in ("true", "yes") else False if low in ("false", "no") else None
     if not isinstance(scam, bool):
         return None, ["'scam' must be true or false"]
 

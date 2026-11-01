@@ -1,0 +1,10 @@
+{
+  "doc": "Same 12 saved WAVs (bench/e2e_audio.py --save-wav, first run), same ASR; cue model before vs after adding ASR-transcript training windows. Level reached @ time (s).",
+  "old_model": {"digital_arrest_en_snr30": "stop@33.0", "digital_arrest_en_snr15": "info", "digital_arrest_en_snr8": "stop@33.0",
+                "kyc_bank_en_snr30": "stop@20.9", "kyc_bank_en_snr15": "caution@21.0", "kyc_bank_en_snr8": "info",
+                "genuine_bank_en_*": "none", "delivery_en_*": "none"},
+  "new_model": {"digital_arrest_en_snr30": "stop@33.0", "digital_arrest_en_snr15": "caution@48.0", "digital_arrest_en_snr8": "stop@33.0",
+                "kyc_bank_en_snr30": "stop@20.9", "kyc_bank_en_snr15": "caution@21.0", "kyc_bank_en_snr8": "info",
+                "genuine_bank_en_*": "none", "delivery_en_*": "none"},
+  "summary": "1 of 6 scam runs improved (INFO->CAUTION), none regressed, genuine calls unchanged (no alert)."
+}

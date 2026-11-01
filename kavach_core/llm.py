@@ -69,6 +69,20 @@ def user_prompt(transcript: str, active: dict[str, float], retrieved: list[dict]
     )
 
 
+def message_user_prompt(message: str, active: dict[str, float], url_reasons: list[str], retrieved: list[dict], lang: str) -> str:
+    """Variant used by the user's phone for a high-risk SMS / WhatsApp message (same JSON contract)."""
+    cues = ", ".join(f"{k}={v:.1f}" for k, v in sorted(active.items(), key=lambda x: -x[1])) or "none"
+    pb = "\n".join(f"- {e['id']}: {e['story_en']} TRUTH: {e['truth_en']}" for e in retrieved)
+    language = "Hindi (Devanagari)" if lang == "hi" else "English"
+    links = "; ".join(url_reasons) or "none"
+    return (
+        f"Relevant scam patterns:\n{pb}\n"
+        f"Detected cue scores: {cues}\nLink check findings: {links}\n"
+        f"Reply language for 'say': {language}\n"
+        f"This is a text MESSAGE the user received, not a call. Message:\n\"\"\"{message.strip()}\"\"\""
+    )
+
+
 def format_llama3(system: str, user: str) -> tuple[str, str]:
     """Return (prefix, suffix). prefix is constant -> prefill once and cache."""
     prefix = f"{BOT}{SH}system{EH}\n\n{system}{EOT}"

@@ -49,6 +49,17 @@ object LlmContract {
             "Transcript (most recent last):\n\"\"\"${transcript.trim()}\"\"\""
     }
 
+    /** Variant for a high-risk SMS / WhatsApp message on the user's phone (same JSON contract). */
+    fun messageUserPrompt(message: String, active: Map<String, Double>, urlReasons: List<String>, retrieved: List<PlaybookEntry>, lang: String): String {
+        val cues = active.entries.sortedByDescending { it.value }.joinToString(", ") { "${it.key}=${String.format(java.util.Locale.ROOT, "%.1f", it.value)}" }
+            .ifEmpty { "none" }
+        val pb = retrieved.joinToString("\n") { "- ${it.id}: ${it.storyEn} TRUTH: ${it.truthEn}" }
+        val language = if (lang == "hi") "Hindi (Devanagari)" else "English"
+        val links = urlReasons.joinToString("; ").ifEmpty { "none" }
+        return "Relevant scam patterns:\n$pb\nDetected cue scores: $cues\nLink check findings: $links\n" +
+            "Reply language for 'say': $language\nThis is a text MESSAGE the user received, not a call. Message:\n\"\"\"${message.trim()}\"\"\""
+    }
+
     /** (prefix, suffix). The prefix never changes: pre-fill it once into the KV cache. */
     fun formatLlama3(system: String, user: String): Pair<String, String> =
         "$BOT${SH}system$EH\n\n$system$EOT" to "${SH}user$EH\n\n$user$EOT${SH}assistant$EH\n\n"

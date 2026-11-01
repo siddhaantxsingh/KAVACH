@@ -138,3 +138,7 @@ internal fun Any?.obj(): Map<String, Any?> = this as Map<String, Any?>
 internal fun Any?.arr(): List<Any?> = this as List<Any?>
 
 internal fun Any?.strList(): List<String> = arr().map { it as String }
+
+/** Public cast helper for app modules (the internal ones above are module-private). */
+@Suppress("UNCHECKED_CAST")
+fun Any?.obj2(): Map<String, Any?> = this as Map<String, Any?>

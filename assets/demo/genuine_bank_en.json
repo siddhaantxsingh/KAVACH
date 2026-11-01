@@ -1,0 +1,25 @@
+{
+ "name": "genuine_bank_en",
+ "lines": [
+  [
+   6,
+   "good evening this is the fraud monitoring team of hdfc bank"
+  ],
+  [
+   13,
+   "we noticed a card transaction of eight thousand four hundred rupees at an online store was this done by you"
+  ],
+  [
+   20,
+   "no problem i have blocked the card for your safety and a new card will be sent"
+  ],
+  [
+   28,
+   "please remember never share your otp or pin with anyone the bank will never ask for it"
+  ],
+  [
+   34,
+   "thank you have a good day"
+  ]
+ ]
+}

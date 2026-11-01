@@ -1,0 +1,162 @@
+package kavach.guardian
+
+import android.annotation.SuppressLint
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
+import android.os.Process
+import android.os.SystemClock
+import android.util.Log
+import com.k2fsa.sherpa.onnx.EndpointConfig
+import com.k2fsa.sherpa.onnx.EndpointRule
+import com.k2fsa.sherpa.onnx.FeatureConfig
+import com.k2fsa.sherpa.onnx.OnlineModelConfig
+import com.k2fsa.sherpa.onnx.OnlineRecognizer
+import com.k2fsa.sherpa.onnx.OnlineRecognizerConfig
+import com.k2fsa.sherpa.onnx.OnlineStream
+import com.k2fsa.sherpa.onnx.OnlineTransducerModelConfig
+import com.k2fsa.sherpa.onnx.OnlineZipformer2CtcModelConfig
+import com.k2fsa.sherpa.onnx.SileroVadModelConfig
+import com.k2fsa.sherpa.onnx.Vad
+import com.k2fsa.sherpa.onnx.VadModelConfig
+import java.io.File
+
+/**
+ * Speaker-phone audio -> streaming ASR (sherpa-onnx, Arm CPU, int8) with Silero VAD gating.
+ *
+ * Hindi/Hinglish (default): streaming Zipformer2-CTC with a Devanagari character vocabulary
+ *   (it writes English loan words in Devanagari, which the cue lexicon covers).
+ * English: streaming Zipformer transducer.
+ * Audio is processed in 100 ms chunks and never stored. VAD skips decoding during long
+ * silence (the stream still receives the audio, so nothing is lost when speech resumes).
+ */
+class AsrEngine(
+    private val modelsDir: File,
+    private val lang: String,
+    private val onPartial: (String) -> Unit,
+    private val onFinal: (text: String, tSeconds: Double) -> Unit,
+) {
+    @Volatile private var running = false
+    private var thread: Thread? = null
+    @Volatile var rtf: Double? = null
+        private set
+    @Volatile var speechRatio: Double = 0.0
+        private set
+    private var t0 = 0L
+
+    fun missingFiles(): List<String> = requiredFiles().filter { !it.exists() }.map { it.path }
+
+    private fun requiredFiles(): List<File> = if (lang == "hi")
+        listOf(File(modelsDir, "asr-hi/model.int8.onnx"), File(modelsDir, "asr-hi/tokens.txt"), File(modelsDir, "silero_vad.onnx"))
+    else
+        listOf(File(modelsDir, "asr-en/encoder.onnx"), File(modelsDir, "asr-en/decoder.onnx"), File(modelsDir, "asr-en/joiner.onnx"),
+            File(modelsDir, "asr-en/tokens.txt"), File(modelsDir, "silero_vad.onnx"))
+
+    private fun recognizer(): OnlineRecognizer {
+        val model = if (lang == "hi") OnlineModelConfig(
+            zipformer2Ctc = OnlineZipformer2CtcModelConfig(model = File(modelsDir, "asr-hi/model.int8.onnx").path),
+            tokens = File(modelsDir, "asr-hi/tokens.txt").path, numThreads = 2, provider = "cpu",
+        ) else OnlineModelConfig(
+            transducer = OnlineTransducerModelConfig(
+                encoder = File(modelsDir, "asr-en/encoder.onnx").path, decoder = File(modelsDir, "asr-en/decoder.onnx").path,
+                joiner = File(modelsDir, "asr-en/joiner.onnx").path,
+            ),
+            tokens = File(modelsDir, "asr-en/tokens.txt").path, numThreads = 2, provider = "cpu",
+        )
+        // Endpointing: a segment ends after 0.8 s of trailing silence, or after 12 s of speech,
+        // so the guardian sees a final segment at least every few seconds on a monologue.
+        val endpoint = EndpointConfig(
+            rule1 = EndpointRule(false, 2.4f, 0.0f),
+            rule2 = EndpointRule(true, 0.8f, 0.0f),
+            rule3 = EndpointRule(false, 0.0f, 12.0f),
+        )
+        val cfg = OnlineRecognizerConfig(featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80), modelConfig = model,
+            endpointConfig = endpoint, enableEndpoint = true, decodingMethod = "greedy_search")
+        return OnlineRecognizer(assetManager = null, config = cfg)
+    }
+
+    private fun vad(): Vad = Vad(assetManager = null, config = VadModelConfig(
+        sileroVadModelConfig = SileroVadModelConfig(model = File(modelsDir, "silero_vad.onnx").path, threshold = 0.5f,
+            minSilenceDuration = 0.25f, minSpeechDuration = 0.25f, windowSize = VAD_WINDOW),
+        sampleRate = SAMPLE_RATE, numThreads = 1, provider = "cpu"))
+
+    @SuppressLint("MissingPermission") // RECORD_AUDIO is checked by GuardianService before start()
+    fun start() {
+        if (running) return
+        running = true
+        t0 = SystemClock.elapsedRealtime()
+        thread = Thread({
+            // ASR is steady, light work: keep it at normal priority so the scheduler can keep it on
+            // efficiency cores; Llama bursts get the urgent priority (see LlamaAdvisor).
+            Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
+            val rec = recognizer()
+            val vad = vad()
+            var stream: OnlineStream = rec.createStream("")
+            val minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+            // VOICE_RECOGNITION disables AGC/noise suppression that smear speaker-phone audio
+            val audio = AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT, maxOf(minBuf, SAMPLE_RATE / 5 * 2))
+            val chunk = ShortArray(SAMPLE_RATE / 10)
+            val vadBuf = FloatArray(VAD_WINDOW)
+            var vadFill = 0
+            var lastSpeechAt = 0.0
+            var audioSeconds = 0.0
+            var computeMs = 0L
+            var speechChunks = 0; var chunks = 0
+            var lastPartial = ""
+            try {
+                audio.startRecording()
+                while (running) {
+                    val n = audio.read(chunk, 0, chunk.size)
+                    if (n <= 0) continue
+                    val samples = FloatArray(n) { chunk[it] / 32768f }
+                    audioSeconds += n.toDouble() / SAMPLE_RATE
+                    val c0 = SystemClock.elapsedRealtime()
+                    for (s in samples) {
+                        vadBuf[vadFill++] = s
+                        if (vadFill == VAD_WINDOW) {
+                            vad.acceptWaveform(vadBuf.copyOf())
+                            if (vad.isSpeechDetected()) lastSpeechAt = audioSeconds
+                            while (!vad.empty()) vad.pop()
+                            vadFill = 0
+                        }
+                    }
+                    chunks++
+                    val inSpeech = audioSeconds - lastSpeechAt < 1.5
+                    if (inSpeech) speechChunks++
+                    stream.acceptWaveform(samples, SAMPLE_RATE)
+                    if (inSpeech) while (rec.isReady(stream)) rec.decode(stream)
+                    val text = rec.getResult(stream).text.trim()
+                    if (text.isNotEmpty() && text != lastPartial) { lastPartial = text; onPartial(text) }
+                    if (rec.isEndpoint(stream)) {
+                        if (text.isNotEmpty()) onFinal(text, (SystemClock.elapsedRealtime() - t0) / 1000.0)
+                        rec.reset(stream)
+                        lastPartial = ""
+                    }
+                    computeMs += SystemClock.elapsedRealtime() - c0
+                    if (chunks % 50 == 0) { rtf = computeMs / 1000.0 / audioSeconds; speechRatio = speechChunks.toDouble() / chunks }
+                }
+                // flush the last words
+                stream.inputFinished()
+                while (rec.isReady(stream)) rec.decode(stream)
+                rec.getResult(stream).text.trim().takeIf { it.isNotEmpty() }?.let { onFinal(it, (SystemClock.elapsedRealtime() - t0) / 1000.0) }
+            } catch (t: Throwable) {
+                Log.e(TAG, "ASR loop failed", t)
+            } finally {
+                try { audio.stop() } catch (_: Throwable) { }
+                audio.release(); stream.release(); rec.release(); vad.release()
+            }
+        }, "kavach-asr").also { it.start() }
+    }
+
+    /** Seconds since start(): the guardian's call clock. */
+    fun now(): Double = (SystemClock.elapsedRealtime() - t0) / 1000.0
+
+    fun stop() { running = false; thread?.join(1500); thread = null }
+
+    companion object {
+        private const val TAG = "AsrEngine"
+        const val SAMPLE_RATE = 16000
+        const val VAD_WINDOW = 512
+    }
+}

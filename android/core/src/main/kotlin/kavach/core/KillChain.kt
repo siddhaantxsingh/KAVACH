@@ -87,7 +87,7 @@ class KillChain(private val stageOf: Map<String, String>, val cfg: KillChainConf
         val ACTION_PAY = setOf("credential_request", "remote_access", "link_click", "payment_request")
         val HOOK_FOR_ACTION = CONTACT_HOOK - "urgency"
         val STRONG_HOOK = setOf("authority_police", "threat", "identity_misuse")
-        val CROSS_KINDS = setOf("dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "scam_sms")
+        val CROSS_KINDS = setOf("dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "scam_sms", "scam_call")
         private val STAGE_ORDER = listOf("contact", "hook", "isolation", "action", "payment")
         fun stageRank(s: String) = STAGE_ORDER.indexOf(s).let { if (it < 0) 99 else it }
         fun round3(x: Double) = Math.round(x * 1000) / 1000.0

@@ -2,7 +2,7 @@ flowchart LR
   subgraph G["Guardian phone (any spare Arm Android) — no INTERNET permission"]
     MIC["Speaker-phone audio<br/>16 kHz, never stored"] --> VAD["Silero VAD<br/>(skip silence)"]
     VAD --> ASR["Streaming ASR<br/>sherpa-onnx int8, Arm CPU<br/>Hindi/Hinglish Zipformer2-CTC · English Zipformer"]
-    ASR -->|"final segment"| FAST["Always-on screen  &lt;1 ms/tick<br/>cue lexicon (552 phrases, 3 scripts)<br/>+ hashed linear classifier<br/>+ kill-chain (decaying evidence)"]
+    ASR -->|"final segment"| FAST["Always-on screen  &lt;1 ms/tick<br/>cue lexicon (583 phrases, 3 scripts)<br/>+ hashed linear classifier<br/>+ kill-chain (decaying evidence)"]
     FAST -->|"CAUTION / STOP"| SPEAK1["Instant spoken warning<br/>(offline TTS, hi-IN / en-IN)"]
     FAST -->|"escalation only"| LLM["Llama 3.2 1B, 4-bit<br/>ExecuTorch + XNNPACK/KleidiAI<br/>warm prefix · JSON verdict"]
     LLM --> VAL["Validator<br/>enums · verbatim evidence"]

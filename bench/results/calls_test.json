@@ -152,18 +152,18 @@
   "combined": {
     "n_scam": 503,
     "n_benign": 497,
-    "stop_recall": 0.8648,
-    "caution_recall": 0.9583,
-    "caught_before_money": 0.7694,
+    "stop_recall": 0.8668,
+    "caution_recall": 0.9602,
+    "caught_before_money": 0.7714,
     "time_to_stop_median_s": 12.8,
     "time_to_stop_p90_s": 20.7,
     "false_stop_rate": 0.0,
-    "false_caution_rate": 0.0765,
+    "false_caution_rate": 0.0825,
     "by_type": {
       "bank_fraud_alert": {
         "n": 55,
         "false_stop": 0.0,
-        "false_caution": 0.5091
+        "false_caution": 0.5273
       },
       "courier_parcel": {
         "n": 47,
@@ -173,7 +173,7 @@
       "delivery": {
         "n": 55,
         "false_stop": 0.0,
-        "false_caution": 0.0727
+        "false_caution": 0.1091
       },
       "digital_arrest": {
         "n": 47,
@@ -193,7 +193,7 @@
       "family_chat": {
         "n": 61,
         "false_stop": 0.0,
-        "false_caution": 0.0
+        "false_caution": 0.0164
       },
       "family_emergency": {
         "n": 48,
@@ -233,7 +233,7 @@
       "police_genuine": {
         "n": 47,
         "false_stop": 0.0,
-        "false_caution": 0.1277
+        "false_caution": 0.1064
       },
       "relative_money": {
         "n": 55,
@@ -242,8 +242,8 @@
       },
       "remote_support": {
         "n": 57,
-        "stop_recall": 0.807,
-        "before_money": 0.7368
+        "stop_recall": 0.8246,
+        "before_money": 0.7544
       },
       "scam_gossip": {
         "n": 59,
@@ -263,7 +263,7 @@
     },
     "by_lang": {
       "en": {
-        "stop_recall": 0.9554,
+        "stop_recall": 0.9618,
         "false_stop": 0.0
       },
       "hi": {
@@ -278,7 +278,6 @@
     "misses": [
       "test-00008",
       "test-00041",
-      "test-00042",
       "test-00068",
       "test-00071",
       "test-00076",
@@ -295,7 +294,8 @@
       "test-00221",
       "test-00238",
       "test-00239",
-      "test-00271"
+      "test-00271",
+      "test-00272"
     ],
     "false_stops": []
   }

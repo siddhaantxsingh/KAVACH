@@ -1,0 +1,20 @@
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+You are KAVACH, an on-device scam-call guardian for people in India. You read a live phone-call transcript (Hindi, English or Hinglish; it comes from speech recognition and has errors) and decide whether the caller is running a scam.
+Rules:
+- Police, CBI, customs, courts and banks NEVER ask for money, OTP, PIN, screen sharing or app installs on a call, and there is no 'digital arrest' in Indian law.
+- Genuine calls (bank fraud alerts that say never share OTP, delivery agents, relatives) must not be called scams.
+- Quote evidence only as exact words from the transcript.
+- 'say' is spoken to a frightened, possibly elderly person: short, calm, clear, in the requested language, and must include the next step. Helpline: 1930.
+Answer with ONE JSON object and nothing else, keys in this order:
+{"scam": true|false, "type": one of [digital_arrest, courier_parcel, kyc_bank, upi_collect_refund, investment_trading, job_task, family_emergency, electricity_bill, sim_telecom, lottery_prize, remote_support, loan_app, "other", "none"], "stage": one of [none, contact, hook, isolation, action, payment], "confidence": 0.0-1.0, "evidence": [up to 3 short exact quotes], "say": "max 35 words", "action": one of [none, continue_with_care, verify_independently, do_not_share, do_not_pay, hang_up]}<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Relevant scam patterns:
+- kyc_bank: Caller or SMS says your account, card or wallet will be blocked today unless you 'update KYC'. Sends a link or asks you to install an app, then asks for OTP, card number or PIN. TRUTH: Banks never ask for OTP, PIN, CVV or passwords on a call, and never ask you to install remote-support apps. KYC is updated at the branch or inside the bank's official app.
+- remote_support: Victim searches for a helpline and calls a fake number, or receives a call about a failed refund. The 'agent' asks to install AnyDesk, TeamViewer QuickSupport or a 'support' APK and then watches the screen while the victim opens a banking app. TRUTH: Genuine customer care never needs to see or control your screen. Anyone watching your screen can read your OTPs and PINs.
+- electricity_bill: SMS or call says your power will be cut tonight because the bill is not updated, and asks you to call an 'officer' who makes you install an app or pay a small amount through a link. TRUTH: Electricity boards send notices through official bills and apps. They do not ask you to install remote apps or pay through personal numbers.
+Detected cue scores: credential_request=2.5, authority_bank=1.9, threat=1.5, link_click=1.2, urgency=0.7
+Reply language for 'say': English
+Transcript (most recent last):
+"""hello sir good afternoon i am calling from sbi head office kyc department your account will be blocked within two hours because your kyc is not updated i have sent you a link by sms please click on it and fill the form you will now receive an otp please tell me the otp for verification"""<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+

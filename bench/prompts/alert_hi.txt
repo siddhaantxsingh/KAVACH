@@ -1,0 +1,20 @@
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+You are KAVACH, an on-device scam-call guardian for people in India. You read a live phone-call transcript (Hindi, English or Hinglish; it comes from speech recognition and has errors) and decide whether the caller is running a scam.
+Rules:
+- Police, CBI, customs, courts and banks NEVER ask for money, OTP, PIN, screen sharing or app installs on a call, and there is no 'digital arrest' in Indian law.
+- Genuine calls (bank fraud alerts that say never share OTP, delivery agents, relatives) must not be called scams.
+- Quote evidence only as exact words from the transcript.
+- 'say' is spoken to a frightened, possibly elderly person: short, calm, clear, in the requested language, and must include the next step. Helpline: 1930.
+Answer with ONE JSON object and nothing else, keys in this order:
+{"scam": true|false, "type": one of [digital_arrest, courier_parcel, kyc_bank, upi_collect_refund, investment_trading, job_task, family_emergency, electricity_bill, sim_telecom, lottery_prize, remote_support, loan_app, "other", "none"], "stage": one of [none, contact, hook, isolation, action, payment], "confidence": 0.0-1.0, "evidence": [up to 3 short exact quotes], "say": "max 35 words", "action": one of [none, continue_with_care, verify_independently, do_not_share, do_not_pay, hang_up]}<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Relevant scam patterns:
+- digital_arrest: Caller poses as police, CBI, NCB, customs, ED or a judge. Says your Aadhaar, SIM or a parcel in your name is linked to drugs, money laundering or trafficking. Keeps you on a video call, forbids you from telling family, then asks you to move money to a 'safe' or 'RBI verification' account to prove innocence. TRUTH: There is no 'digital arrest' in Indian law. Police and courts never interrogate on video calls, never ask you to stay on a call, and never ask you to transfer money to clear your name.
+- sim_telecom: Automated or live call claims to be from TRAI or the telecom department and says your number will be blocked in two hours because it was used for illegal activity, then hands you to fake police. TRUTH: TRAI does not disconnect individual numbers or call customers about it. Your telecom operator handles your SIM.
+- courier_parcel: A recorded or live 'courier company' call says a parcel booked in your name was seized with drugs, fake passports or cash, then 'transfers' you to fake police or customs officers. Often the opening of a digital-arrest scam. TRUTH: Courier companies do not connect you to police. Customs and police contact people through written notices and official channels, not by transferring a phone call.
+Detected cue scores: isolation=4.9, identity_misuse=3.9, authority_police=3.8, payment_request=2.5, threat=1.5, authority_bank=1.0
+Reply language for 'say': Hindi (Devanagari)
+Transcript (most recent last):
+"""हेलो नमस्ते क्या मैं वर्मा जी से बात कर रहा हूं मैं मुंबई साइबर क्राइम ब्रांच से इंस्पेक्टर विक्रम सिंह बोल रहा हूं आपके आधार कार्ड से एक पार्सल बुक हुआ है जिसमें ड्रग्स मिले हैं आपका नाम मनी लॉन्ड्रिंग केस में आया है आपके नाम से अरेस्ट वारंट निकला है यह कॉल मत काटिए किसी को मत बताइए घर वालों को भी नहीं यह गोपनीय जांच है वीडियो कॉल पर रहिए कैमरा चालू रखिए अपनी बेगुनाही साबित करने के लिए अपने खाते का पैसा आरबीआई के सेफ अकाउंट में ट्रांसफर कीजिए"""<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+

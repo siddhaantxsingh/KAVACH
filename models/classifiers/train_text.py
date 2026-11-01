@@ -126,11 +126,17 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dim", type=int, default=1 << 18)
     ap.add_argument("--no-cue-features", action="store_true")
+    ap.add_argument("--no-asr-aug", action="store_true")
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     REPORTS.mkdir(parents=True, exist_ok=True)
 
     tr = call_windows(SYNTH / "calls_train.jsonl")
+    asr = SYNTH / "calls_train_asr.jsonl"  # real ASR transcripts of TTS'd training calls (models/asr/make_asr_noisy_calls.py)
+    if asr.exists() and not a.no_asr_aug:
+        xa = call_windows(asr)
+        tr = tuple(t + x * 3 for t, x in zip(tr, xa))  # 3x weight: few calls, but the exact noise the phone sees
+        print(f"+ {len(xa[0])} ASR windows (x3)")
     dv = call_windows(SYNTH / "calls_dev.jsonl")
     te = call_windows(SYNTH / "calls_test.jsonl")
     lex = None if a.no_cue_features else Lexicon()

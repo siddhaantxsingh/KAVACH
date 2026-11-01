@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "doc": "Package lists for App Inspector and Screen-share Guard. Re-check package names before release.",
+  "payment_apps": ["com.phonepe.app", "net.one97.paytm", "com.google.android.apps.nbu.paisa.user", "in.org.npci.upiapp", "com.sbi.lotusintouch", "com.sbi.upi",
+                   "com.csam.icici.bank.imobile", "com.axis.mobile", "com.msf.kbank.mobile", "com.snapwork.hdfc", "com.dreamplug.androidapp", "com.mobikwik_new",
+                   "in.amazon.mShop.android.shopping", "com.bankofbaroda.mconnect", "com.pnb.pnbone", "com.canarabank.mobility", "com.unionbankofindia.vyom"],
+  "remote_access_apps": ["com.anydesk.anydeskandroid", "com.teamviewer.quicksupport.market", "com.teamviewer.teamviewer.market.mobile", "com.carriez.flutter_hbb",
+                         "com.sand.airdroid", "com.sand.airmirror", "com.realvnc.viewer.android", "com.google.chromeremotedesktop", "com.splashtop.remote.pad.v2",
+                         "com.rsupport.mobizen.sec", "com.microsoft.rdc.androidx"],
+  "trusted_installers": ["com.android.vending", "com.sec.android.app.samsungapps", "com.huawei.appmarket", "com.xiaomi.market", "com.oppo.market",
+                         "com.heytap.market", "com.vivo.appstore", "com.google.android.packageinstaller.system"],
+  "lure_words": ["bank", "kyc", "yono", "sbi", "hdfc", "icici", "axis", "challan", "rto", "aadhaar", "aadhar", "pan", "income tax", "refund", "customer care",
+                 "support", "electricity", "bijli", "courier", "parcel", "fedex", "loan", "reward", "points", "pm kisan", "trai", "police", "secure"]
+}

@@ -1,0 +1,25 @@
+{
+ "name": "kyc_bank_en",
+ "lines": [
+  [
+   5,
+   "hello sir good afternoon"
+  ],
+  [
+   11,
+   "i am calling from sbi head office kyc department"
+  ],
+  [
+   18,
+   "your account will be blocked within two hours because your kyc is not updated"
+  ],
+  [
+   26,
+   "i have sent you a link by sms please click on it and fill the form"
+  ],
+  [
+   34,
+   "you will now receive an otp please tell me the otp for verification"
+  ]
+ ]
+}

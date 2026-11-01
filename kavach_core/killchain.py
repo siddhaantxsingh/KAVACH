@@ -40,7 +40,7 @@ CONTACT_HOOK = {"authority_police", "authority_bank", "identity_misuse", "threat
 ACTION_PAY = {"credential_request", "remote_access", "link_click", "payment_request"}
 HOOK_FOR_ACTION = CONTACT_HOOK - {"urgency"}
 STRONG_HOOK = {"authority_police", "threat", "identity_misuse"}
-CROSS_KINDS = {"dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "scam_sms"}
+CROSS_KINDS = {"dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "scam_sms", "scam_call"}
 
 
 @dataclass

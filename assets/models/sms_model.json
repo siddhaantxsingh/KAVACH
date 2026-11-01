@@ -1,0 +1,16 @@
+{
+  "name": "sms_model",
+  "format": "kavach-hashed-linear-v1",
+  "dim": 262144,
+  "bias": -4.1392975633999,
+  "threshold": 0.5,
+  "char_n": [
+    3,
+    4,
+    5
+  ],
+  "hash": "fnv1a32-utf8",
+  "values": "1+ln(count), l2-normalised",
+  "C": 8.0,
+  "task": "sms/notification text -> scam"
+}

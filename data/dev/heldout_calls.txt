@@ -1,0 +1,131 @@
+# LOCKED held-out hand-written calls. Written after the first evaluation round and
+# never used for tuning lexicon, thresholds or models. Report it once per release.
+# Same format as handwritten_calls.txt.
+
+### ho-s01 | scam | digital_arrest | hing
+C: hello main andheri police station se constable yadav bol raha hoon aapke liye ek notice hai
+V: kaisa notice
+C: aapke mobile number se kuch ladkiyon ko gande message gaye hain aur unhone shikayat ki hai
+V: maine kabhi aisa nahi kiya
+C: aapko abhi ke abhi senior officer se video par baat karni padegi warna team aapke ghar aa jayegi
+C: jab tak sahab baat kar rahe hain aap kisi ko phone nahi karenge aur na hi ghar se bahar jayenge
+C$: settlement ke liye jo account number main de raha hoon usme do lakh daal dijiye
+
+### ho-s02 | scam | kyc_bank | en
+C: hello sir i am calling from the bank regarding your account which has been put on hold
+V: on hold why
+C: there was an issue with your pan details and if it is not fixed by evening your debit card will stop working
+C: do not worry i will help you fix it right now on call
+C$: you will get a message with a number please read that number to me slowly
+
+### ho-s03 | scam | courier_parcel | hi
+C: नमस्ते मैं फेडएक्स कूरियर से बोल रही हूं आपके नाम का एक इंटरनेशनल पार्सल पकड़ा गया है
+V: मेरा कोई पार्सल नहीं है
+C: उसमें नशीला पदार्थ और कई पासपोर्ट मिले हैं इसलिए यह केस पुलिस को दे दिया गया है
+C: मैं आपकी कॉल नारकोटिक्स ऑफिसर को ट्रांसफर कर रही हूं आप लाइन पर बने रहिए
+C: आप पर ड्रग तस्करी का मामला बनेगा और आपकी गिरफ्तारी हो सकती है
+C$: इस केस से नाम हटाने के लिए आपको जांच शुल्क जमा करना होगा
+
+### ho-s04 | scam | upi_collect_refund | en
+C: hello this is from the shopping app your return pickup is done and refund of 1299 is ready
+V: okay great
+C: sir the refund is failing so i will send you a payment request on your upi
+C$: just approve it and put your pin then the amount will reflect instantly
+
+### ho-s05 | scam | family_emergency | hi
+C: नानी मैं आपका नाती बोल रहा हूं मेरी आवाज़ ठीक से नहीं आ रही गला खराब है
+V: अरे बेटा क्या हुआ
+C: मुझसे गलती हो गई पुलिस ने गाड़ी पकड़ ली है मम्मी को मत बताना वो गुस्सा करेंगी
+C$: वकील को अभी तीस हज़ार देने हैं आप इस नंबर पर भेज दो मैं कल लौटा दूंगा
+
+### ho-s06 | scam | investment_trading | hing
+C: sir aapne humare telegram group mein join kiya tha yaad hai stock market wala
+V: haan thoda thoda
+C: is hafte ek special block deal hai jisme do din mein paisa teen guna ho jayega
+C: bahut kam log ko mauka mil raha hai aaj raat tak slot band
+C$: aap humare app mein pachees hazaar add kar dijiye main aapka trade laga deta hoon
+
+### ho-s07 | scam | remote_support | en
+C: this is microsoft security your computer and phone are sending virus warnings to our server
+V: oh no what should i do
+C: our engineer will fix it but he needs to connect to your device
+C$: download the app called anydesk and give me the nine digit address shown on the screen
+
+### ho-s08 | scam | electricity_bill | hing
+C: namaste bijli company se bol raha hoon aapka meter number disconnect list mein aa gaya hai
+V: lekin bill toh bhara tha
+C: wahi toh online update nahi hua aaj raat ko lineman aakar connection kaat dega
+C$: main ek app ka naam bata raha hoon usko install karke usme apna card number daal dijiye
+
+### ho-s09 | scam | job_task | en
+C: hello this is hr from a travel company we found your profile on a job site
+V: yes i am looking for work
+C: it is a simple online task you review hotels and we pay per review you can earn up to five thousand a day
+C$: to unlock the higher paying tasks you have to recharge your work account with three thousand
+
+### ho-s10 | scam | sim_telecom | hi
+C: यह संदेश दूरसंचार विभाग की ओर से है आपका मोबाइल नंबर दो घंटे में बंद कर दिया जाएगा
+C: आपके नाम पर ली गई एक और सिम से धोखाधड़ी की गई है
+V: मैंने कोई दूसरी सिम नहीं ली
+C: हम आपकी कॉल पुलिस को जोड़ रहे हैं जांच पूरी होने तक फोन मत रखिए
+C$: क्लियरेंस के लिए बताए गए खाते में राशि जमा कीजिए
+
+### ho-b01 | benign | bank_fraud_alert | hing
+C: namaste main aapke bank se bol rahi hoon aapke card se raat ko ek international transaction try hua tha
+V: maine toh nahi kiya
+C: koi baat nahi humne usko rok diya hai aur card band kar diya hai naya card aapke ghar aa jayega
+C: dhyan rakhiye bank kabhi phone par otp ya pin nahi poochta agar koi pooche to phone kaat dijiye
+V: theek hai dhanyavaad
+
+### ho-b02 | benign | relative_money | hing
+C: chachu main bol raha hoon exam form bharna hai aaj last date hai
+V: kitne ka hai
+C: paanch sau ka hai papa ka phone band hai isliye aapko bola gpay kar do please
+V: haan bhej deta hoon padhai achhe se karna
+
+### ho-b03 | benign | delivery | hi
+C: नमस्ते मैं गैस एजेंसी से बोल रहा हूं आपका सिलेंडर लेकर आया हूं
+V: आ जाइए ऊपर
+C: नौ सौ पचास रुपये हुए और जो कोड मैसेज में आया है वो बता दीजिए डिलीवरी के लिए
+V: ठीक है चार दो सात एक
+
+### ho-b04 | benign | scam_gossip | en
+C: hey did you hear about the call my grandfather got yesterday
+V: no what happened
+C: some guy said he was from customs and that a parcel with drugs was in his name and he should stay on the line
+C: grandpa just said i will come to the police station myself and hung up
+V: smart man everyone should do that
+
+### ho-b05 | benign | office | en
+C: hi the payment gateway integration is failing in staging can you take a look
+V: sure is it the upi collect flow
+C: yes the collect request times out and the otp screen never loads please check the logs
+V: okay i will debug it after the call
+
+### ho-b06 | benign | police_genuine | hi
+C: नमस्ते मैं ट्रैफिक पुलिस से बोल रहा हूं आपकी गाड़ी का चालान कटा है गलत पार्किंग का
+V: अच्छा कितने का है
+C: पांच सौ का है आप परिवहन की आधिकारिक वेबसाइट पर या कोर्ट जाकर भर सकते हैं
+V: ठीक है मैं देख लेता हूं
+
+### ho-b07 | benign | family_chat | en
+C: mom i will be late today there is a team dinner
+V: okay take an auto back and send me the location
+C: yes and please do not tell dad i spent so much on shoes
+V: haha okay okay
+
+### ho-b08 | benign | insurance_offer | hing
+C: sir main aapke bank se personal loan ke liye call kar raha hoon pre approved offer hai
+V: abhi zarurat nahi hai
+C: koi baat nahi sir kabhi chahiye ho to app mein loan section mein dekh lijiye thank you
+
+### ho-b09 | benign | doctor | en
+C: hello this is the pharmacy your medicines are ready for pickup
+V: can you deliver them
+C: yes our delivery boy will come in an hour you can pay him by upi or cash
+
+### ho-b10 | benign | bank_genuine_kyc | hing
+C: hello sir main aapki bank branch se bol raha hoon aapka account dormant ho gaya hai do saal se transaction nahi hua
+V: achha toh kya karna hoga
+C: aap branch aakar ek form aur aadhaar copy de dijiye account chalu ho jayega phone par kuch nahi chahiye
+V: theek hai kal aata hoon

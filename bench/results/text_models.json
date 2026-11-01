@@ -1,0 +1,118 @@
+[
+  {
+    "model": "cue_model",
+    "C": 0.1,
+    "grid": [
+      {
+        "C": 0.1,
+        "dev_pr_auc": 0.9926
+      },
+      {
+        "C": 0.25,
+        "dev_pr_auc": 0.9925
+      },
+      {
+        "C": 0.5,
+        "dev_pr_auc": 0.9924
+      },
+      {
+        "C": 1.0,
+        "dev_pr_auc": 0.9922
+      },
+      {
+        "C": 2.0,
+        "dev_pr_auc": 0.9919
+      },
+      {
+        "C": 4.0,
+        "dev_pr_auc": 0.9915
+      },
+      {
+        "C": 8.0,
+        "dev_pr_auc": 0.9911
+      }
+    ],
+    "dim": 262144,
+    "train_n": 72603,
+    "seconds": 110.8,
+    "nonzero_weights": 47439,
+    "dev": {
+      "n": 5346,
+      "pos": 3116,
+      "threshold": 0.75,
+      "precision": 0.9795,
+      "recall": 0.9352,
+      "f1": 0.9568,
+      "roc_auc": 0.988,
+      "pr_auc": 0.9926
+    },
+    "test": {
+      "n": 8755,
+      "pos": 5276,
+      "threshold": 0.75,
+      "precision": 0.9018,
+      "recall": 0.7468,
+      "f1": 0.817,
+      "roc_auc": 0.9054,
+      "pr_auc": 0.9325
+    }
+  },
+  {
+    "model": "sms_model",
+    "C": 8.0,
+    "grid": [
+      {
+        "C": 0.1,
+        "dev_pr_auc": 0.9835
+      },
+      {
+        "C": 0.25,
+        "dev_pr_auc": 0.9937
+      },
+      {
+        "C": 0.5,
+        "dev_pr_auc": 0.9962
+      },
+      {
+        "C": 1.0,
+        "dev_pr_auc": 0.997
+      },
+      {
+        "C": 2.0,
+        "dev_pr_auc": 0.9981
+      },
+      {
+        "C": 4.0,
+        "dev_pr_auc": 0.9984
+      },
+      {
+        "C": 8.0,
+        "dev_pr_auc": 0.9985
+      }
+    ],
+    "dim": 262144,
+    "train_n": 6903,
+    "seconds": 4.7,
+    "nonzero_weights": 88222,
+    "dev": {
+      "n": 1057,
+      "pos": 318,
+      "threshold": 0.5,
+      "precision": 1.0,
+      "recall": 0.9906,
+      "f1": 0.9953,
+      "roc_auc": 0.9987,
+      "pr_auc": 0.9985
+    },
+    "test": {
+      "n": 1914,
+      "pos": 555,
+      "threshold": 0.5,
+      "precision": 0.9856,
+      "recall": 0.8631,
+      "f1": 0.9203,
+      "roc_auc": 0.9864,
+      "pr_auc": 0.9755
+    }
+  }
+]

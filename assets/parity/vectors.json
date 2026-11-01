@@ -1,0 +1,3300 @@
+{
+ "normalize": [
+  [
+   "Don't DISCONNECT the call!! It's being recorded…",
+   "dont disconnect the call its being recorded"
+  ],
+  [
+   "मैं मुंबई पुलिस से बोल रहा हूँ, आपके आधार कार्ड का इस्तेमाल मनी लॉन्ड्रिंग में हुआ है। किसी को मत बताइए।",
+   "मैं मुंबई पुलिस से बोल रहा हूं आपके आधार कार्ड का इस्तेमाल मनी लॉन्ड्रिंग में हुआ है किसी को मत बताइए"
+  ],
+  [
+   "aapke aadhaar se money laundering hua hai, call mat kaatna aur kisi ko kuch mat batana",
+   "aapke aadhaar se money laundering hua hai call mat kaatna aur kisi ko kuch mat batana"
+  ],
+  [
+   "Sir this is HDFC fraud monitoring. Please never share your OTP with anyone.",
+   "sir this is hdfc fraud monitoring please never share your otp with anyone"
+  ],
+  [
+   "dont worry just tell me the otp you received",
+   "dont worry just tell me the otp you received"
+  ],
+  [
+   "ज़मानत के लिए ₹५०,००० भेजिए 🙏 तुरंत",
+   "जमानत के लिए 50 000 भेजिए तुरंत"
+  ],
+  [
+   "Your SBI account will be BLOCKED today. Update KYC: http://sbi-kyc-update.xyz/login",
+   "your sbi account will be blocked today update kyc http sbi kyc update xyz login"
+  ],
+  [
+   "482913 is your OTP for transaction of INR 1,299 at AMAZON. Do not share it with anyone. - HDFC Bank",
+   "482913 is your otp for transaction of inr 1 299 at amazon do not share it with anyone hdfc bank"
+  ],
+  [
+   "ओटीपी किसी को शेयर मत करना",
+   "ओटीपी किसी को शेयर मत करना"
+  ],
+  [
+   "pay the withdrawal tax first then you can take out your profit",
+   "pay the withdrawal tax first then you can take out your profit"
+  ],
+  [
+   "",
+   ""
+  ]
+ ],
+ "fnv": [
+  [
+   "",
+   2166136261
+  ],
+  [
+   "a",
+   3826002220
+  ],
+  [
+   "foobar",
+   3214735720
+  ],
+  [
+   "w|पुलिस",
+   1151484427
+  ],
+  [
+   "c| ओट",
+   3054584560
+  ],
+  [
+   "kk|authority_police+isolation",
+   3635839674
+  ]
+ ],
+ "lexicon": [
+  [
+   "Don't DISCONNECT the call!! It's being recorded…",
+   [
+    [
+     "isolation",
+     "don't disconnect",
+     0,
+     2
+    ]
+   ]
+  ],
+  [
+   "मैं मुंबई पुलिस से बोल रहा हूँ, आपके आधार कार्ड का इस्तेमाल मनी लॉन्ड्रिंग में हुआ है। किसी को मत बताइए।",
+   [
+    [
+     "authority_police",
+     "पुलिस",
+     2,
+     3
+    ],
+    [
+     "identity_misuse",
+     "आधार ~ इस्तेमाल",
+     8,
+     12
+    ],
+    [
+     "identity_misuse",
+     "मनी लॉन्ड्रिंग",
+     12,
+     14
+    ],
+    [
+     "isolation",
+     "किसी को मत बताइए",
+     17,
+     21
+    ]
+   ]
+  ],
+  [
+   "aapke aadhaar se money laundering hua hai, call mat kaatna aur kisi ko kuch mat batana",
+   [
+    [
+     "identity_misuse",
+     "money laundering",
+     3,
+     5
+    ],
+    [
+     "isolation",
+     "call mat kaatna",
+     7,
+     10
+    ],
+    [
+     "isolation",
+     "kisi ko kuch mat batana",
+     11,
+     16
+    ]
+   ]
+  ],
+  [
+   "Sir this is HDFC fraud monitoring. Please never share your OTP with anyone.",
+   [
+    [
+     "safety_advice",
+     "never share ~ otp",
+     7,
+     11
+    ]
+   ]
+  ],
+  [
+   "dont worry just tell me the otp you received",
+   [
+    [
+     "credential_request",
+     "tell ~ otp",
+     3,
+     7
+    ]
+   ]
+  ],
+  [
+   "ज़मानत के लिए ₹५०,००० भेजिए 🙏 तुरंत",
+   [
+    [
+     "family_emergency",
+     "ज़मानत",
+     0,
+     1
+    ],
+    [
+     "urgency",
+     "तुरंत",
+     6,
+     7
+    ]
+   ]
+  ],
+  [
+   "Your SBI account will be BLOCKED today. Update KYC: http://sbi-kyc-update.xyz/login",
+   [
+    [
+     "threat",
+     "account ~ block*",
+     2,
+     6
+    ],
+    [
+     "authority_bank",
+     "kyc",
+     8,
+     9
+    ],
+    [
+     "authority_bank",
+     "kyc",
+     11,
+     12
+    ]
+   ]
+  ],
+  [
+   "482913 is your OTP for transaction of INR 1,299 at AMAZON. Do not share it with anyone. - HDFC Bank",
+   []
+  ],
+  [
+   "ओटीपी किसी को शेयर मत करना",
+   [
+    [
+     "safety_advice",
+     "ओटीपी ~ किसी को ~ मत",
+     0,
+     5
+    ]
+   ]
+  ],
+  [
+   "pay the withdrawal tax first then you can take out your profit",
+   [
+    [
+     "payment_request",
+     "pay ~ tax",
+     0,
+     4
+    ],
+    [
+     "reward_greed",
+     "profit",
+     11,
+     12
+    ]
+   ]
+  ],
+  [
+   "",
+   []
+  ]
+ ],
+ "vector_small": {
+  "tokens": [
+   "police",
+   "arrest",
+   "otp"
+  ],
+  "entries": [
+   [
+    1238,
+    0.12126781251816648
+   ],
+   [
+    13859,
+    0.12126781251816648
+   ],
+   [
+    14816,
+    0.12126781251816648
+   ],
+   [
+    14961,
+    0.12126781251816648
+   ],
+   [
+    21677,
+    0.12126781251816648
+   ],
+   [
+    31482,
+    0.12126781251816648
+   ],
+   [
+    44701,
+    0.12126781251816648
+   ],
+   [
+    49235,
+    0.12126781251816648
+   ],
+   [
+    50413,
+    0.12126781251816648
+   ],
+   [
+    61695,
+    0.12126781251816648
+   ],
+   [
+    66201,
+    0.12126781251816648
+   ],
+   [
+    74854,
+    0.36380343755449945
+   ],
+   [
+    77576,
+    0.12126781251816648
+   ],
+   [
+    79558,
+    0.12126781251816648
+   ],
+   [
+    80888,
+    0.12126781251816648
+   ],
+   [
+    89036,
+    0.12126781251816648
+   ],
+   [
+    91054,
+    0.12126781251816648
+   ],
+   [
+    93626,
+    0.36380343755449945
+   ],
+   [
+    103034,
+    0.12126781251816648
+   ],
+   [
+    103895,
+    0.12126781251816648
+   ],
+   [
+    104876,
+    0.12126781251816648
+   ],
+   [
+    105229,
+    0.12126781251816648
+   ],
+   [
+    108053,
+    0.12126781251816648
+   ],
+   [
+    118426,
+    0.36380343755449945
+   ],
+   [
+    125489,
+    0.12126781251816648
+   ],
+   [
+    135953,
+    0.12126781251816648
+   ],
+   [
+    145026,
+    0.12126781251816648
+   ],
+   [
+    146388,
+    0.12126781251816648
+   ],
+   [
+    146688,
+    0.12126781251816648
+   ],
+   [
+    149991,
+    0.12126781251816648
+   ],
+   [
+    166201,
+    0.12126781251816648
+   ],
+   [
+    186623,
+    0.12126781251816648
+   ],
+   [
+    192361,
+    0.12126781251816648
+   ],
+   [
+    193801,
+    0.12126781251816648
+   ],
+   [
+    208653,
+    0.12126781251816648
+   ],
+   [
+    213086,
+    0.12126781251816648
+   ],
+   [
+    215355,
+    0.12126781251816648
+   ],
+   [
+    218237,
+    0.12126781251816648
+   ],
+   [
+    219775,
+    0.12126781251816648
+   ],
+   [
+    224636,
+    0.12126781251816648
+   ],
+   [
+    238776,
+    0.12126781251816648
+   ],
+   [
+    241396,
+    0.12126781251816648
+   ],
+   [
+    247270,
+    0.12126781251816648
+   ],
+   [
+    250879,
+    0.12126781251816648
+   ]
+  ]
+ },
+ "logits": {
+  "cue_model": [
+   [
+    "Don't DISCONNECT the call!! It's being recorded…",
+    -0.3036775293624212
+   ],
+   [
+    "मैं मुंबई पुलिस से बोल रहा हूँ, आपके आधार कार्ड का इस्तेमाल मनी लॉन्ड्रिंग में हुआ है। किसी को मत बताइए।",
+    3.528233735062684
+   ],
+   [
+    "aapke aadhaar se money laundering hua hai, call mat kaatna aur kisi ko kuch mat batana",
+    1.6485428780341986
+   ],
+   [
+    "Sir this is HDFC fraud monitoring. Please never share your OTP with anyone.",
+    -2.0981649265665183
+   ],
+   [
+    "dont worry just tell me the otp you received",
+    -0.9272352374264486
+   ],
+   [
+    "ज़मानत के लिए ₹५०,००० भेजिए 🙏 तुरंत",
+    0.8611105517503943
+   ],
+   [
+    "Your SBI account will be BLOCKED today. Update KYC: http://sbi-kyc-update.xyz/login",
+    3.5273559077662497
+   ],
+   [
+    "482913 is your OTP for transaction of INR 1,299 at AMAZON. Do not share it with anyone. - HDFC Bank",
+    -2.724587394117729
+   ],
+   [
+    "ओटीपी किसी को शेयर मत करना",
+    -2.2779362988260026
+   ],
+   [
+    "pay the withdrawal tax first then you can take out your profit",
+    0.5122602134784608
+   ],
+   [
+    "",
+    -1.0797191931684091
+   ]
+  ],
+  "sms_model": [
+   [
+    "Don't DISCONNECT the call!! It's being recorded…",
+    -2.365431556265344
+   ],
+   [
+    "मैं मुंबई पुलिस से बोल रहा हूँ, आपके आधार कार्ड का इस्तेमाल मनी लॉन्ड्रिंग में हुआ है। किसी को मत बताइए।",
+    -2.793088065534979
+   ],
+   [
+    "aapke aadhaar se money laundering hua hai, call mat kaatna aur kisi ko kuch mat batana",
+    -1.8431378099955975
+   ],
+   [
+    "Sir this is HDFC fraud monitoring. Please never share your OTP with anyone.",
+    -4.220015911080472
+   ],
+   [
+    "dont worry just tell me the otp you received",
+    -4.04249859135879
+   ],
+   [
+    "ज़मानत के लिए ₹५०,००० भेजिए 🙏 तुरंत",
+    1.181547737760817
+   ],
+   [
+    "Your SBI account will be BLOCKED today. Update KYC: http://sbi-kyc-update.xyz/login",
+    1.9714748080008295
+   ],
+   [
+    "482913 is your OTP for transaction of INR 1,299 at AMAZON. Do not share it with anyone. - HDFC Bank",
+    -5.694208208007689
+   ],
+   [
+    "ओटीपी किसी को शेयर मत करना",
+    -4.914389132119183
+   ],
+   [
+    "pay the withdrawal tax first then you can take out your profit",
+    -0.5053031503590817
+   ],
+   [
+    "",
+    -3.619270020232645
+   ]
+  ],
+  "url_model": [
+   [
+    "onlinesbi sbi bank in",
+    -4.7480446319945955
+   ],
+   [
+    "sbi kyc update xyz login",
+    8.541915801821439
+   ],
+   [
+    "hdfcbnak com",
+    -1.17943386848285
+   ],
+   [
+    "paytrn com refund",
+    2.2023132471922007
+   ],
+   [
+    "xn pytm 5cd com",
+    -0.2190389993242543
+   ],
+   [
+    "bit ly 3xYz",
+    0.3883444733414684
+   ],
+   [
+    "45 33 12 9 sbi",
+    2.6707697997840913
+   ],
+   [
+    "sites google com view sbi yono kyc",
+    0.16075080905958816
+   ],
+   [
+    "rto challan top echallan apk",
+    6.302502805153095
+   ],
+   [
+    "hdfc bank in login",
+    -2.3533162782567527
+   ],
+   [
+    "kotaku com",
+    -2.0347929548994097
+   ],
+   [
+    "icicl com",
+    -1.2776047181953492
+   ],
+   [
+    "yonosbi rewards in",
+    1.7539056220821116
+   ],
+   [
+    "evil com x",
+    -1.4308348888920022
+   ],
+   [
+    "amazon in gp your orders",
+    0.01849222704951292
+   ],
+   [
+    "pm kisan bonus site claim",
+    5.651749316353639
+   ]
+  ]
+ },
+ "urls_extract": [
+  [
+   "Don't DISCONNECT the call!! It's being recorded…",
+   []
+  ],
+  [
+   "मैं मुंबई पुलिस से बोल रहा हूँ, आपके आधार कार्ड का इस्तेमाल मनी लॉन्ड्रिंग में हुआ है। किसी को मत बताइए।",
+   []
+  ],
+  [
+   "aapke aadhaar se money laundering hua hai, call mat kaatna aur kisi ko kuch mat batana",
+   []
+  ],
+  [
+   "Sir this is HDFC fraud monitoring. Please never share your OTP with anyone.",
+   []
+  ],
+  [
+   "dont worry just tell me the otp you received",
+   []
+  ],
+  [
+   "ज़मानत के लिए ₹५०,००० भेजिए 🙏 तुरंत",
+   []
+  ],
+  [
+   "Your SBI account will be BLOCKED today. Update KYC: http://sbi-kyc-update.xyz/login",
+   [
+    "http://sbi-kyc-update.xyz/login"
+   ]
+  ],
+  [
+   "482913 is your OTP for transaction of INR 1,299 at AMAZON. Do not share it with anyone. - HDFC Bank",
+   []
+  ],
+  [
+   "ओटीपी किसी को शेयर मत करना",
+   []
+  ],
+  [
+   "pay the withdrawal tax first then you can take out your profit",
+   []
+  ],
+  [
+   "",
+   []
+  ]
+ ],
+ "url_verdicts": [
+  [
+   "https://onlinesbi.sbi.bank.in/",
+   "safe",
+   0.0,
+   [
+    "genuine"
+   ]
+  ],
+  [
+   "sbi-kyc-update.xyz/login",
+   "dangerous",
+   0.9996,
+   [
+    "suspicious_tld",
+    "brand_in_unofficial_domain",
+    "risk_words"
+   ]
+  ],
+  [
+   "hdfcbnak.com",
+   "dangerous",
+   0.9,
+   [
+    "typosquat"
+   ]
+  ],
+  [
+   "http://paytrn.com/refund",
+   "dangerous",
+   0.95,
+   [
+    "homoglyph"
+   ]
+  ],
+  [
+   "https://xn--pytm-5cd.com",
+   "dangerous",
+   0.95,
+   [
+    "homoglyph"
+   ]
+  ],
+  [
+   "bit.ly/3xYz",
+   "suspicious",
+   0.5,
+   [
+    "shortener"
+   ]
+  ],
+  [
+   "http://45.33.12.9/sbi",
+   "dangerous",
+   0.8755,
+   [
+    "ip_host"
+   ]
+  ],
+  [
+   "https://sites.google.com/view/sbi-yono-kyc",
+   "dangerous",
+   0.85,
+   [
+    "user_content_brand"
+   ]
+  ],
+  [
+   "rto-challan.top/echallan.apk",
+   "dangerous",
+   0.9965,
+   [
+    "apk_download",
+    "suspicious_tld",
+    "brand_in_unofficial_domain",
+    "risk_words"
+   ]
+  ],
+  [
+   "hdfc.bank.in/login",
+   "safe",
+   0.0,
+   [
+    "genuine"
+   ]
+  ],
+  [
+   "kotaku.com",
+   "unknown",
+   0.0781,
+   []
+  ],
+  [
+   "icicl.com",
+   "dangerous",
+   0.95,
+   [
+    "homoglyph"
+   ]
+  ],
+  [
+   "yonosbi-rewards.in",
+   "dangerous",
+   0.9,
+   [
+    "brand_in_unofficial_domain"
+   ]
+  ],
+  [
+   "user@evil.com/x",
+   "dangerous",
+   0.8,
+   [
+    "at_sign"
+   ]
+  ],
+  [
+   "https://www.amazon.in/gp/your-orders",
+   "safe",
+   0.0,
+   [
+    "genuine"
+   ]
+  ],
+  [
+   "pm-kisan-bonus.site/claim",
+   "dangerous",
+   0.9933,
+   [
+    "suspicious_tld",
+    "risk_words"
+   ]
+  ]
+ ],
+ "messages": [
+  [
+   "Don't DISCONNECT the call!! It's being recorded…",
+   "safe",
+   0.0858
+  ],
+  [
+   "मैं मुंबई पुलिस से बोल रहा हूँ, आपके आधार कार्ड का इस्तेमाल मनी लॉन्ड्रिंग में हुआ है। किसी को मत बताइए।",
+   "safe",
+   0.0577
+  ],
+  [
+   "aapke aadhaar se money laundering hua hai, call mat kaatna aur kisi ko kuch mat batana",
+   "safe",
+   0.1367
+  ],
+  [
+   "Sir this is HDFC fraud monitoring. Please never share your OTP with anyone.",
+   "safe",
+   0.0145
+  ],
+  [
+   "dont worry just tell me the otp you received",
+   "safe",
+   0.0173
+  ],
+  [
+   "ज़मानत के लिए ₹५०,००० भेजिए 🙏 तुरंत",
+   "suspicious",
+   0.7652
+  ],
+  [
+   "Your SBI account will be BLOCKED today. Update KYC: http://sbi-kyc-update.xyz/login",
+   "dangerous",
+   0.8778
+  ],
+  [
+   "482913 is your OTP for transaction of INR 1,299 at AMAZON. Do not share it with anyone. - HDFC Bank",
+   "safe",
+   0.0034
+  ],
+  [
+   "ओटीपी किसी को शेयर मत करना",
+   "safe",
+   0.0073
+  ],
+  [
+   "pay the withdrawal tax first then you can take out your profit",
+   "safe",
+   0.3763
+  ]
+ ],
+ "killchain": [
+  {
+   "events": [
+    [
+     10,
+     "call",
+     "authority_police",
+     2.0
+    ],
+    [
+     30,
+     "call",
+     "isolation",
+     2.5
+    ]
+   ],
+   "steps": [
+    [
+     11,
+     "info",
+     "cue",
+     1.998
+    ],
+    [
+     31,
+     "stop",
+     "isolation+authority",
+     4.449
+    ]
+   ]
+  },
+  {
+   "events": [
+    [
+     1,
+     "call",
+     "authority_bank",
+     1.0
+    ],
+    [
+     2,
+     "call",
+     "safety_advice",
+     -2.0
+    ],
+    [
+     3,
+     "call",
+     "threat",
+     1.5
+    ],
+    [
+     4,
+     "call",
+     "credential_request",
+     2.5
+    ]
+   ],
+   "steps": [
+    [
+     2,
+     "info",
+     "cue",
+     0.999
+    ],
+    [
+     3,
+     "info",
+     "cue",
+     -1.0
+    ],
+    [
+     4,
+     "caution",
+     "authority+hook",
+     0.499
+    ],
+    [
+     5,
+     "caution",
+     "authority+hook",
+     2.996
+    ]
+   ]
+  },
+  {
+   "events": [
+    [
+     0,
+     "call",
+     "authority_bank",
+     1.0
+    ],
+    [
+     5,
+     "call",
+     "threat",
+     1.5
+    ],
+    [
+     6,
+     "call",
+     "urgency",
+     0.75
+    ],
+    [
+     40,
+     "link",
+     "dangerous_link",
+     2.5
+    ]
+   ],
+   "steps": [
+    [
+     1,
+     "info",
+     "cue",
+     0.999
+    ],
+    [
+     6,
+     "caution",
+     "authority+hook",
+     2.491
+    ],
+    [
+     7,
+     "caution",
+     "authority+hook",
+     3.238
+    ],
+    [
+     41,
+     "stop",
+     "cross-channel:dangerous_link",
+     5.612
+    ]
+   ]
+  },
+  {
+   "events": [
+    [
+     0,
+     "call",
+     "payment_request",
+     2.5
+    ],
+    [
+     3,
+     "call",
+     "link_click",
+     1.25
+    ]
+   ],
+   "steps": [
+    [
+     1,
+     "info",
+     "cue",
+     1.249
+    ],
+    [
+     4,
+     "stop",
+     "multi-action",
+     1.869
+    ]
+   ]
+  },
+  {
+   "events": [
+    [
+     0,
+     "call",
+     "credential_request",
+     2.5
+    ],
+    [
+     600,
+     "call",
+     "payment_request",
+     2.5
+    ]
+   ],
+   "steps": [
+    [
+     1,
+     "info",
+     "cue",
+     1.249
+    ],
+    [
+     601,
+     "stop",
+     "multi-action",
+     1.873
+    ]
+   ]
+  }
+ ],
+ "retrieval": [
+  [
+   {
+    "authority_police": 2.0,
+    "isolation": 2.5
+   },
+   "police do not tell family",
+   [
+    "digital_arrest",
+    "family_emergency",
+    "sim_telecom"
+   ]
+  ],
+  [
+   {
+    "reward_greed": 1.2,
+    "payment_request": 2.5
+   },
+   "lottery prize processing fee",
+   [
+    "lottery_prize",
+    "job_task",
+    "upi_collect_refund"
+   ]
+  ],
+  [
+   {
+    "remote_access": 2.5,
+    "credential_request": 2.5
+   },
+   "install anydesk tell me the code",
+   [
+    "remote_support",
+    "kyc_bank",
+    "upi_collect_refund"
+   ]
+  ]
+ ],
+ "prompt": {
+  "system": "You are KAVACH, an on-device scam-call guardian for people in India. You read a live phone-call transcript (Hindi, English or Hinglish; it comes from speech recognition and has errors) and decide whether the caller is running a scam.\nRules:\n- Police, CBI, customs, courts and banks NEVER ask for money, OTP, PIN, screen sharing or app installs on a call, and there is no 'digital arrest' in Indian law.\n- Genuine calls (bank fraud alerts that say never share OTP, delivery agents, relatives) must not be called scams.\n- Quote evidence only as exact words from the transcript.\n- 'say' is spoken to a frightened, possibly elderly person: short, calm, clear, in the requested language, and must include the next step. Helpline: 1930.\nAnswer with ONE JSON object and nothing else, keys in this order:\n{\"scam\": true|false, \"type\": one of [digital_arrest, courier_parcel, kyc_bank, upi_collect_refund, investment_trading, job_task, family_emergency, electricity_bill, sim_telecom, lottery_prize, remote_support, loan_app, \"other\", \"none\"], \"stage\": one of [none, contact, hook, isolation, action, payment], \"confidence\": 0.0-1.0, \"evidence\": [up to 3 short exact quotes], \"say\": \"max 35 words\", \"action\": one of [none, continue_with_care, verify_independently, do_not_share, do_not_pay, hang_up]}",
+  "user": "Relevant scam patterns:\n- digital_arrest: Caller poses as police, CBI, NCB, customs, ED or a judge. Says your Aadhaar, SIM or a parcel in your name is linked to drugs, money laundering or trafficking. Keeps you on a video call, forbids you from telling family, then asks you to move money to a 'safe' or 'RBI verification' account to prove innocence. TRUTH: There is no 'digital arrest' in Indian law. Police and courts never interrogate on video calls, never ask you to stay on a call, and never ask you to transfer money to clear your name.\nDetected cue scores: isolation=2.5\nReply language for 'say': Hindi (Devanagari)\nTranscript (most recent last):\n\"\"\"kisi ko mat batana\"\"\"",
+  "formatted": [
+   "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are KAVACH, an on-device scam-call guardian for people in India. You read a live phone-call transcript (Hindi, English or Hinglish; it comes from speech recognition and has errors) and decide whether the caller is running a scam.\nRules:\n- Police, CBI, customs, courts and banks NEVER ask for money, OTP, PIN, screen sharing or app installs on a call, and there is no 'digital arrest' in Indian law.\n- Genuine calls (bank fraud alerts that say never share OTP, delivery agents, relatives) must not be called scams.\n- Quote evidence only as exact words from the transcript.\n- 'say' is spoken to a frightened, possibly elderly person: short, calm, clear, in the requested language, and must include the next step. Helpline: 1930.\nAnswer with ONE JSON object and nothing else, keys in this order:\n{\"scam\": true|false, \"type\": one of [digital_arrest, courier_parcel, kyc_bank, upi_collect_refund, investment_trading, job_task, family_emergency, electricity_bill, sim_telecom, lottery_prize, remote_support, loan_app, \"other\", \"none\"], \"stage\": one of [none, contact, hook, isolation, action, payment], \"confidence\": 0.0-1.0, \"evidence\": [up to 3 short exact quotes], \"say\": \"max 35 words\", \"action\": one of [none, continue_with_care, verify_independently, do_not_share, do_not_pay, hang_up]}<|eot_id|>",
+   "<|start_header_id|>user<|end_header_id|>\n\nu<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+  ]
+ },
+ "validate": [
+  [
+   "Sure! {\"scam\": true, \"type\": \"digital_arrest\", \"stage\": \"isolation\", \"confidence\": 0.93, \"evidence\": [\"kisi ko mat batana\", \"made up\"], \"say\": \"Phone kaatiye.\", \"action\": \"hang_up\"}",
+   {
+    "scam": true,
+    "type": "digital_arrest",
+    "stage": "isolation",
+    "confidence": 0.93,
+    "evidence": [
+     "kisi ko mat batana"
+    ],
+    "say": "Phone kaatiye.",
+    "action": "hang_up"
+   }
+  ],
+  [
+   "{\"scam\": \"maybe\"}",
+   null
+  ],
+  [
+   "no json",
+   null
+  ],
+  [
+   "{\"scam\": false, \"type\": \"bogus\", \"stage\": \"x\", \"confidence\": 7, \"action\": \"dance\"}",
+   {
+    "scam": false,
+    "type": "none",
+    "stage": "none",
+    "confidence": 1.0,
+    "evidence": [],
+    "say": "",
+    "action": "none"
+   }
+  ]
+ ],
+ "guardian": [
+  {
+   "id": "hw-s01",
+   "segments": [
+    [
+     4.08,
+     "namaskar main delhi police headquarter se bol raha"
+    ],
+    [
+     6.48,
+     "hoon aapki ek complaint aayi hai"
+    ],
+    [
+     8.54,
+     "kaisi complaint ji"
+    ],
+    [
+     12.52,
+     "aapke aadhar number se ek bank khata khula"
+    ],
+    [
+     15.69,
+     "hai jisme crore rupaye ka hawala paisa aaya"
+    ],
+    [
+     16.18,
+     "hai"
+    ],
+    [
+     19.38,
+     "mera koi aisa khata nahi hai"
+    ],
+    [
+     23.36,
+     "dekhiye abhi aapko CBI officer se connect kar"
+    ],
+    [
+     25.77,
+     "raha hoon unse seedhe baat kariye"
+    ],
+    [
+     29.75,
+     "main CBI se bol raha hoon aapke upar"
+    ],
+    [
+     32.92,
+     "FIR register ho chuki hai aur supreme court"
+    ],
+    [
+     34.56,
+     "se notice aaya hai"
+    ],
+    [
+     37.38,
+     "sir main toh pensioner hoon"
+    ],
+    [
+     41.36,
+     "jab tak investigation chal rahi hai aap video"
+    ],
+    [
+     44.54,
+     "call par hi rahenge aur ghar mein kisi"
+    ],
+    [
+     46.18,
+     "ko kuch nahi bolenge"
+    ],
+    [
+     50.15,
+     "aapke khate ka saara balance verify karne ke"
+    ],
+    [
+     53.33,
+     "liye ek RBI account mein bhejna padega jo"
+    ],
+    [
+     55.35,
+     "baad mein wapas mil jayega"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "info",
+     0.8229
+    ],
+    [
+     6.0,
+     "caution",
+     0.8229
+    ],
+    [
+     6.48,
+     "caution",
+     0.8609
+    ],
+    [
+     8.54,
+     "caution",
+     0.8071
+    ],
+    [
+     9.0,
+     "caution",
+     0.8071
+    ],
+    [
+     12.0,
+     "caution",
+     0.8071
+    ],
+    [
+     12.52,
+     "caution",
+     0.8789
+    ],
+    [
+     15.0,
+     "caution",
+     0.8789
+    ],
+    [
+     15.69,
+     "stop",
+     0.9155
+    ],
+    [
+     16.18,
+     "stop",
+     0.9176
+    ],
+    [
+     18.0,
+     "stop",
+     0.9176
+    ],
+    [
+     19.38,
+     "stop",
+     0.9012
+    ],
+    [
+     21.0,
+     "stop",
+     0.9012
+    ],
+    [
+     23.36,
+     "stop",
+     0.9318
+    ],
+    [
+     24.0,
+     "stop",
+     0.9318
+    ],
+    [
+     25.77,
+     "stop",
+     0.9091
+    ],
+    [
+     27.0,
+     "stop",
+     0.9091
+    ],
+    [
+     29.75,
+     "stop",
+     0.9381
+    ],
+    [
+     30.0,
+     "stop",
+     0.9381
+    ],
+    [
+     32.92,
+     "stop",
+     0.9556
+    ],
+    [
+     33.0,
+     "stop",
+     0.9556
+    ],
+    [
+     34.56,
+     "stop",
+     0.9519
+    ],
+    [
+     36.0,
+     "stop",
+     0.9519
+    ],
+    [
+     37.38,
+     "stop",
+     0.9513
+    ],
+    [
+     39.0,
+     "stop",
+     0.9513
+    ],
+    [
+     41.36,
+     "stop",
+     0.9515
+    ],
+    [
+     42.0,
+     "stop",
+     0.9515
+    ],
+    [
+     44.54,
+     "stop",
+     0.9468
+    ],
+    [
+     45.0,
+     "stop",
+     0.9468
+    ],
+    [
+     46.18,
+     "stop",
+     0.9445
+    ],
+    [
+     48.0,
+     "stop",
+     0.9445
+    ],
+    [
+     50.15,
+     "stop",
+     0.9418
+    ],
+    [
+     51.0,
+     "stop",
+     0.9418
+    ],
+    [
+     53.33,
+     "stop",
+     0.9664
+    ],
+    [
+     54.0,
+     "stop",
+     0.9664
+    ],
+    [
+     55.35,
+     "stop",
+     0.9699
+    ],
+    [
+     57.0,
+     "stop",
+     0.9699
+    ],
+    [
+     60.0,
+     "stop",
+     0.9699
+    ]
+   ],
+   "final_rule": "classifier"
+  },
+  {
+   "id": "hw-s02",
+   "segments": [
+    [
+     4.08,
+     "good morning madam i am calling from the"
+    ],
+    [
+     6.1,
+     "customs office at mumbai airport"
+    ],
+    [
+     8.15,
+     "yes what happened"
+    ],
+    [
+     12.13,
+     "a package addressed to you from malaysia was"
+    ],
+    [
+     15.31,
+     "opened and we found narcotics and twenty sim"
+    ],
+    [
+     16.18,
+     "cards inside"
+    ],
+    [
+     19.77,
+     "i have not ordered anything from malaysia"
+    ],
+    [
+     23.75,
+     "that is what everyone says madam the package"
+    ],
+    [
+     26.92,
+     "has your phone number and aadhaar details on"
+    ],
+    [
+     27.41,
+     "it"
+    ],
+    [
+     31.38,
+     "i am transferring this to the narcotics officer"
+    ],
+    [
+     33.41,
+     "handling the case please hold"
+    ],
+    [
+     37.38,
+     "madam this case is serious you can be"
+    ],
+    [
+     40.18,
+     "arrested today itself unless you cooperate fully"
+    ],
+    [
+     44.15,
+     "keep this conversation strictly private do not speak"
+    ],
+    [
+     47.33,
+     "to your husband or anyone till we close"
+    ],
+    [
+     48.2,
+     "the matter"
+    ],
+    [
+     52.18,
+     "to clear your name you will need to"
+    ],
+    [
+     55.35,
+     "deposit a refundable amount into our verification account"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "none",
+     0.3242
+    ],
+    [
+     6.0,
+     "none",
+     0.3242
+    ],
+    [
+     6.1,
+     "info",
+     0.7626
+    ],
+    [
+     8.15,
+     "info",
+     0.7866
+    ],
+    [
+     9.0,
+     "info",
+     0.7866
+    ],
+    [
+     12.0,
+     "info",
+     0.7866
+    ],
+    [
+     12.13,
+     "info",
+     0.754
+    ],
+    [
+     15.0,
+     "info",
+     0.754
+    ],
+    [
+     15.31,
+     "caution",
+     0.867
+    ],
+    [
+     16.18,
+     "stop",
+     0.8589
+    ],
+    [
+     18.0,
+     "stop",
+     0.8589
+    ],
+    [
+     19.77,
+     "stop",
+     0.8737
+    ],
+    [
+     21.0,
+     "stop",
+     0.8737
+    ],
+    [
+     23.75,
+     "stop",
+     0.8017
+    ],
+    [
+     24.0,
+     "stop",
+     0.8017
+    ],
+    [
+     26.92,
+     "stop",
+     0.8836
+    ],
+    [
+     27.0,
+     "stop",
+     0.8836
+    ],
+    [
+     27.41,
+     "stop",
+     0.8821
+    ],
+    [
+     30.0,
+     "stop",
+     0.8821
+    ],
+    [
+     31.38,
+     "stop",
+     0.9048
+    ],
+    [
+     33.0,
+     "stop",
+     0.9048
+    ],
+    [
+     33.41,
+     "stop",
+     0.9063
+    ],
+    [
+     36.0,
+     "stop",
+     0.9063
+    ],
+    [
+     37.38,
+     "stop",
+     0.9163
+    ],
+    [
+     39.0,
+     "stop",
+     0.9163
+    ],
+    [
+     40.18,
+     "stop",
+     0.9331
+    ],
+    [
+     42.0,
+     "stop",
+     0.9331
+    ],
+    [
+     44.15,
+     "stop",
+     0.9312
+    ],
+    [
+     45.0,
+     "stop",
+     0.9312
+    ],
+    [
+     47.33,
+     "stop",
+     0.9383
+    ],
+    [
+     48.0,
+     "stop",
+     0.9383
+    ],
+    [
+     48.2,
+     "stop",
+     0.9382
+    ],
+    [
+     51.0,
+     "stop",
+     0.9382
+    ],
+    [
+     52.18,
+     "stop",
+     0.9365
+    ],
+    [
+     54.0,
+     "stop",
+     0.9365
+    ],
+    [
+     55.35,
+     "stop",
+     0.948
+    ],
+    [
+     57.0,
+     "stop",
+     0.948
+    ],
+    [
+     60.0,
+     "stop",
+     0.948
+    ]
+   ],
+   "final_rule": "classifier"
+  },
+  {
+   "id": "hw-s03",
+   "segments": [
+    [
+     4.08,
+     "नमस्ते मैडम मैं बैंक से बोल रहा हूं"
+    ],
+    [
+     7.25,
+     "आपका खाता अगले दो घंटे में बंद हो"
+    ],
+    [
+     7.74,
+     "जाएगा"
+    ],
+    [
+     10.18,
+     "क्यों बंद हो जाएगा"
+    ],
+    [
+     14.15,
+     "आपका पैन कार्ड अपडेट नहीं है इसलिए खाता"
+    ],
+    [
+     15.79,
+     "ब्लॉक हो रहा है"
+    ],
+    [
+     19.77,
+     "मैं आपको एक मैसेज भेज रहा हूं उसमें"
+    ],
+    [
+     22.95,
+     "जो लिंक है उसे खोलकर अपनी डिटेल्स भरिए"
+    ],
+    [
+     25.0,
+     "अच्छा भर दिया"
+    ],
+    [
+     28.98,
+     "अभी आपके फोन पर एक कोड आया होगा"
+    ],
+    [
+     32.15,
+     "वो मुझे बताइए ताकि मैं खाता चालू कर"
+    ],
+    [
+     32.64,
+     "दूं"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "info",
+     0.9044
+    ],
+    [
+     6.0,
+     "caution",
+     0.9044
+    ],
+    [
+     7.25,
+     "stop",
+     0.963
+    ],
+    [
+     7.74,
+     "stop",
+     0.9704
+    ],
+    [
+     9.0,
+     "stop",
+     0.9704
+    ],
+    [
+     10.18,
+     "stop",
+     0.9618
+    ],
+    [
+     12.0,
+     "stop",
+     0.9618
+    ],
+    [
+     14.15,
+     "stop",
+     0.9582
+    ],
+    [
+     15.0,
+     "stop",
+     0.9582
+    ],
+    [
+     15.79,
+     "stop",
+     0.9558
+    ],
+    [
+     18.0,
+     "stop",
+     0.9558
+    ],
+    [
+     19.77,
+     "stop",
+     0.9553
+    ],
+    [
+     21.0,
+     "stop",
+     0.9553
+    ],
+    [
+     22.95,
+     "stop",
+     0.9607
+    ],
+    [
+     24.0,
+     "stop",
+     0.9607
+    ],
+    [
+     25.0,
+     "stop",
+     0.9581
+    ],
+    [
+     27.0,
+     "stop",
+     0.9581
+    ],
+    [
+     28.98,
+     "stop",
+     0.9595
+    ],
+    [
+     30.0,
+     "stop",
+     0.9595
+    ],
+    [
+     32.15,
+     "stop",
+     0.9545
+    ],
+    [
+     32.64,
+     "stop",
+     0.9533
+    ],
+    [
+     33.0,
+     "stop",
+     0.9533
+    ],
+    [
+     36.0,
+     "stop",
+     0.9533
+    ]
+   ],
+   "final_rule": "classifier"
+  },
+  {
+   "id": "hw-s04",
+   "segments": [
+    [
+     4.08,
+     "hello sir this is from the refund team"
+    ],
+    [
+     6.48,
+     "regarding your failed transaction of 2400"
+    ],
+    [
+     9.69,
+     "oh yes my payment failed yesterday"
+    ],
+    [
+     13.67,
+     "sir to process the refund quickly i will"
+    ],
+    [
+     16.85,
+     "need you to install a small app from"
+    ],
+    [
+     19.25,
+     "the play store called quick support"
+    ],
+    [
+     20.92,
+     "okay installing"
+    ],
+    [
+     24.9,
+     "now it will show a nine digit number"
+    ],
+    [
+     28.08,
+     "just read that out to me and keep"
+    ],
+    [
+     29.33,
+     "the screen on"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "info",
+     0.967
+    ],
+    [
+     6.0,
+     "caution",
+     0.967
+    ],
+    [
+     6.48,
+     "caution",
+     0.8256
+    ],
+    [
+     9.0,
+     "caution",
+     0.8256
+    ],
+    [
+     9.69,
+     "caution",
+     0.8068
+    ],
+    [
+     12.0,
+     "caution",
+     0.8068
+    ],
+    [
+     13.67,
+     "caution",
+     0.9295
+    ],
+    [
+     15.0,
+     "caution",
+     0.9295
+    ],
+    [
+     16.85,
+     "stop",
+     0.9445
+    ],
+    [
+     18.0,
+     "stop",
+     0.9445
+    ],
+    [
+     19.25,
+     "stop",
+     0.9328
+    ],
+    [
+     20.92,
+     "stop",
+     0.9375
+    ],
+    [
+     21.0,
+     "stop",
+     0.9375
+    ],
+    [
+     24.0,
+     "stop",
+     0.9375
+    ],
+    [
+     24.9,
+     "stop",
+     0.9407
+    ],
+    [
+     27.0,
+     "stop",
+     0.9407
+    ],
+    [
+     28.08,
+     "stop",
+     0.9194
+    ],
+    [
+     29.33,
+     "stop",
+     0.9096
+    ],
+    [
+     30.0,
+     "stop",
+     0.9096
+    ],
+    [
+     33.0,
+     "stop",
+     0.9096
+    ]
+   ],
+   "final_rule": "hook+action"
+  },
+  {
+   "id": "hw-s05",
+   "segments": [
+    [
+     4.08,
+     "hello aunty main rohit ka dost bol raha"
+    ],
+    [
+     4.95,
+     "hoon pehchana"
+    ],
+    [
+     7.38,
+     "haan beta kya hua"
+    ],
+    [
+     11.36,
+     "aunty rohit ka bike se bada accident ho"
+    ],
+    [
+     14.54,
+     "gaya hai aur usne ek aadmi ko maar"
+    ],
+    [
+     17.33,
+     "diya police ne usko pakad liya hai"
+    ],
+    [
+     20.54,
+     "hey bhagwan woh theek hai na"
+    ],
+    [
+     24.52,
+     "woh theek hai par thanedar bol raha hai"
+    ],
+    [
+     27.69,
+     "abhi pachas hazaar de do to case nahi"
+    ],
+    [
+     28.18,
+     "banega"
+    ],
+    [
+     32.15,
+     "uncle ko abhi mat batana woh pareshan ho"
+    ],
+    [
+     32.64,
+     "jayenge"
+    ],
+    [
+     36.62,
+     "main ek number bhejta hoon us par phonepe"
+    ],
+    [
+     37.87,
+     "kar dijiye jaldi"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "none",
+     0.5946
+    ],
+    [
+     4.95,
+     "none",
+     0.4748
+    ],
+    [
+     6.0,
+     "none",
+     0.4748
+    ],
+    [
+     7.38,
+     "none",
+     0.5566
+    ],
+    [
+     9.0,
+     "none",
+     0.5566
+    ],
+    [
+     11.36,
+     "info",
+     0.6855
+    ],
+    [
+     12.0,
+     "info",
+     0.6855
+    ],
+    [
+     14.54,
+     "info",
+     0.7347
+    ],
+    [
+     15.0,
+     "info",
+     0.7347
+    ],
+    [
+     17.33,
+     "caution",
+     0.7933
+    ],
+    [
+     18.0,
+     "caution",
+     0.7933
+    ],
+    [
+     20.54,
+     "caution",
+     0.75
+    ],
+    [
+     21.0,
+     "caution",
+     0.75
+    ],
+    [
+     24.0,
+     "caution",
+     0.75
+    ],
+    [
+     24.52,
+     "caution",
+     0.7259
+    ],
+    [
+     27.0,
+     "caution",
+     0.7259
+    ],
+    [
+     27.69,
+     "caution",
+     0.7639
+    ],
+    [
+     28.18,
+     "caution",
+     0.7627
+    ],
+    [
+     30.0,
+     "caution",
+     0.7627
+    ],
+    [
+     32.15,
+     "caution",
+     0.6911
+    ],
+    [
+     32.64,
+     "caution",
+     0.6951
+    ],
+    [
+     33.0,
+     "caution",
+     0.6951
+    ],
+    [
+     36.0,
+     "caution",
+     0.6951
+    ],
+    [
+     36.62,
+     "stop",
+     0.7242
+    ],
+    [
+     37.87,
+     "stop",
+     0.7493
+    ],
+    [
+     39.0,
+     "stop",
+     0.7493
+    ],
+    [
+     42.0,
+     "stop",
+     0.7493
+    ]
+   ],
+   "final_rule": "hook+action"
+  },
+  {
+   "id": "hw-s06",
+   "segments": [
+    [
+     4.08,
+     "bhaiya maine galti se aapke number par paanch"
+    ],
+    [
+     7.25,
+     "hazaar bhej diye hain please wapas kar do"
+    ],
+    [
+     10.85,
+     "mere paas toh koi paisa nahi aaya"
+    ],
+    [
+     14.82,
+     "aaya hai aap check karo main ek request"
+    ],
+    [
+     18.0,
+     "bhej raha hoon usme amount daal ke apna"
+    ],
+    [
+     20.41,
+     "pin dalo paisa wapas ho jayega"
+    ],
+    [
+     24.38,
+     "request aa gayi hogi accept karke pin daal"
+    ],
+    [
+     24.87,
+     "do"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "none",
+     0.5643
+    ],
+    [
+     6.0,
+     "none",
+     0.5643
+    ],
+    [
+     7.25,
+     "info",
+     0.5104
+    ],
+    [
+     9.0,
+     "info",
+     0.5104
+    ],
+    [
+     10.85,
+     "info",
+     0.5241
+    ],
+    [
+     12.0,
+     "info",
+     0.5241
+    ],
+    [
+     14.82,
+     "info",
+     0.612
+    ],
+    [
+     15.0,
+     "info",
+     0.612
+    ],
+    [
+     18.0,
+     "info",
+     0.6309
+    ],
+    [
+     20.41,
+     "info",
+     0.6701
+    ],
+    [
+     21.0,
+     "info",
+     0.6701
+    ],
+    [
+     24.0,
+     "info",
+     0.6701
+    ],
+    [
+     24.38,
+     "info",
+     0.697
+    ],
+    [
+     24.87,
+     "info",
+     0.6934
+    ],
+    [
+     27.0,
+     "info",
+     0.6934
+    ],
+    [
+     30.0,
+     "info",
+     0.6934
+    ]
+   ],
+   "final_rule": "cue"
+  },
+  {
+   "id": "hw-s07",
+   "segments": [
+    [
+     4.08,
+     "नमस्कार बिजली कार्यालय से बोल रहे हैं आपका"
+    ],
+    [
+     6.48,
+     "पिछला बिल जमा नहीं हुआ है"
+    ],
+    [
+     9.31,
+     "मैंने तो भर दिया था"
+    ],
+    [
+     13.28,
+     "सिस्टम में अपडेट नहीं है आज रात साढ़े"
+    ],
+    [
+     16.08,
+     "नौ बजे आपकी लाइट काट दी जाएगी"
+    ],
+    [
+     20.05,
+     "आप एक ऐप डाउनलोड कीजिए मैं उसमें आपका"
+    ],
+    [
+     21.69,
+     "बिल अपडेट कर दूंगा"
+    ],
+    [
+     25.67,
+     "अब उसमें दस रुपये का पेमेंट कीजिए अपने"
+    ],
+    [
+     26.92,
+     "डेबिट कार्ड से"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "none",
+     0.7633
+    ],
+    [
+     6.0,
+     "none",
+     0.7633
+    ],
+    [
+     6.48,
+     "none",
+     0.7399
+    ],
+    [
+     9.0,
+     "none",
+     0.7399
+    ],
+    [
+     9.31,
+     "none",
+     0.609
+    ],
+    [
+     12.0,
+     "none",
+     0.609
+    ],
+    [
+     13.28,
+     "info",
+     0.845
+    ],
+    [
+     15.0,
+     "caution",
+     0.845
+    ],
+    [
+     16.08,
+     "caution",
+     0.8231
+    ],
+    [
+     18.0,
+     "caution",
+     0.8231
+    ],
+    [
+     20.05,
+     "stop",
+     0.8933
+    ],
+    [
+     21.0,
+     "stop",
+     0.8933
+    ],
+    [
+     21.69,
+     "stop",
+     0.8821
+    ],
+    [
+     24.0,
+     "stop",
+     0.8821
+    ],
+    [
+     25.67,
+     "stop",
+     0.8725
+    ],
+    [
+     26.92,
+     "stop",
+     0.8697
+    ],
+    [
+     27.0,
+     "stop",
+     0.8697
+    ],
+    [
+     30.0,
+     "stop",
+     0.8697
+    ]
+   ],
+   "final_rule": "classifier"
+  },
+  {
+   "id": "hw-s08",
+   "segments": [
+    [
+     4.08,
+     "hi am i speaking with mr kapoor i"
+    ],
+    [
+     6.48,
+     "am from a wealth management firm"
+    ],
+    [
+     7.77,
+     "yes"
+    ],
+    [
+     11.75,
+     "we run a private group of five hundred"
+    ],
+    [
+     14.92,
+     "investors and last month everybody made forty percent"
+    ],
+    [
+     18.9,
+     "you only need to start with ten thousand"
+    ],
+    [
+     21.69,
+     "and our analyst will trade for you"
+    ],
+    [
+     23.75,
+     "is it safe"
+    ],
+    [
+     27.72,
+     "hundred percent safe sir returns are guaranteed by"
+    ],
+    [
+     28.59,
+     "our company"
+    ],
+    [
+     32.57,
+     "i will share the account details on whatsapp"
+    ],
+    [
+     35.75,
+     "just make the first payment today to block"
+    ],
+    [
+     36.62,
+     "your slot"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "none",
+     0.1598
+    ],
+    [
+     6.0,
+     "none",
+     0.1598
+    ],
+    [
+     6.48,
+     "none",
+     0.3445
+    ],
+    [
+     7.77,
+     "none",
+     0.3689
+    ],
+    [
+     9.0,
+     "none",
+     0.3689
+    ],
+    [
+     11.75,
+     "none",
+     0.4606
+    ],
+    [
+     12.0,
+     "none",
+     0.4606
+    ],
+    [
+     14.92,
+     "none",
+     0.4552
+    ],
+    [
+     15.0,
+     "none",
+     0.4552
+    ],
+    [
+     18.0,
+     "none",
+     0.4552
+    ],
+    [
+     18.9,
+     "none",
+     0.4254
+    ],
+    [
+     21.0,
+     "none",
+     0.4254
+    ],
+    [
+     21.69,
+     "none",
+     0.4714
+    ],
+    [
+     23.75,
+     "none",
+     0.489
+    ],
+    [
+     24.0,
+     "none",
+     0.489
+    ],
+    [
+     27.0,
+     "none",
+     0.489
+    ],
+    [
+     27.72,
+     "info",
+     0.8816
+    ],
+    [
+     28.59,
+     "caution",
+     0.9008
+    ],
+    [
+     30.0,
+     "caution",
+     0.9008
+    ],
+    [
+     32.57,
+     "caution",
+     0.9062
+    ],
+    [
+     33.0,
+     "caution",
+     0.9062
+    ],
+    [
+     35.75,
+     "stop",
+     0.8818
+    ],
+    [
+     36.0,
+     "stop",
+     0.8818
+    ],
+    [
+     36.62,
+     "stop",
+     0.884
+    ],
+    [
+     39.0,
+     "stop",
+     0.884
+    ],
+    [
+     42.0,
+     "stop",
+     0.884
+    ]
+   ],
+   "final_rule": "hook+action"
+  },
+  {
+   "id": "hw-s09",
+   "segments": [
+    [
+     4.08,
+     "this is an important message from the telecommunications"
+    ],
+    [
+     4.56,
+     "authority"
+    ],
+    [
+     8.54,
+     "your mobile connection will be terminated in two"
+    ],
+    [
+     10.18,
+     "hours because of misuse"
+    ],
+    [
+     11.85,
+     "what misuse"
+    ],
+    [
+     15.82,
+     "there are complaints of harassment messages sent from"
+    ],
+    [
+     18.62,
+     "a number registered on your identity documents"
+    ],
+    [
+     22.59,
+     "i am connecting you to the cyber police"
+    ],
+    [
+     25.0,
+     "so you can give a statement"
+    ],
+    [
+     28.98,
+     "sir you are now a suspect do not"
+    ],
+    [
+     32.15,
+     "end this call or talk to anyone else"
+    ],
+    [
+     36.13,
+     "for the no objection certificate you must pay"
+    ],
+    [
+     39.31,
+     "the clearance amount to the account we provide"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "none",
+     0.5399
+    ],
+    [
+     4.56,
+     "none",
+     0.5568
+    ],
+    [
+     6.0,
+     "none",
+     0.5568
+    ],
+    [
+     8.54,
+     "none",
+     0.7675
+    ],
+    [
+     9.0,
+     "none",
+     0.7675
+    ],
+    [
+     10.18,
+     "none",
+     0.779
+    ],
+    [
+     11.85,
+     "none",
+     0.7692
+    ],
+    [
+     12.0,
+     "none",
+     0.7692
+    ],
+    [
+     15.0,
+     "none",
+     0.7692
+    ],
+    [
+     15.82,
+     "none",
+     0.8007
+    ],
+    [
+     18.0,
+     "caution",
+     0.8007
+    ],
+    [
+     18.62,
+     "caution",
+     0.8597
+    ],
+    [
+     21.0,
+     "caution",
+     0.8597
+    ],
+    [
+     22.59,
+     "caution",
+     0.9245
+    ],
+    [
+     24.0,
+     "caution",
+     0.9245
+    ],
+    [
+     25.0,
+     "caution",
+     0.9139
+    ],
+    [
+     27.0,
+     "caution",
+     0.9139
+    ],
+    [
+     28.98,
+     "caution",
+     0.9132
+    ],
+    [
+     30.0,
+     "caution",
+     0.9132
+    ],
+    [
+     32.15,
+     "caution",
+     0.923
+    ],
+    [
+     33.0,
+     "caution",
+     0.923
+    ],
+    [
+     36.0,
+     "caution",
+     0.923
+    ],
+    [
+     36.13,
+     "caution",
+     0.893
+    ],
+    [
+     39.0,
+     "caution",
+     0.893
+    ],
+    [
+     39.31,
+     "stop",
+     0.8955
+    ],
+    [
+     42.0,
+     "stop",
+     0.8955
+    ],
+    [
+     45.0,
+     "stop",
+     0.8955
+    ]
+   ],
+   "final_rule": "hook+action"
+  },
+  {
+   "id": "hw-s10",
+   "segments": [
+    [
+     4.08,
+     "hello ji amazon ki taraf se part time"
+    ],
+    [
+     7.25,
+     "ka offer hai roz ka teen se chaar"
+    ],
+    [
+     7.74,
+     "hazaar"
+    ],
+    [
+     10.18,
+     "kya kaam karna hoga"
+    ],
+    [
+     14.15,
+     "bas products ko rating dena hai aur screenshot"
+    ],
+    [
+     17.33,
+     "bhejna hai pehle din ka paisa hum turant"
+    ],
+    [
+     18.2,
+     "dete hain"
+    ],
+    [
+     20.25,
+     "achha theek hai"
+    ],
+    [
+     24.23,
+     "ab premium task ke liye aapko pehle do"
+    ],
+    [
+     27.41,
+     "hazaar deposit karne honge woh commission ke saath"
+    ],
+    [
+     28.28,
+     "wapas aayega"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "none",
+     0.313
+    ],
+    [
+     6.0,
+     "none",
+     0.313
+    ],
+    [
+     7.25,
+     "none",
+     0.5267
+    ],
+    [
+     7.74,
+     "none",
+     0.5276
+    ],
+    [
+     9.0,
+     "none",
+     0.5276
+    ],
+    [
+     10.18,
+     "none",
+     0.4877
+    ],
+    [
+     12.0,
+     "none",
+     0.4877
+    ],
+    [
+     14.15,
+     "none",
+     0.4316
+    ],
+    [
+     15.0,
+     "none",
+     0.4316
+    ],
+    [
+     17.33,
+     "info",
+     0.5085
+    ],
+    [
+     18.0,
+     "info",
+     0.5085
+    ],
+    [
+     18.2,
+     "info",
+     0.5271
+    ],
+    [
+     20.25,
+     "info",
+     0.5126
+    ],
+    [
+     21.0,
+     "info",
+     0.5126
+    ],
+    [
+     24.0,
+     "info",
+     0.5126
+    ],
+    [
+     24.23,
+     "info",
+     0.5361
+    ],
+    [
+     27.0,
+     "info",
+     0.5361
+    ],
+    [
+     27.41,
+     "stop",
+     0.7772
+    ],
+    [
+     28.28,
+     "stop",
+     0.8048
+    ],
+    [
+     30.0,
+     "stop",
+     0.8048
+    ],
+    [
+     33.0,
+     "stop",
+     0.8048
+    ]
+   ],
+   "final_rule": "hook+action"
+  },
+  {
+   "id": "hw-s11",
+   "segments": [
+    [
+     4.08,
+     "मैं मुंबई के साइबर थाने से बात कर"
+    ],
+    [
+     7.25,
+     "रहा हूं आपके नाम से एक सिम ली"
+    ],
+    [
+     10.43,
+     "गई है जिससे गलत वीडियो भेजे गए हैं"
+    ],
+    [
+     13.25,
+     "मैंने कोई सिम नहीं ली"
+    ],
+    [
+     17.23,
+     "आपके आधार से ली गई है अब आपकी"
+    ],
+    [
+     20.02,
+     "गिरफ्तारी का वारंट जारी हो गया है"
+    ],
+    [
+     24.0,
+     "यह गुप्त जांच है आप कमरे का दरवाज़ा"
+    ],
+    [
+     26.79,
+     "बंद कर लीजिए और कैमरा चालू रखिए"
+    ],
+    [
+     30.77,
+     "अपनी एफडी तोड़कर पैसा हमारे बताए खाते में"
+    ],
+    [
+     33.95,
+     "डालिए जांच के बाद सब लौटा दिया जाएगा"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "none",
+     0.3389
+    ],
+    [
+     6.0,
+     "none",
+     0.3389
+    ],
+    [
+     7.25,
+     "none",
+     0.6987
+    ],
+    [
+     9.0,
+     "none",
+     0.6987
+    ],
+    [
+     10.43,
+     "none",
+     0.7569
+    ],
+    [
+     12.0,
+     "none",
+     0.7569
+    ],
+    [
+     13.25,
+     "none",
+     0.6877
+    ],
+    [
+     15.0,
+     "none",
+     0.6877
+    ],
+    [
+     17.23,
+     "none",
+     0.7639
+    ],
+    [
+     18.0,
+     "none",
+     0.7639
+    ],
+    [
+     20.02,
+     "caution",
+     0.8874
+    ],
+    [
+     21.0,
+     "stop",
+     0.8874
+    ],
+    [
+     24.0,
+     "stop",
+     0.9081
+    ],
+    [
+     26.79,
+     "stop",
+     0.898
+    ],
+    [
+     27.0,
+     "stop",
+     0.898
+    ],
+    [
+     30.0,
+     "stop",
+     0.898
+    ],
+    [
+     30.77,
+     "stop",
+     0.9169
+    ],
+    [
+     33.0,
+     "stop",
+     0.9169
+    ],
+    [
+     33.95,
+     "stop",
+     0.9163
+    ],
+    [
+     36.0,
+     "stop",
+     0.9163
+    ],
+    [
+     39.0,
+     "stop",
+     0.9163
+    ]
+   ],
+   "final_rule": "classifier"
+  },
+  {
+   "id": "hw-s12",
+   "segments": [
+    [
+     4.08,
+     "congratulations sir your mobile number has won the"
+    ],
+    [
+     6.48,
+     "lucky draw of a reputed company"
+    ],
+    [
+     9.31,
+     "really what did i win"
+    ],
+    [
+     13.28,
+     "a brand new car or twelve lakh cash"
+    ],
+    [
+     16.46,
+     "but first the gst and registration has to"
+    ],
+    [
+     17.33,
+     "be cleared"
+    ],
+    [
+     21.31,
+     "you can pay the registration charge of eight"
+    ],
+    [
+     24.1,
+     "thousand five hundred through upi right now"
+    ]
+   ],
+   "levels": [
+    [
+     3.0,
+     "none",
+     0.0
+    ],
+    [
+     4.08,
+     "none",
+     0.7282
+    ],
+    [
+     6.0,
+     "none",
+     0.7282
+    ],
+    [
+     6.48,
+     "info",
+     0.9645
+    ],
+    [
+     9.0,
+     "caution",
+     0.9645
+    ],
+    [
+     9.31,
+     "caution",
+     0.9345
+    ],
+    [
+     12.0,
+     "caution",
+     0.9345
+    ],
+    [
+     13.28,
+     "caution",
+     0.902
+    ],
+    [
+     15.0,
+     "caution",
+     0.902
+    ],
+    [
+     16.46,
+     "caution",
+     0.8996
+    ],
+    [
+     17.33,
+     "caution",
+     0.9052
+    ],
+    [
+     18.0,
+     "caution",
+     0.9052
+    ],
+    [
+     21.0,
+     "caution",
+     0.9052
+    ],
+    [
+     21.31,
+     "stop",
+     0.8425
+    ],
+    [
+     24.0,
+     "stop",
+     0.8425
+    ],
+    [
+     24.1,
+     "stop",
+     0.8635
+    ],
+    [
+     27.0,
+     "stop",
+     0.8635
+    ],
+    [
+     30.0,
+     "stop",
+     0.8635
+    ]
+   ],
+   "final_rule": "hook+action"
+  }
+ ]
+}

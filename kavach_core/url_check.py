@@ -123,20 +123,34 @@ def label_of(registrable: str) -> str:
     return parts[0]
 
 
-def levenshtein(a: str, b: str, cap: int = 3) -> int:
+def osa_distance(a: str, b: str, cap: int = 3) -> int:
+    """Optimal-string-alignment edit distance (adjacent transposition costs 1)."""
     if abs(len(a) - len(b)) > cap:
         return cap + 1
-    prev = list(range(len(b) + 1))
-    for i, ca in enumerate(a, 1):
-        cur = [i] + [0] * len(b)
-        best = cur[0]
-        for j, cb in enumerate(b, 1):
-            cur[j] = min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb))
-            best = min(best, cur[j])
-        if best > cap:
-            return cap + 1
-        prev = cur
-    return prev[-1]
+    d = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]
+    for i in range(len(a) + 1):
+        d[i][0] = i
+    for j in range(len(b) + 1):
+        d[0][j] = j
+    for i in range(1, len(a) + 1):
+        for j in range(1, len(b) + 1):
+            cost = 0 if a[i - 1] == b[j - 1] else 1
+            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost)
+            if i > 1 and j > 1 and a[i - 1] == b[j - 2] and a[i - 2] == b[j - 1]:
+                d[i][j] = min(d[i][j], d[i - 2][j - 2] + 1)
+    return d[len(a)][len(b)]
+
+
+def is_typosquat(label: str, genuine: str) -> bool:
+    """Distance 1 (substitution, deletion or swap, not a pure extra letter) for names of
+    5+ letters; distance 2 only for names of 8+ letters. Tuned to keep real words such
+    as 'kotaku' (kotak + u) or 'usbank' out."""
+    if len(genuine) < 5 or label == genuine:
+        return False
+    dist = osa_distance(label, genuine, 2)
+    if dist == 1:
+        return len(label) <= len(genuine)
+    return dist == 2 and len(genuine) >= 8 and len(label) == len(genuine)
 
 
 def deconfuse(s: str) -> str:
@@ -146,7 +160,8 @@ def deconfuse(s: str) -> str:
 
 
 class UrlChecker:
-    def __init__(self, model: LinearModel | None = None, path: Path | str = ASSETS / "genuine_domains.json"):
+    def __init__(self, model: LinearModel | None = None, path: Path | str = ASSETS / "genuine_domains.json",
+                 model_threshold: float | None = None):
         d = json.loads(Path(path).read_text(encoding="utf-8"))
         self.domains = set(d["domains"])
         self.suffixes = d["trusted_suffixes"]
@@ -154,8 +169,11 @@ class UrlChecker:
         self.bad_tlds = set(d["suspicious_tlds"])
         self.shorteners = set(d["shorteners"])
         self.user_content = d["user_content_hosts"]
-        self.genuine_labels = sorted({label_of(x) for x in self.domains if "." in x} | {"sbi"})
+        self.genuine_labels = sorted({label_of(x) for x in self.domains if "." in x} | {b for b in self.brands if len(b) >= 5})
         self.model = model
+        # model-only flags need a higher bar than rule flags; the value is chosen on the dev
+        # split for <= 3% false alarms on popular benign domains (models/classifiers/train_url.py)
+        self.model_threshold = model_threshold if model_threshold is not None else (model.threshold if model else 0.5)
 
     # --- allow-list
     def is_genuine(self, host: str) -> bool:
@@ -174,9 +192,9 @@ class UrlChecker:
                     continue
                 if p == b:
                     return b
-                if p.startswith(b) and p[len(b):] in GLUE_WORDS:
+                if p.startswith(b) and (p[len(b):] in GLUE_WORDS or p[len(b):] in self.brands):
                     return b
-                if p.endswith(b) and p[: -len(b)] in GLUE_WORDS:
+                if p.endswith(b) and (p[: -len(b)] in GLUE_WORDS or p[: -len(b)] in self.brands):
                     return b
         return None
 
@@ -230,8 +248,7 @@ class UrlChecker:
                     reasons.append("homoglyph")
                     nearest = g
                     break
-                dist = levenshtein(label, g, 2)
-                if 1 <= dist <= (1 if len(g) <= 5 else 2):
+                if is_typosquat(label, g):
                     reasons.append("typosquat")
                     nearest = g
                     break
@@ -246,8 +263,11 @@ class UrlChecker:
         if weak >= 2:
             rule_risk = max(rule_risk, 0.75)
         model_p = self.model.predict_proba(self.model_text(host, path)) if self.model else 0.0
-        if model_p >= 0.5 and not reasons:
+        # rescale so that the dev-chosen model threshold maps to 0.5 (suspicious)
+        t = self.model_threshold
+        model_risk = 0.5 * model_p / t if model_p < t else 0.5 + 0.5 * (model_p - t) / max(1e-6, 1 - t)
+        if model_risk >= 0.5 and not reasons:
             reasons.append("model")
-        risk = max(rule_risk, model_p)
+        risk = max(rule_risk, model_risk)
         level = "dangerous" if risk >= 0.8 else "suspicious" if risk >= 0.5 else "unknown"
         return UrlVerdict(url, host, reg, round(risk, 4), level, reasons, nearest)

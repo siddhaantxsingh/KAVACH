@@ -24,8 +24,10 @@ from .features import LinearModel, fnv1a32  # noqa: F401  (fnv1a32 re-exported f
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
 
+# ASCII-only constructs (no \b, no Unicode \s) so the Kotlin port behaves identically;
+# extract_urls() maps every whitespace character to ' ' first.
 URL_RE = re.compile(
-    r"((?:https?://|hxxps?://|www\.)[^\s<>\"']+|\b(?:[a-z0-9-]+\.)+[a-z]{2,24}(?:/[^\s<>\"']*)?)",
+    r"((?:https?://|hxxps?://|www\.)[^ <>\"']+|(?<![A-Za-z0-9_])(?:[a-z0-9-]+\.)+[a-z]{2,24}(?:/[^ <>\"']*)?)",
     re.IGNORECASE,
 )
 MULTI_SUFFIXES = {
@@ -75,6 +77,7 @@ class UrlVerdict:
 
 
 def extract_urls(text: str) -> list[str]:
+    text = "".join(" " if c.isspace() else c for c in text)
     out = []
     for m in URL_RE.finditer(text):
         u = m.group(1).rstrip(".,;:!?)]}")
@@ -165,7 +168,9 @@ class UrlChecker:
         d = json.loads(Path(path).read_text(encoding="utf-8"))
         self.domains = set(d["domains"])
         self.suffixes = d["trusted_suffixes"]
-        self.brands = sorted(set(d["brands"]), key=len, reverse=True)
+        self.brand_set = set(d["brands"])
+        # deterministic order (longest first, then alphabetical) - identical in Kotlin
+        self.brands = sorted(self.brand_set, key=lambda b: (-len(b), b))
         self.bad_tlds = set(d["suspicious_tlds"])
         self.shorteners = set(d["shorteners"])
         self.user_content = d["user_content_hosts"]
@@ -192,9 +197,9 @@ class UrlChecker:
                     continue
                 if p == b:
                     return b
-                if p.startswith(b) and (p[len(b):] in GLUE_WORDS or p[len(b):] in self.brands):
+                if p.startswith(b) and (p[len(b):] in GLUE_WORDS or p[len(b):] in self.brand_set):
                     return b
-                if p.endswith(b) and (p[: -len(b)] in GLUE_WORDS or p[: -len(b)] in self.brands):
+                if p.endswith(b) and (p[: -len(b)] in GLUE_WORDS or p[: -len(b)] in self.brand_set):
                     return b
         return None
 
@@ -226,7 +231,9 @@ class UrlChecker:
         tld = host.rsplit(".", 1)[-1] if "." in host else ""
         if tld in self.bad_tlds:
             reasons.append("suspicious_tld")
-        if uhost != host or any(ord(c) > 127 for c in uhost):
+        # any internationalised label is treated as a look-alike signal: decoders differ
+        # between platforms and genuine Indian bank / payment sites are all ASCII
+        if "xn--" in host or uhost != host or any(ord(c) > 127 for c in uhost):
             reasons.append("homoglyph")
 
         brand = self.find_brand(host)

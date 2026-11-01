@@ -1,0 +1,6 @@
+# LoRA fine-tuning (Colab / Kaggle GPU)
+torch
+transformers>=4.50,<5
+peft>=0.13
+accelerate
+safetensors

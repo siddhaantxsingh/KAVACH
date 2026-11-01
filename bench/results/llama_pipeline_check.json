@@ -1,0 +1,17 @@
+{
+  "model": "tiny llama3.2-shaped (2 layers, dim 128, GQA 4/2, llama3 rope scaling x32, tied embeddings)",
+  "conversion_max_abs_logit_diff": 3.5762786865234375e-07,
+  "conversion_ok": true,
+  "tiny_fp32.pte": {
+    "size_kb": 2102.5,
+    "max_abs_logit_diff": 4.76837158203125e-07,
+    "mean_rel_err": 4.187782280951069e-07,
+    "argmax_agreement": 1.0
+  },
+  "tiny_8da4w.pte": {
+    "size_kb": 353.2,
+    "max_abs_logit_diff": 0.21409308910369873,
+    "mean_rel_err": 0.199637308716774,
+    "argmax_agreement": 1.0
+  }
+}

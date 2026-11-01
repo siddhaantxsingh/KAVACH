@@ -1,0 +1,6 @@
+# Export / evaluation environment for the Llama pipeline.
+# Keep executorch equal to the Android runtime version (android/gradle.properties: executorchVersion).
+# torch/torchao versions are resolved by executorch's own install requirements.
+executorch==1.4.0
+safetensors
+transformers>=4.50,<5

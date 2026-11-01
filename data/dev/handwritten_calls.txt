@@ -1,0 +1,226 @@
+# Hand-written evaluation calls (independent of the generator templates).
+# Written freely, in a different style from data/synth/call_templates.py, to check
+# that models generalise beyond template phrasing. NOT a substitute for the
+# human-recorded test set (demo/recording_protocol.md).
+#
+# Format:  ### <id> | <label: scam|benign> | <type> | <lang>
+#          C: caller line      V: victim line
+#          A line starting with "C$:" is the first request for OTP/PIN/money/remote access
+#          (money moment) used for the "caught before payment request" metric.
+
+### hw-s01 | scam | digital_arrest | hing
+C: namaskar main delhi police headquarter se bol raha hoon aapki ek complaint aayi hai
+V: kaisi complaint ji
+C: aapke aadhar number se ek bank khata khula hai jisme crore rupaye ka hawala paisa aaya hai
+V: mera koi aisa khata nahi hai
+C: dekhiye abhi aapko CBI officer se connect kar raha hoon unse seedhe baat kariye
+C: main CBI se bol raha hoon aapke upar FIR register ho chuki hai aur supreme court se notice aaya hai
+V: sir main toh pensioner hoon
+C: jab tak investigation chal rahi hai aap video call par hi rahenge aur ghar mein kisi ko kuch nahi bolenge
+C$: aapke khate ka saara balance verify karne ke liye ek RBI account mein bhejna padega jo baad mein wapas mil jayega
+
+### hw-s02 | scam | courier_parcel | en
+C: good morning madam i am calling from the customs office at mumbai airport
+V: yes what happened
+C: a package addressed to you from malaysia was opened and we found narcotics and twenty sim cards inside
+V: i have not ordered anything from malaysia
+C: that is what everyone says madam the package has your phone number and aadhaar details on it
+C: i am transferring this to the narcotics officer handling the case please hold
+C: madam this case is serious you can be arrested today itself unless you cooperate fully
+C: keep this conversation strictly private do not speak to your husband or anyone till we close the matter
+C$: to clear your name you will need to deposit a refundable amount into our verification account
+
+### hw-s03 | scam | kyc_bank | hi
+C: नमस्ते मैडम मैं बैंक से बोल रहा हूं आपका खाता अगले दो घंटे में बंद हो जाएगा
+V: क्यों बंद हो जाएगा
+C: आपका पैन कार्ड अपडेट नहीं है इसलिए खाता ब्लॉक हो रहा है
+C: मैं आपको एक मैसेज भेज रहा हूं उसमें जो लिंक है उसे खोलकर अपनी डिटेल्स भरिए
+V: अच्छा भर दिया
+C$: अभी आपके फोन पर एक कोड आया होगा वो मुझे बताइए ताकि मैं खाता चालू कर दूं
+
+### hw-s04 | scam | remote_support | en
+C: hello sir this is from the refund team regarding your failed transaction of 2400
+V: oh yes my payment failed yesterday
+C: sir to process the refund quickly i will need you to install a small app from the play store called quick support
+V: okay installing
+C$: now it will show a nine digit number just read that out to me and keep the screen on
+
+### hw-s05 | scam | family_emergency | hing
+C: hello aunty main rohit ka dost bol raha hoon pehchana
+V: haan beta kya hua
+C: aunty rohit ka bike se bada accident ho gaya hai aur usne ek aadmi ko maar diya police ne usko pakad liya hai
+V: hey bhagwan woh theek hai na
+C: woh theek hai par thanedar bol raha hai abhi pachas hazaar de do to case nahi banega
+C: uncle ko abhi mat batana woh pareshan ho jayenge
+C$: main ek number bhejta hoon us par phonepe kar dijiye jaldi
+
+### hw-s06 | scam | upi_collect_refund | hing
+C: bhaiya maine galti se aapke number par paanch hazaar bhej diye hain please wapas kar do
+V: mere paas toh koi paisa nahi aaya
+C: aaya hai aap check karo main ek request bhej raha hoon usme amount daal ke apna pin dalo paisa wapas ho jayega
+C$: request aa gayi hogi accept karke pin daal do
+
+### hw-s07 | scam | electricity_bill | hi
+C: नमस्कार बिजली कार्यालय से बोल रहे हैं आपका पिछला बिल जमा नहीं हुआ है
+V: मैंने तो भर दिया था
+C: सिस्टम में अपडेट नहीं है आज रात साढ़े नौ बजे आपकी लाइट काट दी जाएगी
+C: आप एक ऐप डाउनलोड कीजिए मैं उसमें आपका बिल अपडेट कर दूंगा
+C$: अब उसमें दस रुपये का पेमेंट कीजिए अपने डेबिट कार्ड से
+
+### hw-s08 | scam | investment_trading | en
+C: hi am i speaking with mr kapoor i am from a wealth management firm
+V: yes
+C: we run a private group of five hundred investors and last month everybody made forty percent
+C: you only need to start with ten thousand and our analyst will trade for you
+V: is it safe
+C: hundred percent safe sir returns are guaranteed by our company
+C$: i will share the account details on whatsapp just make the first payment today to block your slot
+
+### hw-s09 | scam | sim_telecom | en
+C: this is an important message from the telecommunications authority
+C: your mobile connection will be terminated in two hours because of misuse
+V: what misuse
+C: there are complaints of harassment messages sent from a number registered on your identity documents
+C: i am connecting you to the cyber police so you can give a statement
+C: sir you are now a suspect do not end this call or talk to anyone else
+C$: for the no objection certificate you must pay the clearance amount to the account we provide
+
+### hw-s10 | scam | job_task | hing
+C: hello ji amazon ki taraf se part time ka offer hai roz ka teen se chaar hazaar
+V: kya kaam karna hoga
+C: bas products ko rating dena hai aur screenshot bhejna hai pehle din ka paisa hum turant dete hain
+V: achha theek hai
+C$: ab premium task ke liye aapko pehle do hazaar deposit karne honge woh commission ke saath wapas aayega
+
+### hw-s11 | scam | digital_arrest | hi
+C: मैं मुंबई के साइबर थाने से बात कर रहा हूं आपके नाम से एक सिम ली गई है जिससे गलत वीडियो भेजे गए हैं
+V: मैंने कोई सिम नहीं ली
+C: आपके आधार से ली गई है अब आपकी गिरफ्तारी का वारंट जारी हो गया है
+C: यह गुप्त जांच है आप कमरे का दरवाज़ा बंद कर लीजिए और कैमरा चालू रखिए
+C$: अपनी एफडी तोड़कर पैसा हमारे बताए खाते में डालिए जांच के बाद सब लौटा दिया जाएगा
+
+### hw-s12 | scam | lottery_prize | en
+C: congratulations sir your mobile number has won the lucky draw of a reputed company
+V: really what did i win
+C: a brand new car or twelve lakh cash but first the gst and registration has to be cleared
+C$: you can pay the registration charge of eight thousand five hundred through upi right now
+
+### hw-s13 | scam | kyc_bank | en
+C: sir your credit card reward points worth seven thousand are expiring tonight
+V: oh how do i redeem them
+C: i will send a link on sms you just enter the card details there and the points will convert into cash
+C$: after that you will get a code tell it to me so i can complete the redemption
+
+### hw-s14 | scam | courier_parcel | hing
+C: hello main blue dart se bol raha hoon aapka parcel return ho gaya hai address galat tha
+V: achha kaunsa parcel
+C: sir naya address update karne ke liye hum ek link bhej rahe hain usme do rupaye ka charge lagega
+C$: link khol ke apne card se do rupaye pay kar dijiye
+
+### hw-s15 | scam | remote_support | hi
+C: मैं कस्टमर केयर से बोल रहा हूं आपने जो शिकायत की थी उसका रिफंड आना है
+V: हां जी बताइए
+C: आप अपने फोन में एक ऐप डाल लीजिए उससे मैं आपका रिफंड डायरेक्ट भेज दूंगा
+C$: अब अपना यूपीआई ऐप खोलिए और जो नंबर मैं बोलूं वो डालिए
+
+### hw-s16 | scam | digital_arrest | en
+C: madam this is the narcotics control bureau your name has appeared in an international smuggling ring
+V: that is impossible
+C: we will verify that but until then you are not allowed to leave your house or contact your lawyer
+C: stay on this skype call our officer will take your statement on camera
+C$: all your savings must be shifted to the supervision account so the court can check the source of funds
+
+### hw-b01 | benign | bank_fraud_alert | en
+C: good afternoon this is the security desk of your bank calling about a payment of 12,999 at an electronics website
+V: no that was not me
+C: thank you for confirming i have blocked the card right away and a replacement will reach you in a week
+C: please remember the bank will never call you to ask for an otp or pin and you should not share it with anyone
+V: okay thank you
+C: you can also check the dispute status in the official app thank you for banking with us
+
+### hw-b02 | benign | delivery | hing
+C: bhaiya swiggy se order aaya hai gate pe guard rok raha hai
+V: haan main bol deta hoon aa jao
+C: aur bhaiya app mein jo otp hai woh bata do delivery complete karni hai
+V: haan woh 4 7 2 1 hai
+C: thank you sir rating de dena
+
+### hw-b03 | benign | relative_money | hi
+C: मम्मी मेरा फोन का बिल आया है आठ सौ का
+V: ठीक है बेटा
+C: आप यूपीआई से भेज दोगे मेरे पास अभी पैसे नहीं हैं अगले हफ्ते स्टाइपेंड आएगा
+V: हां अभी भेजती हूं खाना खाया तुमने
+C: हां मम्मी खा लिया
+
+### hw-b04 | benign | scam_gossip | hing
+C: suna tumne gupta ji ke saath kya hua
+V: nahi kya hua
+C: unko koi police wala bankar video call pe dhamka raha tha ki aapka arrest hoga
+C: woh dar ke paise bhejne wale the par bete ne phone le liya aur 1930 pe complaint kar di
+V: achha hua bach gaye aajkal yeh bahut ho raha hai
+C: haan bank wale bhi bolte hain kabhi otp mat do
+
+### hw-b05 | benign | police_genuine | en
+C: hello this is head constable singh from the sector 18 police station
+V: yes sir
+C: we received your application for the tenant verification you need to come and sign the form
+C: please bring the rent agreement and the tenant's aadhaar copy any weekday before five
+V: okay i will come tomorrow
+
+### hw-b06 | benign | insurance_offer | hi
+C: नमस्ते सर मैं आपकी बीमा कंपनी से बोल रही हूं आपकी हेल्थ पॉलिसी अगले महीने खत्म हो रही है
+V: अच्छा कितना प्रीमियम है
+C: पिछली बार जितना ही है आप हमारी वेबसाइट या ऐप से रिन्यू कर सकते हैं या एजेंट घर आ जाएगा
+V: ठीक है मैं वेबसाइट से कर लूंगा
+
+### hw-b07 | benign | office | en
+C: hey can you share your screen in the standup i want to see the dashboard
+V: sure give me a second
+C: also finance asked us to transfer the remaining amount to the vendor once the purchase order is approved
+V: okay i will do it after lunch
+
+### hw-b08 | benign | family_chat | hing
+C: papa aapne woh dawai li ya nahi
+V: haan le li beta
+C: aur woh bank wala kaam ho gaya pension ka form jama kar diya
+V: haan kal branch jaake de diya manager ne bola ek hafte mein ho jayega
+C: chalo achha hai
+
+### hw-b09 | benign | bank_genuine_kyc | en
+C: hello sir i am calling from your home branch your kyc documents are due for periodic update
+V: what do i need to do
+C: nothing over the phone sir just visit the branch with your aadhaar and pan or update it in the official banking app under profile
+V: alright i will visit on saturday
+C: thank you sir have a good day
+
+### hw-b10 | benign | doctor | hi
+C: नमस्ते मैं डॉक्टर अग्रवाल की क्लिनिक से बोल रही हूं कल आपका चेकअप है
+V: हां याद है
+C: आप सुबह दस बजे आ जाइए और पुरानी रिपोर्ट साथ लेकर आइए
+V: ठीक है धन्यवाद
+
+### hw-b11 | benign | delivery | en
+C: hi this is the courier guy from blue dart there is a parcel for you
+V: oh great where are you
+C: i am near the temple i cannot find your house can you send me your location on whatsapp
+V: sure sending
+C: got it i will be there in five minutes
+
+### hw-b12 | benign | relative_money | en
+C: hi uncle it's priya my train ticket got cancelled and i have to book a cab to the airport
+V: oh no how much
+C: around two thousand can you send it on gpay i will give it to papa to return
+V: sure beta sending now call me when you reach
+
+### hw-b13 | benign | scam_gossip | en
+C: did you see the advisory from the bank today
+V: no what did it say
+C: it said there is no such thing as digital arrest and if anyone calls claiming to be police and asks for money just hang up and call 1930
+V: good that they are telling people
+C: yes mummy almost fell for one last year remember
+
+### hw-b14 | benign | office | hing
+C: sir server pe ek link bheja hai click karke report download kar lo
+V: haan dekh leta hoon
+C: aur client ka payment aaj aa jayega toh salary time pe ho jayegi
+V: theek hai

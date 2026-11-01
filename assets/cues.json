@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "Scam-cue lexicon shared by the Python reference implementation and the Android apps. Phrases are matched on normalised text (see kavach_core/normalize.py). DSL: tokens separated by spaces; a token ending in '*' is a prefix match; the token '~' is a gap of 0-3 arbitrary tokens. Categories marked negatable are suppressed when a negator appears inside the match or within 3 tokens before / 2 tokens after it (e.g. 'never share your OTP').",
+  "doc": "Scam-cue lexicon shared by the Python reference implementation and the Android apps. Phrases are matched on normalised text (see kavach_core/normalize.py). DSL: tokens separated by spaces; a token ending in '*' is a prefix match; the token '~' is a gap of 0-3 arbitrary tokens. Categories marked negatable are suppressed when a negator appears inside the match or within 2 tokens before / 2 tokens after it (e.g. 'never share your OTP').",
   "negators": [
     "not",
     "never",
@@ -174,7 +174,18 @@
         "संदिग्ध लेनदेन",
         "आतंकी फंडिंग",
         "आपके नाम ~ केस",
-        "आपके नाम पर"
+        "आपके नाम पर",
+        "complaint* ~ against",
+        "complaint* ~ registered",
+        "sim ~ issued",
+        "on your aadhaar",
+        "on your aadhar",
+        "against ~ aadhaar",
+        "aadhaar par",
+        "aadhar par",
+        "शिकायत* ~ दर्ज",
+        "सिम ~ जारी",
+        "आधार पर"
       ]
     },
     "threat": {
@@ -261,7 +272,13 @@
         "आज रात",
         "आखिरी मौका",
         "आखिरी चेतावनी",
-        "फौरन"
+        "फौरन",
+        "warna",
+        "otherwise ~ cannot",
+        "minute ke andar",
+        "minutes ~ otherwise",
+        "वरना",
+        "मिनट के अंदर"
       ]
     },
     "isolation": {
@@ -322,7 +339,17 @@
         "गोपनीय",
         "गुप्त जांच",
         "कमरे ~ अकेले",
-        "कमरा बंद"
+        "कमरा बंद",
+        "if you tell ~ family",
+        "tell ~ family ~ arrest*",
+        "family ~ will ~ arrest*",
+        "they will ~ arrested",
+        "ghar walon ko bataya",
+        "ghar walon ~ arrest*",
+        "woh bhi arrest",
+        "घर वालों को ~ बताया",
+        "घर वालों ~ अरेस्ट",
+        "वे भी अरेस्ट"
       ]
     },
     "credential_request": {
@@ -368,7 +395,17 @@
         "पिन डालिए",
         "सीवीवी",
         "कार्ड नंबर",
-        "पासवर्ड ~ बता*"
+        "पासवर्ड ~ बता*",
+        "share ~ o t p",
+        "tell ~ o t p",
+        "o t p ~ share",
+        "o t p ~ bata*",
+        "tell ~ code",
+        "code ~ bata*",
+        "code ~ tell",
+        "read ~ code",
+        "कोड ~ बता*",
+        "कोड ~ बोल*"
       ]
     },
     "remote_access": {
@@ -407,7 +444,12 @@
         "ऐप ~ इंस्टॉल",
         "एप ~ डाउनलोड",
         "एप ~ इंस्टॉल",
-        "एपीके"
+        "एपीके",
+        "sharing permission",
+        "screen ~ permission",
+        "permission ~ screen",
+        "स्क्रीन ~ परमिशन",
+        "परमिशन ~ स्क्रीन"
       ]
     },
     "link_click": {
@@ -487,7 +529,34 @@
         "स्कैन",
         "रिक्वेस्ट ~ अप्रूव",
         "पेमेंट ~ कर*",
-        "भुगतान"
+        "भुगतान",
+        "pay ~ tax",
+        "withdrawal tax",
+        "tax ~ bhar*",
+        "google pay",
+        "gpay",
+        "phonepe",
+        "phone pe",
+        "paytm",
+        "hazaar ~ bhej*",
+        "thousand ~ send",
+        "lakh ~ send",
+        "send ~ immediately",
+        "approve kijiye",
+        "deposit",
+        "prepay",
+        "pay first",
+        "pehle ~ pay",
+        "टैक्स ~ भर*",
+        "विड्रॉल",
+        "गूगल पे",
+        "फोनपे",
+        "पेटीएम",
+        "हजार ~ भेज*",
+        "हज़ार ~ भेज*",
+        "लाख ~ भेज*",
+        "अप्रूव",
+        "डिपॉजिट"
       ]
     },
     "reward_greed": {
@@ -539,7 +608,22 @@
         "टास्क",
         "कमीशन",
         "बोनस",
-        "गिफ्ट"
+        "गिफ्ट",
+        "profit",
+        "profits",
+        "percent profit",
+        "daily ~ percent",
+        "vip member*",
+        "returns",
+        "earn*",
+        "kama sakte",
+        "kamai",
+        "मुनाफा",
+        "प्रॉफिट",
+        "वीआईपी",
+        "रोज ~ परसेंट",
+        "कमा सकते",
+        "कमाई"
       ]
     },
     "family_emergency": {

@@ -1,0 +1,302 @@
+{
+  "rules": {
+    "n_scam": 503,
+    "n_benign": 497,
+    "stop_recall": 0.7913,
+    "caution_recall": 0.8608,
+    "caught_before_money": 0.6481,
+    "time_to_stop_median_s": 16.7,
+    "time_to_stop_p90_s": 27.1,
+    "false_stop_rate": 0.0,
+    "false_caution_rate": 0.0,
+    "by_type": {
+      "bank_fraud_alert": {
+        "n": 55,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "courier_parcel": {
+        "n": 47,
+        "stop_recall": 0.9787,
+        "before_money": 0.8936
+      },
+      "delivery": {
+        "n": 55,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "digital_arrest": {
+        "n": 47,
+        "stop_recall": 1.0,
+        "before_money": 0.8936
+      },
+      "doctor": {
+        "n": 59,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "electricity_bill": {
+        "n": 42,
+        "stop_recall": 0.2381,
+        "before_money": 0.2381
+      },
+      "family_chat": {
+        "n": 61,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "family_emergency": {
+        "n": 48,
+        "stop_recall": 0.75,
+        "before_money": 0.2292
+      },
+      "insurance_offer": {
+        "n": 51,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "investment_trading": {
+        "n": 44,
+        "stop_recall": 0.8636,
+        "before_money": 0.8636
+      },
+      "job_task": {
+        "n": 46,
+        "stop_recall": 0.7826,
+        "before_money": 0.7826
+      },
+      "kyc_bank": {
+        "n": 56,
+        "stop_recall": 0.9464,
+        "before_money": 0.5357
+      },
+      "lottery_prize": {
+        "n": 43,
+        "stop_recall": 0.5349,
+        "before_money": 0.5349
+      },
+      "office": {
+        "n": 55,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "police_genuine": {
+        "n": 47,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "relative_money": {
+        "n": 55,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "remote_support": {
+        "n": 57,
+        "stop_recall": 0.807,
+        "before_money": 0.7368
+      },
+      "scam_gossip": {
+        "n": 59,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "sim_telecom": {
+        "n": 36,
+        "stop_recall": 0.9444,
+        "before_money": 0.8333
+      },
+      "upi_collect_refund": {
+        "n": 37,
+        "stop_recall": 0.7838,
+        "before_money": 0.5946
+      }
+    },
+    "by_lang": {
+      "en": {
+        "stop_recall": 0.9172,
+        "false_stop": 0.0
+      },
+      "hi": {
+        "stop_recall": 0.675,
+        "false_stop": 0.0
+      },
+      "hing": {
+        "stop_recall": 0.7849,
+        "false_stop": 0.0
+      }
+    },
+    "misses": [
+      "test-00008",
+      "test-00017",
+      "test-00041",
+      "test-00042",
+      "test-00062",
+      "test-00068",
+      "test-00069",
+      "test-00071",
+      "test-00076",
+      "test-00079",
+      "test-00087",
+      "test-00107",
+      "test-00109",
+      "test-00121",
+      "test-00126",
+      "test-00135",
+      "test-00159",
+      "test-00160",
+      "test-00183",
+      "test-00188"
+    ],
+    "false_stops": []
+  },
+  "combined": {
+    "n_scam": 503,
+    "n_benign": 497,
+    "stop_recall": 0.8648,
+    "caution_recall": 0.9583,
+    "caught_before_money": 0.7694,
+    "time_to_stop_median_s": 12.8,
+    "time_to_stop_p90_s": 20.7,
+    "false_stop_rate": 0.0,
+    "false_caution_rate": 0.0765,
+    "by_type": {
+      "bank_fraud_alert": {
+        "n": 55,
+        "false_stop": 0.0,
+        "false_caution": 0.5091
+      },
+      "courier_parcel": {
+        "n": 47,
+        "stop_recall": 1.0,
+        "before_money": 1.0
+      },
+      "delivery": {
+        "n": 55,
+        "false_stop": 0.0,
+        "false_caution": 0.0727
+      },
+      "digital_arrest": {
+        "n": 47,
+        "stop_recall": 1.0,
+        "before_money": 0.9574
+      },
+      "doctor": {
+        "n": 59,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "electricity_bill": {
+        "n": 42,
+        "stop_recall": 0.4524,
+        "before_money": 0.3095
+      },
+      "family_chat": {
+        "n": 61,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "family_emergency": {
+        "n": 48,
+        "stop_recall": 0.9167,
+        "before_money": 0.5208
+      },
+      "insurance_offer": {
+        "n": 51,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "investment_trading": {
+        "n": 44,
+        "stop_recall": 0.8636,
+        "before_money": 0.8636
+      },
+      "job_task": {
+        "n": 46,
+        "stop_recall": 0.7826,
+        "before_money": 0.7826
+      },
+      "kyc_bank": {
+        "n": 56,
+        "stop_recall": 0.9821,
+        "before_money": 0.7857
+      },
+      "lottery_prize": {
+        "n": 43,
+        "stop_recall": 0.8837,
+        "before_money": 0.8837
+      },
+      "office": {
+        "n": 55,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "police_genuine": {
+        "n": 47,
+        "false_stop": 0.0,
+        "false_caution": 0.1277
+      },
+      "relative_money": {
+        "n": 55,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "remote_support": {
+        "n": 57,
+        "stop_recall": 0.807,
+        "before_money": 0.7368
+      },
+      "scam_gossip": {
+        "n": 59,
+        "false_stop": 0.0,
+        "false_caution": 0.0
+      },
+      "sim_telecom": {
+        "n": 36,
+        "stop_recall": 1.0,
+        "before_money": 1.0
+      },
+      "upi_collect_refund": {
+        "n": 37,
+        "stop_recall": 0.7838,
+        "before_money": 0.6216
+      }
+    },
+    "by_lang": {
+      "en": {
+        "stop_recall": 0.9554,
+        "false_stop": 0.0
+      },
+      "hi": {
+        "stop_recall": 0.8,
+        "false_stop": 0.0
+      },
+      "hing": {
+        "stop_recall": 0.8441,
+        "false_stop": 0.0
+      }
+    },
+    "misses": [
+      "test-00008",
+      "test-00041",
+      "test-00042",
+      "test-00068",
+      "test-00071",
+      "test-00076",
+      "test-00079",
+      "test-00087",
+      "test-00107",
+      "test-00121",
+      "test-00126",
+      "test-00159",
+      "test-00204",
+      "test-00206",
+      "test-00208",
+      "test-00217",
+      "test-00221",
+      "test-00238",
+      "test-00239",
+      "test-00271"
+    ],
+    "false_stops": []
+  }
+}

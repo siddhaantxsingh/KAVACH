@@ -13,8 +13,13 @@ Feature set for a normalised token list t:
   w|<tok>                word unigrams
   b|<tok_i> <tok_i+1>    word bigrams
   c|<ngram>              character 3..5-grams of " " + tok + " "
+  k|<category>           cue-lexicon category hits (optional, "cue_features")
+  kk|<catA>+<catB>       co-occurring category pairs, sorted (optional)
 Each feature string is UTF-8 encoded and hashed with 32-bit FNV-1a, modulo DIM.
-Values are 1 + ln(count), then the vector is L2-normalised.
+Values are 1 + ln(count) (cue features multiplied by CUE_SCALE), then the
+vector is L2-normalised. Cue features let the model learn the kill-chain-like
+combinations (authority + isolation, hook + payment) that generalise across
+phrasings far better than raw n-grams.
 """
 from __future__ import annotations
 
@@ -30,6 +35,7 @@ from .normalize import tokens as _tokens
 FNV_OFFSET = 0x811C9DC5
 FNV_PRIME = 0x01000193
 CHAR_N = (3, 4, 5)
+CUE_SCALE = 3.0
 
 
 def fnv1a32(s: str) -> int:
@@ -54,14 +60,32 @@ def feature_strings(toks: list[str]) -> list[tuple[str, int]]:
     return out
 
 
-def vectorize_tokens(toks: list[str], dim: int) -> tuple[dict[int, float], list[tuple[int, int]]]:
+def cue_feature_strings(hits) -> list[tuple[str, int]]:
+    """hits: objects with .category and .start (lexicon.CueHit)."""
+    out = [("k|" + h.category, h.start) for h in hits]
+    cats = sorted({h.category for h in hits})
+    for i in range(len(cats)):
+        for j in range(i + 1, len(cats)):
+            out.append(("kk|" + cats[i] + "+" + cats[j], -1))
+    return out
+
+
+def vectorize_tokens(toks: list[str], dim: int, hits=None) -> tuple[dict[int, float], list[tuple[int, int]]]:
     counts: dict[int, int] = {}
+    cue_idx: set[int] = set()
     attrib: list[tuple[int, int]] = []
     for f, ti in feature_strings(toks):
         idx = fnv1a32(f) % dim
         counts[idx] = counts.get(idx, 0) + 1
         attrib.append((idx, ti))
-    vec = {k: 1.0 + math.log(v) for k, v in counts.items()}
+    if hits is not None:
+        for f, ti in cue_feature_strings(hits):
+            idx = fnv1a32(f) % dim
+            counts[idx] = counts.get(idx, 0) + 1
+            cue_idx.add(idx)
+            if ti >= 0:
+                attrib.append((idx, ti))
+    vec = {k: (1.0 + math.log(v)) * (CUE_SCALE if k in cue_idx else 1.0) for k, v in counts.items()}
     norm = math.sqrt(sum(v * v for v in vec.values())) or 1.0
     return {k: v / norm for k, v in vec.items()}, attrib
 
@@ -74,9 +98,13 @@ class LinearModel:
     bias: float
     threshold: float = 0.5
     meta: dict | None = None
+    lexicon: object | None = None  # set when meta["cue_features"] is true
+
+    def _hits(self, toks: list[str]):
+        return self.lexicon.match_tokens(toks) if self.lexicon is not None else None
 
     def logit_tokens(self, toks: list[str]) -> float:
-        vec, _ = vectorize_tokens(toks, self.dim)
+        vec, _ = vectorize_tokens(toks, self.dim, self._hits(toks))
         return self.bias + sum(float(self.weights[k]) * v for k, v in vec.items())
 
     def predict_proba(self, text: str) -> float:
@@ -85,7 +113,7 @@ class LinearModel:
     def explain(self, text: str, top_k: int = 5) -> list[tuple[str, float]]:
         """Top tokens by positive contribution to the logit."""
         toks = _tokens(text)
-        vec, attrib = vectorize_tokens(toks, self.dim)
+        vec, attrib = vectorize_tokens(toks, self.dim, self._hits(toks))
         per_tok = [0.0] * len(toks)
         # distribute each hashed feature's contribution evenly over its occurrences
         occ: dict[int, int] = {}
@@ -118,6 +146,8 @@ class LinearModel:
             "char_n": list(CHAR_N),
             "hash": "fnv1a32-utf8",
             "values": "1+ln(count), l2-normalised",
+            "cue_features": self.lexicon is not None,
+            "cue_scale": CUE_SCALE,
         }
         if self.meta:
             meta.update(self.meta)
@@ -129,7 +159,12 @@ class LinearModel:
         meta = json.loads((d / f"{name}.json").read_text(encoding="utf-8"))
         w = np.fromfile(d / f"{name}.bin", dtype="<f4")
         assert w.shape[0] == meta["dim"], "weight file does not match dim"
-        return cls(name, meta["dim"], w, float(meta["bias"]), float(meta.get("threshold", 0.5)), meta)
+        lex = None
+        if meta.get("cue_features"):
+            from .lexicon import Lexicon
+
+            lex = Lexicon()
+        return cls(name, meta["dim"], w, float(meta["bias"]), float(meta.get("threshold", 0.5)), meta, lex)
 
 
 def _sigmoid(z: float) -> float:
@@ -139,13 +174,14 @@ def _sigmoid(z: float) -> float:
     return e / (1.0 + e)
 
 
-def build_matrix(texts: list[str], dim: int):
+def build_matrix(texts: list[str], dim: int, lexicon=None):
     """Sparse CSR matrix for training with scikit-learn."""
     from scipy.sparse import csr_matrix
 
     rows, cols, vals = [], [], []
     for r, t in enumerate(texts):
-        vec, _ = vectorize_tokens(_tokens(t), dim)
+        tk = _tokens(t)
+        vec, _ = vectorize_tokens(tk, dim, lexicon.match_tokens(tk) if lexicon is not None else None)
         for k, v in vec.items():
             rows.append(r)
             cols.append(k)

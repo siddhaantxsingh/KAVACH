@@ -28,6 +28,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from kavach_core.features import LinearModel, build_matrix  # noqa: E402
 from kavach_core.guardian import WINDOW_TOKENS  # noqa: E402
+from kavach_core.lexicon import Lexicon  # noqa: E402
 from kavach_core.normalize import tokens  # noqa: E402
 
 SYNTH = ROOT / "data" / "synth" / "out"
@@ -88,9 +89,9 @@ def metrics(y: np.ndarray, p: np.ndarray, thr: float) -> dict:
     }
 
 
-def fit(name: str, tr, dv, te, dim: int, extra_meta: dict) -> dict:
+def fit(name: str, tr, dv, te, dim: int, extra_meta: dict, lexicon=None) -> dict:
     t0 = time.time()
-    Xtr, Xdv, Xte = build_matrix(tr[0], dim), build_matrix(dv[0], dim), build_matrix(te[0], dim)
+    Xtr, Xdv, Xte = (build_matrix(x[0], dim, lexicon) for x in (tr, dv, te))
     ytr, ydv, yte = np.array(tr[1]), np.array(dv[1]), np.array(te[1])
     best = None
     grid = []
@@ -109,7 +110,7 @@ def fit(name: str, tr, dv, te, dim: int, extra_meta: dict) -> dict:
     thr = round(float(thr), 2)
     pte = clf.predict_proba(Xte)[:, 1]
     w = clf.coef_[0].astype(np.float32)
-    model = LinearModel(name, dim, w, float(clf.intercept_[0]), thr, {"C": C, **extra_meta})
+    model = LinearModel(name, dim, w, float(clf.intercept_[0]), thr, {"C": C, **extra_meta}, lexicon)
     model.save(OUT)
     # parity check: our own inference == sklearn
     k = min(200, len(te[0]))
@@ -124,6 +125,7 @@ def fit(name: str, tr, dv, te, dim: int, extra_meta: dict) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dim", type=int, default=1 << 18)
+    ap.add_argument("--no-cue-features", action="store_true")
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     REPORTS.mkdir(parents=True, exist_ok=True)
@@ -131,10 +133,11 @@ def main() -> None:
     tr = call_windows(SYNTH / "calls_train.jsonl")
     dv = call_windows(SYNTH / "calls_dev.jsonl")
     te = call_windows(SYNTH / "calls_test.jsonl")
-    r1 = fit("cue_model", tr[:2], dv[:2], te[:2], a.dim, {"window_tokens": WINDOW_TOKENS, "task": "call transcript window -> scam"})
+    lex = None if a.no_cue_features else Lexicon()
+    r1 = fit("cue_model", tr[:2], dv[:2], te[:2], a.dim, {"window_tokens": WINDOW_TOKENS, "task": "call transcript window -> scam"}, lex)
 
     rows = sms_rows()
-    r2 = fit("sms_model", rows["train"], rows["dev"], rows["test"], a.dim, {"task": "sms/notification text -> scam"})
+    r2 = fit("sms_model", rows["train"], rows["dev"], rows["test"], a.dim, {"task": "sms/notification text -> scam"}, lex)
     (REPORTS / "text_models.json").write_text(json.dumps([r1, r2], indent=2))
 
 

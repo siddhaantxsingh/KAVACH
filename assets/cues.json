@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "doc": "Scam-cue lexicon shared by the Python reference implementation and the Android apps. Phrases are matched on normalised text (see kavach_core/normalize.py). DSL: tokens separated by spaces; a token ending in '*' is a prefix match; the token '~' is a gap of 0-3 arbitrary tokens. Categories marked negatable are suppressed when a negator appears inside the match or within 2 tokens before / 2 tokens after it (e.g. 'never share your OTP').",
+  "doc": "Scam-cue lexicon shared by the Python reference implementation and the Android apps. Phrases are matched on normalised text (see kavach_core/normalize.py). DSL: tokens separated by spaces; a token ending in '*' is a prefix match; the token '~' is a gap of 0-4 arbitrary tokens. Categories marked negatable are suppressed when a negator appears inside the match or within 2 tokens before / 2 tokens after it (e.g. 'never share your OTP').",
   "negators": [
     "not",
     "never",
@@ -123,7 +123,13 @@
         "कस्टमर केयर",
         "बिजली विभाग",
         "बिजली दफ्तर",
-        "सिम कार्ड"
+        "सिम कार्ड",
+        "bank se bol*",
+        "from ~ bank",
+        "calling from ~ bank",
+        "बैंक से",
+        "बैंक की ओर से",
+        "बैंक की तरफ से"
       ]
     },
     "identity_misuse": {
@@ -405,7 +411,13 @@
         "code ~ tell",
         "read ~ code",
         "कोड ~ बता*",
-        "कोड ~ बोल*"
+        "कोड ~ बोल*",
+        "card details",
+        "enter ~ card",
+        "card ~ details",
+        "कोड आया",
+        "code aaya ~ bata*",
+        "पिन डाल*"
       ]
     },
     "remote_access": {
@@ -556,7 +568,21 @@
         "हज़ार ~ भेज*",
         "लाख ~ भेज*",
         "अप्रूव",
-        "डिपॉजिट"
+        "डिपॉजिट",
+        "first payment",
+        "make ~ payment",
+        "pay ~ upi",
+        "through upi",
+        "upi ~ pay*",
+        "registration ~ charge*",
+        "registration ~ fee",
+        "pay ~ charge*",
+        "recharge ~ account",
+        "work account",
+        "pin dal*",
+        "pin daal*",
+        "apna pin",
+        "upi pin daal*"
       ]
     },
     "reward_greed": {
@@ -623,7 +649,12 @@
         "वीआईपी",
         "रोज ~ परसेंट",
         "कमा सकते",
-        "कमाई"
+        "कमाई",
+        "reward points",
+        "points ~ cash",
+        "points ~ expir*",
+        "guaranteed",
+        "गारंटी*"
       ]
     },
     "family_emergency": {

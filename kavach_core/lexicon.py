@@ -3,7 +3,7 @@
 Phrase DSL (see assets/cues.json):
   * tokens are separated by spaces and matched against normalised tokens;
   * a token ending in '*' is a prefix match ("arrest*" matches "arrested");
-  * the token '~' is a gap of 0..3 arbitrary tokens.
+  * the token '~' is a gap of 0..4 arbitrary tokens.
 
 Negatable categories are suppressed when a negator token appears inside the
 matched span, within 2 tokens before it, or within 2 tokens after it, so that
@@ -18,7 +18,7 @@ from pathlib import Path
 from .normalize import normalize, tokens
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
-GAP_MAX = 3
+GAP_MAX = 4
 NEG_BEFORE = 2
 NEG_AFTER = 2
 
@@ -103,11 +103,27 @@ class Lexicon:
         return any(toks[k] in self.negators for k in range(lo, hi))
 
     def match_tokens(self, toks: list[str]) -> list[CueHit]:
+        """All cue hits. Semantics: per category, phrases in file order, start positions
+        ascending; a token already covered by a hit of the same category cannot start
+        another hit of that category. Candidate starts are pre-indexed by first token."""
+        positions: dict[str, list[int]] = {}
+        for i, t in enumerate(toks):
+            positions.setdefault(t, []).append(i)
+        prefix_cache: dict[str, list[int]] = {}
+
+        def starts(first: str) -> list[int]:
+            if first.endswith("*") and len(first) > 1:
+                if first not in prefix_cache:
+                    pre = first[:-1]
+                    prefix_cache[first] = sorted(i for t, ps in positions.items() if t.startswith(pre) for i in ps)
+                return prefix_cache[first]
+            return positions.get(first, [])
+
         hits: list[CueHit] = []
         for cat in self.categories.values():
             covered: set[int] = set()
             for pat, raw in zip(cat.phrases, cat.raw_phrases):
-                for i in range(len(toks)):
+                for i in starts(pat[0]):
                     if i in covered:
                         continue
                     e = _match_at(pat, toks, i)

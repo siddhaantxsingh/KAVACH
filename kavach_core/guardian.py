@@ -12,7 +12,10 @@ Pipeline per call
 
 Classifier levels use two consecutive ticks to avoid one-window spikes:
   CAUTION  if p >= p_caution on 2 consecutive ticks
-  STOP     if p >= p_stop    on 2 consecutive ticks and kill-chain >= CAUTION
+  STOP     if p >= p_stop    on 2 consecutive ticks and (kill-chain >= CAUTION
+           or an action/payment cue is active)
+Classifier veto: a weak rule-only STOP (hook+action, multi-action, score) is
+held at CAUTION while the classifier stayed below p_veto on the last 3 ticks.
 """
 from __future__ import annotations
 
@@ -34,7 +37,12 @@ RESCAN_OVERLAP = 12
 @dataclass
 class GuardianConfig:
     p_caution: float = 0.80
-    p_stop: float = 0.93
+    p_stop: float = 0.80  # tuned on dev+handwritten, bench/results/guardian_tuning.json
+    # weak rule-only STOPs (hook+action, multi-action, score) become CAUTION when the
+    # classifier has been confidently benign on the recent windows; strong rules
+    # (isolation+authority, authority+identity+threat, cross-channel) are never vetoed
+    p_veto: float = 0.50
+    veto_rules: tuple = ("hook+action", "multi-action", "score")
     llm_escalate_conf: float = 0.80
     lang: str = "hi"
     killchain: KillChainConfig = field(default_factory=KillChainConfig)
@@ -132,9 +140,13 @@ class Guardian:
         a = self.kc.assess(now)
 
         level, rule = a.level, a.rule
+        if (self.model is not None and level == "stop" and rule in self.cfg.veto_rules and self.level != "stop"
+                and max(self.p_hist[-3:]) < self.cfg.p_veto):
+            level, rule = "caution", rule + "(vetoed)"
         last2 = self.p_hist[-2:]
+        action_cue = bool(set(a.active) & {"credential_request", "remote_access", "link_click", "payment_request"})
         if len(last2) == 2:
-            if min(last2) >= self.cfg.p_stop and LEVELS.index(a.level) >= LEVELS.index("caution"):
+            if min(last2) >= self.cfg.p_stop and (LEVELS.index(a.level) >= LEVELS.index("caution") or action_cue):
                 if LEVELS.index("stop") > LEVELS.index(level):
                     level, rule = "stop", "classifier"
             elif min(last2) >= self.cfg.p_caution and LEVELS.index(level) < LEVELS.index("caution"):

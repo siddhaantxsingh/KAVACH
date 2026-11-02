@@ -14,6 +14,13 @@
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <!-- App Inspector needs to see installed apps (side-loaded prototype; see docs/threat_model.md for the Play-policy design) -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
+    <!-- same-phone link between KAVACH Guardian and KAVACH Shield: only apps signed with
+         the same key can hold this permission, so no other app can read or fake messages -->
+    <permission android:name="io.kavach.permission.LINK" android:protectionLevel="signature" />
+    <uses-permission android:name="io.kavach.permission.LINK" />
+    <queries>
+        <package android:name="io.kavach.guardian" />
+    </queries>
     <!-- deliberately NO INTERNET permission: nothing can leave this phone -->
 
     <application

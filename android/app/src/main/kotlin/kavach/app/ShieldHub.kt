@@ -18,7 +18,9 @@ import kavach.core.KillChain
 import kavach.core.LlmContract
 import kavach.core.MessageVerdict
 import kavach.shared.DeviceLink
+import kavach.shared.KavachLink
 import kavach.shared.LlamaAdvisor
+import kavach.shared.LocalLink
 import kavach.shared.Ui
 import java.io.File
 import java.util.concurrent.Executors
@@ -45,7 +47,9 @@ object ShieldHub {
     @Volatile var last: Assessment? = null
     @Volatile var linkState = "not started"
     @Volatile var guardianLevel = "none"
-    private var link: DeviceLink? = null
+    private var btLink: DeviceLink? = null
+    private var localLink: LocalLink? = null
+    private val links: List<KavachLink> get() = listOfNotNull(btLink, localLink)
     private var advisor: LlamaAdvisor? = null
     private var lastStopAt = 0L
 
@@ -122,7 +126,10 @@ object ShieldHub {
             // the risky call itself becomes cross-channel evidence on this phone: a dangerous
             // link or APK during / after a suspicious call escalates to STOP (cross-channel-multi)
             if (lv == "caution" || lv == "stop") feed(ctx, KcEvent(now(), "call", "scam_call", 2.0, "guardian:$lv"), forward = false)
-            if (lv == "stop") showStop(ctx, force = true, reason = say)
+            if (lv == "stop") {
+                // Same phone: the Guardian screen already shows STOP and has spoken; don't cover it.
+                if (m["same_device"] == true) familyAlert(ctx, say) else showStop(ctx, force = true, reason = say)
+            }
         }
     }
 
@@ -130,7 +137,7 @@ object ShieldHub {
     private fun feed(ctx: Context, ev: KcEvent, forward: Boolean) {
         val kc = killChain ?: return
         kc.add(ev)
-        if (forward && ev.kind in KillChain.CROSS_KINDS) link?.sendEvent(ev)
+        if (forward && ev.kind in KillChain.CROSS_KINDS) links.forEach { it.sendEvent(ev) }
         val a = kc.assess(now())
         val prev = last?.level
         last = a
@@ -163,7 +170,7 @@ object ShieldHub {
     }
 
     /** Optional: SMS a trusted family member on STOP (off unless a number is configured and SEND_SMS granted). */
-    private fun familyAlert(ctx: Context, text: String) {
+    fun familyAlert(ctx: Context, text: String) {
         val p = ctx.getSharedPreferences("kavach", Context.MODE_PRIVATE)
         val number = p.getString("family_number", null)?.takeIf { it.isNotBlank() } ?: return
         if (ctx.checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) return
@@ -211,13 +218,17 @@ object ShieldHub {
 
     // ------------------------------------------------------------------ link to the Guardian
     fun startLink(ctx: Context) {
-        if (link != null) return
-        if (android.os.Build.VERSION.SDK_INT >= 31 && ctx.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            linkState = "Bluetooth permission needed"; changed(); return
-        }
         val app = ctx.applicationContext
-        link = DeviceLink(app, onMessage = { m -> onGuardianMessage(app, m) }, onState = { s -> linkState = s; changed() }).also { it.startServer() }
+        // same-phone link (Guardian installed on this phone) - always on, costs nothing
+        if (localLink == null) {
+            localLink = LocalLink(app, LocalLink.GUARDIAN_PACKAGE, onMessage = { m -> onGuardianMessage(app, m) },
+                onState = { s -> linkState = s; changed() }).also { it.start() }
+        }
+        // Bluetooth link for a Guardian on another phone
+        if (btLink != null) return
+        if (android.os.Build.VERSION.SDK_INT >= 31 && ctx.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) return
+        btLink = DeviceLink(app, onMessage = { m -> onGuardianMessage(app, m) }, onState = { s -> linkState = s; changed() }).also { it.startServer() }
     }
 
-    fun stopLink() { link?.stop(); link = null }
+    fun stopLink() { btLink?.stop(); btLink = null; localLink?.stop(); localLink = null }
 }

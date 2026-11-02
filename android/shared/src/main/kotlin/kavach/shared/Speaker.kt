@@ -3,7 +3,9 @@ package kavach.shared
 import android.content.Context
 import android.media.AudioAttributes
 import android.os.Bundle
+import android.os.SystemClock
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import java.util.Locale
 
@@ -17,6 +19,8 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
         private set
     @Volatile var hindiAvailable = false
         private set
+    @Volatile private var speaking = false
+    @Volatile private var lastSpokeAt = 0L
 
     override fun onInit(status: Int) {
         ready = status == TextToSpeech.SUCCESS
@@ -27,13 +31,28 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build(),
         )
         tts.setSpeechRate(0.92f) // a little slower for elderly listeners
+        tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(id: String?) { speaking = true; lastSpokeAt = SystemClock.elapsedRealtime() }
+            override fun onDone(id: String?) { speaking = false; lastSpokeAt = SystemClock.elapsedRealtime() }
+            @Deprecated("Deprecated in Java") override fun onError(id: String?) { speaking = false; lastSpokeAt = SystemClock.elapsedRealtime() }
+        })
     }
+
+    /**
+     * True while a warning is being spoken and for [tailMs] afterwards. The Guardian's own
+     * microphone hears its warnings; this lets it ignore them instead of reacting to its own
+     * words ("police", "arrest", "1930" …).
+     */
+    fun isSpeakingOrJustSpoke(tailMs: Long = 1200): Boolean =
+        speaking || SystemClock.elapsedRealtime() - lastSpokeAt < tailMs
 
     /** Interrupts anything being spoken: a STOP warning must never queue behind a CAUTION. */
     fun speak(text: String, lang: String, id: String = "kavach-${System.nanoTime()}") {
         if (!ready || text.isBlank()) return
         val loc = if (lang == "hi" && hindiAvailable) HINDI else ENGLISH_IN
         tts.language = loc
+        speaking = true
+        lastSpokeAt = SystemClock.elapsedRealtime()
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, Bundle(), id)
     }
 

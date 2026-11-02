@@ -107,15 +107,17 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
 
     @Suppress("MissingPermission")
     private fun pickPhone() {
-        if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissionsIfNeeded(); return
+        val names = arrayListOf("This phone (KAVACH Shield is installed here)")
+        val addrs = arrayListOf(kavach.shared.LocalLink.SAME_PHONE)
+        val btAllowed = Build.VERSION.SDK_INT < 31 || checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        if (btAllowed) {
+            val bonded = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter?.bondedDevices?.toList() ?: emptyList()
+            for (d in bonded) { names.add("Bluetooth: " + (d.name ?: d.address)); addrs.add(d.address) }
         }
-        val bonded = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter?.bondedDevices?.toList() ?: emptyList()
-        if (bonded.isEmpty()) { status.text = "Pair the user's phone in Bluetooth settings first."; return }
-        AlertDialog.Builder(this).setTitle("User's phone (running KAVACH Shield)").setItems(bonded.map { it.name ?: it.address }.toTypedArray()) { _, w ->
-            linkAddr = bonded[w].address
+        AlertDialog.Builder(this).setTitle("Where is KAVACH Shield running?").setItems(names.toTypedArray()) { _, w ->
+            linkAddr = addrs[w]
             getPreferences(Context.MODE_PRIVATE).edit().putString("link", linkAddr).apply()
-            status.text = "Will link to ${bonded[w].name} when guarding starts."
+            status.text = "Will link to: ${names[w]} when guarding starts."
         }.show()
     }
 

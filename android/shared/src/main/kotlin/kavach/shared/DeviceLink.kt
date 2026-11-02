@@ -24,7 +24,7 @@ import java.util.UUID
  * The user's phone runs the server; the Guardian connects to it (it was paired once).
  */
 @SuppressLint("MissingPermission") // callers check BLUETOOTH_CONNECT before starting the link
-class DeviceLink(context: Context, private val onMessage: (Map<String, Any?>) -> Unit, private val onState: (String) -> Unit) {
+class DeviceLink(context: Context, private val onMessage: (Map<String, Any?>) -> Unit, private val onState: (String) -> Unit) : KavachLink {
     private val adapter: BluetoothAdapter? = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
     @Volatile private var socket: BluetoothSocket? = null
     @Volatile private var server: BluetoothServerSocket? = null
@@ -95,15 +95,13 @@ class DeviceLink(context: Context, private val onMessage: (Map<String, Any?>) ->
         }
     }
 
-    @Synchronized fun send(msg: Map<String, Any?>): Boolean {
+    @Synchronized override fun send(msg: Map<String, Any?>): Boolean {
         val o = out ?: return false
         return try { o.write((MiniJson.write(msg) + "\n").toByteArray(Charsets.UTF_8)); o.flush(); true }
         catch (t: Throwable) { Log.w(TAG, "send failed", t); false }
     }
 
-    fun sendEvent(ev: KcEvent) = send(linkedMapOf("type" to "event", "t" to ev.t, "channel" to ev.channel, "kind" to ev.kind, "weight" to ev.weight, "detail" to ev.detail))
-
-    fun stop() {
+    override fun stop() {
         running = false
         try { server?.close() } catch (_: Throwable) { }
         try { socket?.close() } catch (_: Throwable) { }

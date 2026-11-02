@@ -18,7 +18,9 @@ import kavach.core.GuardianConfig
 import kavach.core.MiniJson
 import kavach.core.Verdict
 import kavach.shared.DeviceLink
+import kavach.shared.KavachLink
 import kavach.shared.KavachRuntime
+import kavach.shared.LocalLink
 import kavach.shared.LlamaAdvisor
 import kavach.shared.PerfStats
 import kavach.shared.Speaker
@@ -55,7 +57,8 @@ class GuardianService : Service() {
     private var asr: AsrEngine? = null
     private var advisor: LlamaAdvisor? = null
     private var speaker: Speaker? = null
-    private var link: DeviceLink? = null
+    private var link: KavachLink? = null
+    private var ignoredOwnVoice = 0
     private var demo: DemoPlayer? = null
     private var log: FileWriter? = null
     private val finals = ArrayList<String>()
@@ -122,6 +125,12 @@ class GuardianService : Service() {
 
     private fun onFinalSegment(text: String) {
         val t = callTime()
+        // The microphone also hears KAVACH's own spoken warning; never treat it as the caller.
+        if (speaker?.isSpeakingOrJustSpoke() == true) {
+            ignoredOwnVoice++
+            GuardianBus.status("ignored our own spoken warning ($ignoredOwnVoice)")
+            return
+        }
         engine.execute {
             val g = guardian ?: return@execute
             g.onSegment(text, t)
@@ -171,12 +180,17 @@ class GuardianService : Service() {
     }
 
     private fun connectLink(address: String) {
-        val bm = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager ?: return
-        val dev = try { bm.adapter?.getRemoteDevice(address) } catch (t: Throwable) { null } ?: return
-        link = DeviceLink(this, onMessage = { m ->
+        val onMsg: (Map<String, Any?>) -> Unit = { m ->
             // events from the user's phone (dangerous link, risky APK, screen share) join this call's kill-chain
             DeviceLink.eventFrom(m, callTime())?.let { ev -> engine.execute { guardian?.addExternal(ev); tickNow() } }
-        }, onState = { s -> GuardianBus.status("phone link: $s") }).also { it.connect(dev) }
+        }
+        if (address == LocalLink.SAME_PHONE) {
+            link = LocalLink(this, LocalLink.SHIELD_PACKAGE, onMsg) { s -> GuardianBus.status("Shield link: $s") }.also { it.start() }
+            return
+        }
+        val bm = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager ?: return
+        val dev = try { bm.adapter?.getRemoteDevice(address) } catch (t: Throwable) { null } ?: return
+        link = DeviceLink(this, onMessage = onMsg, onState = { s -> GuardianBus.status("phone link: $s") }).also { it.connect(dev) }
     }
 
     // ---- per-session benchmark log (bench/parse_session.py turns these into plots)

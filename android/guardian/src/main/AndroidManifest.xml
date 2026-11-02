@@ -8,6 +8,13 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- same-phone link between KAVACH Guardian and KAVACH Shield: only apps signed with
+         the same key can hold this permission, so no other app can read or fake messages -->
+    <permission android:name="io.kavach.permission.LINK" android:protectionLevel="signature" />
+    <uses-permission android:name="io.kavach.permission.LINK" />
+    <queries>
+        <package android:name="io.kavach.shield" />
+    </queries>
     <!-- deliberately NO INTERNET permission: nothing can leave this phone -->
 
     <application

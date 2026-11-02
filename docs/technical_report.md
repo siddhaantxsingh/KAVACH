@@ -132,8 +132,13 @@ speech models (ExecuTorch Qualcomm/MediaTek backends) is Phase 2.
   SMS + Accessibility + overlay, sideloaded, named like a bank/KYC/challan app. **Screen-share
   Guard v0** (preview) raises STOP when a payment or banking app comes to the foreground while
   a remote-access app is active.
-* **Device link**: Bluetooth RFCOMM carrying newline-delimited JSON events. Both phones work
-  offline.
+* **Device link**: Bluetooth RFCOMM carrying newline-delimited JSON events when the Guardian is
+  another phone. A **same-phone link** (explicit broadcasts protected by a signature-level
+  permission) is used when Guardian and Shield are installed on one Android phone and the call
+  is on another phone, e.g. an iPhone, on speaker. This is our team's demo setup. Both work offline.
+* **Own-voice filter**: the Guardian ignores ASR segments recognised while it is speaking a
+  warning and for 1.2 s afterwards. Otherwise its own warning ("police", "arrest", "1930")
+  could raise its level.
 
 # 4. Arm-specific engineering
 

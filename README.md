@@ -64,6 +64,10 @@ scripts/push_models.sh --official-spinquant      # stock Llama 3.2 1B (until the
 # or your fine-tuned model: models/llama/README.md, then scripts/push_models.sh --llama <pte> <tokenizer.model>
 ```
 
+**Only one Android phone?** Install *both* apps on it (build both on the same computer), take
+the scam call on any other phone (an iPhone is fine) on speaker next to it, and in the
+Guardian choose **Link phone → This phone**. See `demo/jury_demo_runbook.md`.
+
 Without any models the Guardian still works in **Demo replay** mode. With ASR but no Llama
 it runs the rule + classifier path, which is the fail-safe design.
 
@@ -72,7 +76,7 @@ it runs the rule + classifier path, which is the fail-safe design.
 - [x] Source code on GitHub — Guardian + Message/Link modules (plus previews of App Inspector & Screen-share Guard)
 - [x] Technical report — `docs/KAVACH_Phase1_Technical_Report.pdf`
 - [ ] Debug APKs — run `scripts/build_apks.sh` on a machine with the Android SDK; attach both APKs to a GitHub release
-- [ ] Push ASR + Llama models to the phones and do one live rehearsal (`demo/jury_demo_runbook.md`)
+- [ ] Push ASR + Llama models to the Android and do one live rehearsal (`demo/jury_demo_runbook.md`, written for 1 Android + 2 iPhones)
 - [ ] Record the 3-minute demo video (live scam call + perf overlay + benchmark slide)
 - [ ] Run `bench/llama_bench.sh` on one phone and add the table to report §7.5 (optional for Phase 1, strong signal)
 - [ ] Fill in team names below

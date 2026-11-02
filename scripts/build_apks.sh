@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Build both debug APKs (needs Android SDK: ANDROID_HOME or android/local.properties with sdk.dir).
+# Build BOTH on the same computer: the same-phone link only works between apps signed with the same key.
 #   scripts/build_apks.sh            -> dist/kavach-guardian-debug.apk, dist/kavach-shield-debug.apk
 set -euo pipefail
 cd "$(dirname "$0")/.."

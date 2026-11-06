@@ -5,7 +5,9 @@ dB; the quiet frames (10th percentile) are the room noise, the loud frames (90th
 speech + noise. SNR = 10*log10((P_loud - P_quiet) / P_quiet). Crude but needs no model, and
 bench/e2e_noise.py checks it against the true SNR. Kotlin: kavach.core.AudioCheck (parity-tested).
 
-verdict(): >= 12 dB "good", >= 6 dB "move closer", below "too noisy".
+verdict(): estimate >= 18 dB "good", >= 12 dB "move closer", below "too noisy". The estimate reads
+about 5 dB above the true SNR (bench/e2e_noise.py: true 30/15/8/3 dB -> 35/21/14/10 dB); with the
+default English model scam calls reached STOP 6/6 at a true 15 dB, 4/6 at 8 dB, 2/6 at 3 dB.
 """
 from __future__ import annotations
 
@@ -41,4 +43,4 @@ def estimate_from_powers(powers: list[float]) -> float:
 
 
 def verdict(snr_db: float) -> str:
-    return "good" if snr_db >= 12.0 else "move_closer" if snr_db >= 6.0 else "too_noisy"
+    return "good" if snr_db >= 18.0 else "move_closer" if snr_db >= 12.0 else "too_noisy"

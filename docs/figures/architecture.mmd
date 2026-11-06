@@ -1,19 +1,28 @@
 flowchart LR
-  subgraph G["Guardian phone (any spare Arm Android) — no INTERNET permission"]
-    MIC["Speaker-phone audio<br/>16 kHz, never stored"] --> VAD["Silero VAD<br/>(skip silence)"]
+  subgraph G["Guardian (spare Android, or the same Android) — no INTERNET permission"]
+    direction TB
+    MIC["Speaker-phone audio<br/>16 kHz, never stored<br/>(system mode: call audio)"] --> VAD["Silero VAD<br/>(skip silence)"]
+    MIC --> PLC["Placement check<br/>live SNR: good / move closer"]
     VAD --> ASR["Streaming ASR<br/>sherpa-onnx int8, Arm CPU<br/>Hindi/Hinglish Zipformer2-CTC · English Zipformer"]
-    ASR -->|"final segment"| FAST["Always-on screen  &lt;1 ms/tick<br/>cue lexicon (583 phrases, 3 scripts)<br/>+ hashed linear classifier<br/>+ kill-chain (decaying evidence)"]
+    ASR -->|"final segment"| FAST["Always-on screen  &lt;1 ms/tick<br/>cue lexicon (698 phrases, 3 scripts,<br/>caller + victim side)<br/>+ hashed linear classifier<br/>+ kill-chain (decaying evidence)"]
     FAST -->|"CAUTION / STOP"| SPEAK1["Instant spoken warning<br/>(offline TTS, hi-IN / en-IN)"]
     FAST -->|"escalation only"| LLM["Llama 3.2 1B, 4-bit<br/>ExecuTorch + XNNPACK/KleidiAI<br/>warm prefix · JSON verdict"]
     LLM --> VAL["Validator<br/>enums · verbatim evidence"]
     VAL -->|"may raise CAUTION→STOP<br/>never lowers STOP"| SPEAK1
   end
-  subgraph M["User's phone — no INTERNET permission"]
+  subgraph M["User's phone (KAVACH Shield) — no INTERNET permission"]
+    direction LR
+    C["Calls: unknown number?<br/>(never the audio)<br/>opt-in KAVACH Phone: auto speaker"] --> KC
     N["SMS / WhatsApp notifications"] --> MS["Message Shield<br/>SMS classifier + cues"]
     L["Links"] --> LC["Link Check<br/>allow-list · look-alike rules · URL model"]
     A["New / installed APKs"] --> AI["App Inspector v0"]
     S["Remote-access app + payment app"] --> SG["Screen-share Guard v0"]
-    MS & LC & AI & SG --> KC["Kill-chain hub<br/>(cross-channel fusion)"]
-    KC --> STOP["Full-screen STOP card<br/>call 1930 · family SMS"]
+    T["Per-app traffic counters"] --> NW["Network Watch<br/>upload · beaconing"]
+    MS & LC & AI & SG & NW --> KC["Kill-chain hub<br/>(cross-channel fusion,<br/>unknown call + risky action = STOP)"]
+    KC --> STOP["Full-screen STOP card<br/>end call · call 1930 · family SMS"]
   end
-  G <-->|"Bluetooth RFCOMM<br/>JSON events"| M
+  subgraph O["Optional app (needs INTERNET)"]
+    V["Network Watch DNS<br/>local DNS-only VPN"]
+  end
+  V -->|"malicious_domain"| KC
+  SPEAK1 <-->|"Bluetooth or same-phone link:<br/>call_started · call_ended · events · level"| KC

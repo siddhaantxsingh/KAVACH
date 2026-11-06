@@ -8,7 +8,8 @@ import kotlin.math.min
  * Guardian placement check (port of kavach_core/audio_check.py, parity-tested): estimates the
  * speech-to-noise ratio of the last ~5 s of microphone audio from 20 ms frame powers
  * (90th percentile = speech + noise, 10th percentile = room noise).
- * >= 12 dB "good", >= 6 dB "move_closer", below "too_noisy".
+ * estimate >= 18 dB "good", >= 12 dB "move_closer", below "too_noisy" (the estimate reads ~5 dB high;
+ * calibrated in bench/e2e_noise.py).
  */
 object AudioCheck {
     fun framePowers(x: FloatArray, sr: Int, frameMs: Int = 20): List<Double> {
@@ -35,7 +36,7 @@ object AudioCheck {
 
     fun estimateSnrDb(x: FloatArray, sr: Int): Double = estimateFromPowers(framePowers(x, sr))
 
-    fun verdict(snrDb: Double): String = if (snrDb >= 12.0) "good" else if (snrDb >= 6.0) "move_closer" else "too_noisy"
+    fun verdict(snrDb: Double): String = if (snrDb >= 18.0) "good" else if (snrDb >= 12.0) "move_closer" else "too_noisy"
 
     /** Rolling window over the live microphone stream (no audio kept, only 250 frame powers). */
     class Live(private val sr: Int, private val frames: Int = 250) {

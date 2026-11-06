@@ -33,6 +33,8 @@ SIM (or Wi-Fi calling off) only to *receive* the scam SMS, so keep the SIM in an
   Volume at maximum, screen brightness up, the phone 30–60 cm from iPhone 2, both lying flat.
 * iPhone 2: speaker volume at about 70 % (too loud distorts, too soft is missed).
 * Room: no fan pointing at the phones; the TV off.
+* Start a 10 s test call and check the Guardian's **Placement** line says *good*. If it says
+  *move closer* or *too noisy*, move the phones together (a TV or people talking is the worst case).
 
 ## Timeline
 | Time | What happens | What the jury sees |
@@ -62,3 +64,29 @@ roles."
 Victim's Android runs Shield and takes the call on speaker. A second Android runs the Guardian,
 linked over Bluetooth (pair once, then **Link phone → Bluetooth: <phone>**). The scammer can use
 any phone. Everything else is the same, and the STOP card also pops up on the victim's phone.
+
+
+## Extra demos (optional, about 30 s each)
+
+**One-phone mode (no Guardian).** On the Android, close the Guardian. Call the Android from an
+iPhone with a number that is not in contacts and keep talking. While the call is on, open the
+scam link from the SMS (or open AnyDesk). Shield shows STOP: *"Unknown caller + a dangerous link"*.
+Point out: Shield never heard the call; it only knew a call with an unknown number was going on.
+
+**Both modes together (needs two Androids).** Guardian on Android 2 in **⏸ Standby**. Call Android 1
+from an unknown number: the Guardian starts listening by itself ("call detected — listening"),
+and both screens show which channel triggered the warning. Hang up: it returns to standby
+about 30 s later.
+
+**KAVACH Phone (dialer).** On Android 1, Shield → *KAVACH Phone* → *Make KAVACH my phone app*.
+Call it from an unknown number and answer: it says "Unknown number. KAVACH is turning on the
+speaker…" and switches to speaker. When the Guardian reaches STOP, the red **END CALL NOW** button
+appears on the call screen.
+
+**Network Watch.**
+* On the laptop: `python bench/netwatch_pcap_demo.py`. In 3 seconds it finds a Wi-Fi port scan,
+  malware domain lookups, a fake bank site, a remote-control heartbeat and a photo upload, and
+  raises nothing for normal browsing.
+* On the phone (optional; needs Wi-Fi on, so do it after the main demo): install
+  `kavach-netwatch-debug.apk`, *Start Network Watch*, then open `hdfcbnak.com` in the browser.
+  The app flags the look-alike and Shield records it.

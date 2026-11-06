@@ -74,3 +74,18 @@ def test_network_event_during_unknown_call_is_stop():
     kc2.add(Event(0.0, "phone", CALL_START, 0.0))
     kc2.add(Event(60.0, "network", "malicious_domain", 1.5, "x.biz"))
     assert kc2.assess(61.0).level == "stop"
+
+
+def test_placement_verdict_and_estimator():
+    import math
+    import random
+
+    from kavach_core.audio_check import estimate_snr_db, verdict
+
+    rng = random.Random(0)
+    sr = 16000
+    # 1 s "speech" bursts at amplitude 0.3 alternating with silence, plus noise at amplitude a
+    def sig(noise_amp):
+        return [(0.3 * math.sin(2 * math.pi * 220 * i / sr) if (i // sr) % 2 == 0 else 0.0) + rng.gauss(0, noise_amp) for i in range(5 * sr)]
+    assert verdict(estimate_snr_db(sig(0.003), sr)) == "good"
+    assert verdict(estimate_snr_db(sig(0.2), sr)) == "too_noisy"

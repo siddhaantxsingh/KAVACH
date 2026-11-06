@@ -1,6 +1,11 @@
 {
  "unsw_nb15": {
   "dataset": "UNSW-NB15 official partitions",
+  "normal_tls_flows": {
+   "train": 0,
+   "test": 0
+  },
+  "deployment_status": "research only, raises no alerts: UNSW-NB15 has no normal TLS/HTTPS flows, so ordinary phone HTTPS is scored as attack (see bench/netwatch_pcap_demo.py). Needs retraining on phone traffic.",
   "n_train": 158000,
   "n_val": 17341,
   "n_test": 82332,

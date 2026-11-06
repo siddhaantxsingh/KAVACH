@@ -60,6 +60,24 @@ object LlmContract {
             "Reply language for 'say': $language\nThis is a text MESSAGE the user received, not a call. Message:\n\"\"\"${message.trim()}\"\"\""
     }
 
+    val NETWORK_KIND_TEXT = mapOf(
+        "suspicious_upload" to "an app secretly sent a lot of data from the phone",
+        "beaconing_app" to "an app keeps contacting a server in the background at a steady rhythm (remote-control pattern)",
+        "malicious_domain" to "an app contacted a fake or malware website",
+    )
+
+    /** Network Watch variant (same JSON contract). events: (kind, detail). */
+    fun networkUserPrompt(events: List<Pair<String, String>>, inUnknownCall: Boolean, retrieved: List<PlaybookEntry>, lang: String): String {
+        val pb = retrieved.joinToString("\n") { "- ${it.id}: ${it.storyEn} TRUTH: ${it.truthEn}" }
+        val language = if (lang == "hi") "Hindi (Devanagari)" else "English"
+        val lines = events.joinToString("\n") { (k, d) -> "- ${NETWORK_KIND_TEXT[k] ?: k}: \"$d\"" }.ifEmpty { "- none" }
+        val call = if (inUnknownCall) "yes, a call with an unknown number is going on right now" else "no"
+        return "Relevant scam patterns:\n$pb\nNetwork Watch findings on the user's phone:\n$lines\n" +
+            "During a call from an unknown number: $call\nReply language for 'say': $language\n" +
+            "This is NOT a call transcript. Explain simply what the app may be doing (stealing data, remote control) " +
+            "and what to do now (uninstall the app, turn off mobile data / Wi-Fi, call 1930)."
+    }
+
     /** (prefix, suffix). The prefix never changes: pre-fill it once into the KV cache. */
     fun formatLlama3(system: String, user: String): Pair<String, String> =
         "$BOT${SH}system$EH\n\n$system$EOT" to "${SH}user$EH\n\n$user$EOT${SH}assistant$EH\n\n"

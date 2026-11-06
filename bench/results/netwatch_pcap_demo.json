@@ -1,0 +1,39 @@
+{
+ "pcap": "netwatch_demo.pcap",
+ "packets": 4550,
+ "flows": 535,
+ "flagged_flows": 79,
+ "flagged_among_normal_https": "60/60",
+ "flagged_among_scan_probes": "7/399",
+ "flow_model_note": "UNSW-NB15 flow model is reported, not used for alerts: no normal TLS in its training data",
+ "alerts": [
+  {
+   "kind": "suspicious_upload",
+   "remote": "203.0.113.9",
+   "bytes": 2483800,
+   "what": "2.5 MB sent to 203.0.113.9"
+  },
+  {
+   "kind": "port_scan",
+   "remote": "192.168.1.66",
+   "first_s": 30.0,
+   "what": "192.168.1.66 tried 399 ports of the phone within a minute"
+  },
+  {
+   "kind": "malicious_domain",
+   "first_s": 68.03,
+   "what": "the phone looked up 3 machine-generated domains that do not exist"
+  },
+  {
+   "kind": "malicious_domain",
+   "first_s": 80.03,
+   "what": "the phone opened a look-alike website hdfcbnak.com"
+  },
+  {
+   "kind": "beaconing",
+   "remote": "203.0.113.9",
+   "first_s": 155.0,
+   "what": "the phone contacts 203.0.113.9 every 30 s"
+  }
+ ]
+}

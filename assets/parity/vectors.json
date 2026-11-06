@@ -1341,6 +1341,44 @@
    "<|start_header_id|>user<|end_header_id|>\n\nu<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
   ]
  },
+ "network_prompt": [
+  {
+   "events": [
+    [
+     "suspicious_upload",
+     "Loan Fast: sent 12.4 MB in the background in 5 min"
+    ]
+   ],
+   "call": true,
+   "lang": "hi",
+   "text": "Relevant scam patterns:\n- remote_support: Victim searches for a helpline and calls a fake number, or receives a call about a failed refund. The 'agent' asks to install AnyDesk, TeamViewer QuickSupport or a 'support' APK and then watches the screen while the victim opens a banking app. TRUTH: Genuine customer care never needs to see or control your screen. Anyone watching your screen can read your OTPs and PINs.\n- loan_app: An unregistered loan app asks for contacts and photo permissions, disburses a small loan, then demands huge repayments and threatens to send morphed photos to contacts. TRUTH: Legitimate lenders are RBI-regulated, do not need access to your contacts or gallery, and do not threaten borrowers.\nNetwork Watch findings on the user's phone:\n- an app secretly sent a lot of data from the phone: \"Loan Fast: sent 12.4 MB in the background in 5 min\"\nDuring a call from an unknown number: yes, a call with an unknown number is going on right now\nReply language for 'say': Hindi (Devanagari)\nThis is NOT a call transcript. Explain simply what the app may be doing (stealing data, remote control) and what to do now (uninstall the app, turn off mobile data / Wi-Fi, call 1930)."
+  },
+  {
+   "events": [],
+   "call": false,
+   "lang": "en",
+   "text": "Relevant scam patterns:\n\nNetwork Watch findings on the user's phone:\n- none\nDuring a call from an unknown number: no\nReply language for 'say': English\nThis is NOT a call transcript. Explain simply what the app may be doing (stealing data, remote control) and what to do now (uninstall the app, turn off mobile data / Wi-Fi, call 1930)."
+  },
+  {
+   "events": [
+    [
+     "beaconing_app",
+     "x"
+    ],
+    [
+     "malicious_domain",
+     "y"
+    ],
+    [
+     "other",
+     "z"
+    ]
+   ],
+   "call": false,
+   "lang": "en",
+   "text": "Relevant scam patterns:\n- remote_support: Victim searches for a helpline and calls a fake number, or receives a call about a failed refund. The 'agent' asks to install AnyDesk, TeamViewer QuickSupport or a 'support' APK and then watches the screen while the victim opens a banking app. TRUTH: Genuine customer care never needs to see or control your screen. Anyone watching your screen can read your OTPs and PINs.\nNetwork Watch findings on the user's phone:\n- an app keeps contacting a server in the background at a steady rhythm (remote-control pattern): \"x\"\n- an app contacted a fake or malware website: \"y\"\n- other: \"z\"\nDuring a call from an unknown number: no\nReply language for 'say': English\nThis is NOT a call transcript. Explain simply what the app may be doing (stealing data, remote control) and what to do now (uninstall the app, turn off mobile data / Wi-Fi, call 1930)."
+  }
+ ],
  "validate": [
   [
    "Sure! {\"scam\": true, \"type\": \"digital_arrest\", \"stage\": \"isolation\", \"confidence\": 0.93, \"evidence\": [\"kisi ko mat batana\", \"made up\"], \"say\": \"Phone kaatiye.\", \"action\": \"hang_up\"}",
@@ -29665,5 +29703,146 @@
     ]
    ]
   }
- ]
+ ],
+ "dns_parse": [
+  [
+   "1234010000010000000000000377777706476f6f676c6503636f6d0000010001",
+   [
+    4660,
+    false,
+    "www.google.com",
+    0
+   ]
+  ],
+  [
+   "0007810300010000000000000c786a77716b7a7076626e66680362697a0000010001",
+   [
+    7,
+    true,
+    "xjwqkzpvbnfh.biz",
+    3
+   ]
+  ],
+  [
+   "0009810000010000000000000e7362692d6b79632d7570646174650378797a0000010001",
+   [
+    9,
+    true,
+    "sbi-kyc-update.xyz",
+    0
+   ]
+  ],
+  [
+   "000100",
+   null
+  ],
+  [
+   "000000000000000000000000",
+   null
+  ]
+ ],
+ "dns_watch": {
+  "lookups": [
+   [
+    0.0,
+    "com.chat",
+    "google.com",
+    false
+   ],
+   [
+    5.0,
+    "com.chat",
+    "graph.facebook.com",
+    false
+   ],
+   [
+    6.0,
+    "com.chat",
+    "app-measurement.com",
+    false
+   ],
+   [
+    10.0,
+    "com.evil",
+    "hdfcbnak.com",
+    false
+   ],
+   [
+    11.0,
+    "com.evil",
+    "hdfcbnak.com",
+    false
+   ],
+   [
+    20.0,
+    "com.rat",
+    "xjwqkzpvbnfhtrq.biz",
+    true
+   ],
+   [
+    30.0,
+    "com.rat",
+    "kdjfhgkdjfhgqwpz.ru",
+    true
+   ],
+   [
+    35.0,
+    "com.rat",
+    "kdjfhgkdjfhgqwpz.ru",
+    true
+   ],
+   [
+    40.0,
+    "com.rat",
+    "cvyh1po636avyrsxebwbkn7.net",
+    true
+   ],
+   [
+    50.0,
+    "com.rat",
+    "qpwoeiruty1029.info",
+    true
+   ],
+   [
+    900.0,
+    "com.rat",
+    "zmxncbvlaksjdh.top",
+    true
+   ],
+   [
+    60.0,
+    "com.ok",
+    "xjwqkzpvbnfhtrq.biz",
+    false
+   ]
+  ],
+  "events": [
+   [],
+   [],
+   [],
+   [
+    [
+     10.0,
+     "malicious_domain",
+     2.0,
+     "com.evil opened a look-alike website hdfcbnak.com"
+    ]
+   ],
+   [],
+   [],
+   [],
+   [],
+   [
+    [
+     40.0,
+     "malicious_domain",
+     1.5,
+     "com.rat looked up 3 machine-generated domains that do not exist"
+    ]
+   ],
+   [],
+   [],
+   []
+  ]
+ }
 }

@@ -64,6 +64,7 @@ python -m pytest -q tests
 python bench/eval_calls.py --split test          # also: dev, handwritten, heldout
 
 # 2. Android debug APKs (Android Studio / SDK 34, JDK 17)
+# ready-made APKs: GitHub Releases -> apks-latest (built on every push), or build locally:
 scripts/build_apks.sh                            # -> dist/kavach-{guardian,shield,netwatch}-debug.apk
 adb install dist/kavach-guardian-debug.apk       # on the spare phone
 adb install dist/kavach-shield-debug.apk         # on the user's phone

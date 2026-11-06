@@ -2,6 +2,7 @@
 # Download the on-device models and push them to the phones with adb.
 #
 #   scripts/push_models.sh --asr                      # Hindi/Hinglish + English streaming ASR + VAD -> Guardian
+#   scripts/push_models.sh --asr-small                # same, but the small 20M English model (low-end phones)
 #   scripts/push_models.sh --llama <file.pte> <tokenizer.model> [--to guardian|shield|both]
 #   scripts/push_models.sh --official-spinquant       # Meta's pre-quantised Llama 3.2 1B Instruct (no KAVACH LoRA),
 #                                                     # handy before your own fine-tune is ready
@@ -16,10 +17,13 @@ dst() { echo "/sdcard/Android/data/$1/files/models"; }
 
 asr() {
   local R=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models
-  # English: streaming Zipformer transducer (20M, int8)
-  if [[ ! -d "$CACHE/en20m" ]]; then
-    curl -fL "$R/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2" | tar xj -C "$CACHE"
-    mv "$CACHE/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17" "$CACHE/en20m"
+  # English: streaming Zipformer transducer, int8. Default: zipformer-en-2023-06-21 (188 MB), which in
+  # bench/e2e_noise.py reached STOP on 18/24 noisy scam calls vs 6/24 for the 20M model (0 false STOPs both).
+  local EN=en0621 ENNAME=sherpa-onnx-streaming-zipformer-en-2023-06-21
+  if [[ "${SMALL_EN:-0}" == 1 ]]; then EN=en20m; ENNAME=sherpa-onnx-streaming-zipformer-en-20M-2023-02-17; fi
+  if [[ ! -d "$CACHE/$EN" ]]; then
+    curl -fL "$R/$ENNAME.tar.bz2" | tar xj -C "$CACHE"
+    mv "$CACHE/$ENNAME" "$CACHE/$EN"
   fi
   [[ -f "$CACHE/silero_vad.onnx" ]] || curl -fL -o "$CACHE/silero_vad.onnx" "$R/silero_vad.onnx"
   # Hindi/Hinglish: streaming Zipformer2-CTC, Devanagari characters (Apache-2.0; see models/asr/README.md)
@@ -30,10 +34,10 @@ asr() {
   fi
   local D; D=$(dst $G)
   adb shell mkdir -p "$D/asr-en" "$D/asr-hi"
-  adb push "$CACHE/en20m/encoder-epoch-99-avg-1.int8.onnx" "$D/asr-en/encoder.onnx"
-  adb push "$CACHE/en20m/decoder-epoch-99-avg-1.onnx" "$D/asr-en/decoder.onnx"
-  adb push "$CACHE/en20m/joiner-epoch-99-avg-1.int8.onnx" "$D/asr-en/joiner.onnx"
-  adb push "$CACHE/en20m/tokens.txt" "$D/asr-en/tokens.txt"
+  adb push "$CACHE/$EN/encoder-epoch-99-avg-1.int8.onnx" "$D/asr-en/encoder.onnx"
+  adb push "$CACHE/$EN/decoder-epoch-99-avg-1.onnx" "$D/asr-en/decoder.onnx"
+  adb push "$CACHE/$EN/joiner-epoch-99-avg-1.int8.onnx" "$D/asr-en/joiner.onnx"
+  adb push "$CACHE/$EN/tokens.txt" "$D/asr-en/tokens.txt"
   adb push "$CACHE/hi/model.int8.onnx" "$D/asr-hi/model.int8.onnx"
   adb push "$CACHE/hi/tokens.txt" "$D/asr-hi/tokens.txt"
   adb push "$CACHE/silero_vad.onnx" "$D/silero_vad.onnx"
@@ -51,6 +55,7 @@ llama() {
 
 case "${1:-}" in
   --asr) asr ;;
+  --asr-small) SMALL_EN=1 asr ;;
   --llama) llama "$2" "$3" "${5:-both}" ;;
   --official-spinquant)
     huggingface-cli download executorch-community/Llama-3.2-1B-Instruct-SpinQuant_INT4_EO8-ET \

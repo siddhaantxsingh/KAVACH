@@ -8,19 +8,26 @@ date: "November 2026"
 
 KAVACH listens to a suspicious call on speaker-phone (with consent), understands it on the
 phone, and stops the victim before money moves. It joins what it hears with the SMS, link,
-app and screen-share that follow, because real Indian scams move across channels. **Nothing
-leaves the device:** neither app requests the Android `INTERNET` permission.
+app, screen-share, payment and network activity that follow, because real Indian scams move
+across channels. **Nothing leaves the device:** neither main app requests the Android
+`INTERNET` permission.
+
+KAVACH runs **three on-device pipelines** that feed one kill chain: the **Guardian** (the call
+conversation), **Shield** (messages, links, apps, screen sharing, payments, and *that* a call
+with an unknown number is going on), and **Network Watch** (what installed apps send over
+the network). Each one works alone; together they cover the whole scam.
 
 **What exists at the Phase 1 freeze** (all in this repository):
 
-* **Two Android apps** (Kotlin, no AndroidX, compile-checked against the Android 34 API,
-  ExecuTorch 1.5 and sherpa-onnx 1.13.8 APIs):
-  *KAVACH Guardian* (spare phone: streaming Hindi/Hinglish or English ASR, Call Guardian,
-  Llama 3.2 1B advisor, spoken warnings) and *KAVACH Shield* (user's phone: Message
-  Shield, Link Check, cross-channel kill-chain, full-screen STOP card, and Phase-2 previews
-  of App Inspector and Screen-share Guard).
+* **Two main Android apps + one optional app** (Kotlin, no AndroidX, compile-checked against
+  the Android 34 API, ExecuTorch 1.5 and sherpa-onnx 1.13.8 APIs):
+  *KAVACH Guardian* (streaming Hindi/Hinglish or English ASR, Call Guardian, Llama 3.2 1B
+  advisor, spoken warnings, live placement check, Standby auto-start, OEM/system mode),
+  *KAVACH Shield* (Message Shield, Link Check, call awareness, Network Watch app-traffic
+  detector, App Inspector, Screen-share Guard, opt-in KAVACH Phone dialer, kill-chain hub,
+  STOP card), and the optional *KAVACH Network Watch* DNS app (§3.6).
 * **A Python reference implementation** of every on-device algorithm, with the Kotlin port
-  proven identical by **196 parity checks**, including tick-by-tick replays of whole calls.
+  proven identical by **336 parity checks**, including tick-by-tick replays of whole calls.
 * **The Llama pipeline** (LoRA data, fine-tuning, Hugging Face→Meta conversion,
   ExecuTorch 4-bit export ladder, evaluation), **verified end to end** on a tiny
   Llama-3.2-shaped model: conversion is exact (max logit difference 3.6e-7), and the exported
@@ -32,16 +39,21 @@ Llama; no false STOP was raised on any genuine call in any set:
 
 | Evaluation set | Scam calls reaching STOP | STOP before the money/OTP request | Genuine calls wrongly STOPped |
 |---|---|---|---|
-| Synthetic test, 1,000 calls, phrasings never trained on | **86.7 %** | 77.1 % | **0 %** |
-| Hand-written calls, 16 scam / 14 genuine | **93.8 %** | 62.5 % | **0 %** |
+| Synthetic test, 1,000 calls, phrasings never trained on | **90.6 %** | 78.3 % | **0 %** |
+| Same, caller heard through the speaker (3× ASR errors on the caller's lines) | 71.1 % | 55.6 % | **0 %** |
+| Hand-written calls, 16 scam / 14 genuine | **93.8 %** | 68.8 % | **0 %** |
 | Locked held-out calls, 10 / 10, never used for tuning | **70 %** | 50 % | **0 %** |
-| End-to-end audio: TTS call → speaker-phone channel → ASR, 6 scam / 6 genuine runs | 4 of 6 STOP, 6 of 6 ≥ CAUTION (a second audio realisation: 3 STOP, 5 ≥ CAUTION) | — | **0 of 6** (not even a CAUTION) |
+| Noisy-room audio: TTS call → speaker-phone → fan / TV / babble at 30–3 dB → ASR, 24 scam / 24 genuine | 18 of 24 (6/6 at 30 and 15 dB) | — | **0 of 24** |
 
-The honest reading: the fast path is safe, with no false STOPs, but on unseen phrasing it
-leaves 20–30 % of scam calls at CAUTION. That gap is exactly what the Llama 3.2 1B
-layer is for: it judges every CAUTION and may escalate it to STOP. Measuring that on phones
-with the fine-tuned model is the first Phase 2 milestone (§9). The other bottleneck is ASR
-quality on speaker-phone audio (§7.5).
+Network Watch (§7.6): all 5 planted threats found in a replayed capture with no alert on normal
+browsing; in 200 simulated traces per scenario, spyware uploads and remote-control heartbeats
+are caught every time, with 0 % false alarms on normal app use.
+
+The honest reading: the fast path is safe, with no false STOPs anywhere, but on unseen phrasing
+it leaves about 10 % of scam calls at CAUTION (about 30 % when the caller is badly heard). That
+gap is what the Llama 3.2 1B layer is for: it judges every CAUTION and may escalate it to STOP.
+Measuring that on phones is the first Phase 2 milestone (§9). The other bottleneck is speech
+recognition when a TV or other people are talking in the room (§7.3).
 
 # 2. Problem and scope
 
@@ -53,13 +65,19 @@ On-device call-scam detection exists only on premium phones. KAVACH targets the 
 mid-range Android phones most families own, explains every alert in Hindi or English, and
 gives the next step (hang up, call 1930).
 
-Since Android 10, third-party apps cannot capture call audio. The **Guardian** is therefore a
-spare Android phone placed beside the speaker-phone call; it works on any phone today. The
-production path is OEM or pre-loaded dialer integration.
+Since Android 10, third-party apps cannot capture call audio. The **Guardian** therefore listens
+to the call on speaker, from a spare Android or from the same Android when the call is on
+another phone. That has three costs, and Phase 1 now addresses each of them:
+
+| Drawback | What KAVACH does about it | Section |
+|---|---|---|
+| Needs an extra device | **One-phone mode**: Shield alone knows *that* an unknown-number call is going on and stops risky actions during it; **OEM/system mode**: the same Guardian APK reads the call audio directly when a phone maker ships it as a privileged app | 3.5, 3.7 |
+| The victim must put the call on speaker | **KAVACH Phone** (opt-in dialer role) puts unknown callers on speaker itself after a spoken notice; otherwise a "turn on speaker" nudge when a Guardian is linked | 3.5 |
+| Noisy rooms | a bigger English recogniser (3× more noisy scam calls reach STOP), a live **placement check**, victim-side cues (the victim sits next to the Guardian), and fusion with actions that need no audio at all | 3.1, 7.3 |
 
 # 3. Architecture
 
-![System architecture: two phones, two inference pipelines, no network](figures/architecture.png)
+![System architecture: Guardian, Shield and Network Watch feed one kill chain; no network in the main apps](figures/architecture.png)
 
 ## 3.1 Pipeline A — speech (Guardian, Arm CPU; NPU in Phase 2)
 
@@ -68,7 +86,8 @@ production path is OEM or pre-loaded dialer integration.
 | Capture | `AudioRecord`, `VOICE_RECOGNITION` source, 16 kHz mono, 100 ms chunks | AGC/noise suppression off; audio never written to storage |
 | VAD | Silero VAD (sherpa-onnx), 512-sample windows | decoding is skipped after 1.5 s of silence; audio is still buffered, so nothing is lost |
 | Streaming ASR — Hindi/Hinglish | Zipformer2-CTC, int8, Devanagari characters (`betterflow-hindi-streaming-ctc`, Apache-2.0) | writes English loan words in Devanagari; the cue lexicon covers both scripts |
-| Streaming ASR — English | Zipformer transducer 20M, int8 (k2-fsa) | host RTF 0.05; on-device RTF from the perf overlay |
+| Streaming ASR — English | Zipformer transducer `en-2023-06-21`, int8, 188 MB (k2-fsa); the 20M model remains for low-end phones (`push_models.sh --asr-small`) | host RTF 0.12 (20M: 0.05); chosen by the noisy-room benchmark, §7.3 |
+| Placement check | 20 ms frame powers over the last 5 s; 90th vs 10th percentile → SNR estimate; "good / move closer / too noisy" on screen | no audio kept; thresholds calibrated in §7.3 |
 | Endpointing | trailing silence 0.8 s, or 12 s maximum utterance | each final segment triggers an immediate engine tick |
 
 **Design decision from this phase.** The proposal named a Hindi FastConformer streaming
@@ -93,10 +112,11 @@ speech models (ExecuTorch Qualcomm/MediaTek backends) is Phase 2.
 
 ## 3.3 The always-on fast path (both phones)
 
-1. **Cue lexicon** (`assets/cues.json`): 583 phrases in 13 categories (authority, identity
+1. **Cue lexicon** (`assets/cues.json`): 698 phrases in 16 categories (authority, identity
    misuse, threat, urgency, isolation, credential request, remote access, link, payment,
-   reward, family emergency, safety advice, …), each in English, romanised Hinglish and
-   Devanagari. The phrase rules support prefixes and gaps of 0–4 words. A request is ignored when
+   reward, family emergency, safety advice, and three **victim-side** categories: the person
+   next to the Guardian reading out an OTP or account number, saying they are sending money,
+   or begging not to be arrested), each in English, romanised Hinglish and Devanagari. The phrase rules support prefixes and gaps of 0–4 words. A request is ignored when
    a nearby word negates it ("never share your OTP" is *safety advice*, not a request).
 2. **Hashed linear classifiers** (`cue_model`, `sms_model`, `url_model`). Features:
    FNV-1a hashed words, word pairs and 3–5 letter fragments, plus cue-category hits and
@@ -108,8 +128,13 @@ speech models (ExecuTorch Qualcomm/MediaTek backends) is Phase 2.
    (none → info → caution → stop) is *sticky* within a session: a scammer cannot calm the guard
    with small talk. STOP rules: isolation + authority; authority + identity + threat;
    two different action/payment requests; a hook plus an action with no genuine safety
-   advice heard; cross-channel evidence (a risky call plus a dangerous link, APK or screen
-   share); total score.
+   advice heard; **victim complying** (the victim reads an OTP or says they are paying *and* a
+   scam pretext is present: police, identity misuse, threat, bank, or the victim's own fear;
+   a delivery OTP or money for family alone never stops); **call + action** (a suspicious
+   conversation and a risky action in the same call); **unknown call + risky action**
+   (one-phone mode); cross-channel evidence; total score. CAUTION also for a payment app
+   opened during an unknown-number call longer than 3 minutes. Every rule has a plain
+   Hindi/English reason shown on both screens ("Unknown caller + a dangerous link").
 4. **Guardian logic**: ticks after every final ASR segment and at least every 3 s. The
    classifier adds CAUTION or STOP when it stays above 0.8 for two consecutive ticks. It can
    also **veto** a weak rule-only STOP while it has been confidently benign (< 0.5); strong
@@ -140,6 +165,48 @@ speech models (ExecuTorch Qualcomm/MediaTek backends) is Phase 2.
   warning and for 1.2 s afterwards. Otherwise its own warning ("police", "arrest", "1930")
   could raise its level.
 
+## 3.5 Calls on the user's phone: one-phone mode, both modes together, KAVACH Phone
+
+* **Call awareness** (`CallMonitor`, phone-state broadcast): Shield knows a call is on, whether
+  the number is in the contacts, and how long it has lasted. It never hears the call.
+* **One-phone mode:** during an unknown-number call, a dangerous link, a risky APK, screen
+  sharing, a suspicious upload or a malicious domain is STOP even with no Guardian.
+* **Both modes together:** when Shield sees an unknown call start it sends `call_started` over
+  the link; a Guardian in **Standby** starts listening by itself and stops 30 s after
+  `call_ended`. (The microphone foreground service is started while the Guardian screen is
+  visible, as Android requires; listening is then switched on and off.) A suspicious
+  conversation plus a risky action in the same call is STOP. With an iPhone as the call
+  phone, Shield cannot see the call, so the Guardian is started by hand.
+* **KAVACH Phone** (opt-in dialer role, `InCallService`): big-button call screen with the live
+  KAVACH level; for an unknown number it says "KAVACH is turning on the speaker so the Guardian
+  can listen" and routes the call to the speaker; on STOP a one-tap **End call**.
+
+## 3.6 Network Watch (third pipeline; details in `docs/network_watch.md`)
+
+* **App traffic watch** inside Shield, **no INTERNET permission**: `NetworkStatsManager` per-app
+  byte counters every 30 s (also with the screen off). Only *suspect* apps (sideloaded, new,
+  remote-access, or rated suspicious) are judged, so normal apps stay quiet; "I know this app"
+  trusts one. Kinds: `suspicious_upload` (≥ 5 MB in 5 min in the background, or a slow
+  ≥ 4 MB/hour trickle) and `beaconing_app` (small background bursts at a steady rhythm).
+* **Optional DNS-watch app** (`io.kavach.netwatch`): a local DNS-only `VpnService` learns which
+  app looks up which name, forwards the lookup unchanged to the phone's own DNS server, and
+  flags bank look-alikes and bursts of machine-generated names that do not exist (malware
+  looking for its control server) as `malicious_domain`. It must hold INTERNET to forward
+  lookups, so it is a separate opt-in app.
+* **Flow model** (1,665-parameter MLP, ExecuTorch `.pte` 11 KB) trained on UNSW-NB15. It is
+  evaluated and reported but **raises no alerts**, because UNSW-NB15 has no normal HTTPS
+  traffic (§7.6).
+* Llama explains a network finding with the same JSON contract (`network_user_prompt`).
+
+## 3.7 OEM / system mode (`docs/oem_mode.md`)
+
+The Guardian manifest asks for `CAPTURE_AUDIO_OUTPUT`. A normal install never gets it. A
+phone maker that ships the Guardian as a privileged system app grants it; the Guardian then
+reads `VOICE_CALL` (both sides), falling back to `VOICE_DOWNLINK` and then the microphone, runs on
+the same phone as the call, and starts by itself on unknown calls. This removes both the
+spare phone and the speaker step, but needs an OEM partner, depends on the phone's audio HAL,
+and needs explicit user consent. We cannot demonstrate it on a retail phone.
+
 # 4. Arm-specific engineering
 
 | Lever | Status in Phase 1 | How it is measured |
@@ -160,13 +227,15 @@ is therefore 4-bit with coarse groups. Both failures were reproduced on the tiny
 
 | Need | Source | Use |
 |---|---|---|
-| Call transcripts | **Synthetic generator** (`data/synth/generate_calls.py`): 11 scam scripts and 9 benign scenarios built from 41 utterance pools. Each pool has an English, Hinglish and Devanagari rendering, with ASR-style corruption and realistic timing. Scripts are paraphrased from I4C, RBI and bank advisories. | train 8,000 / dev 600 / test 1,000 calls |
+| Call transcripts | **Synthetic generator** (`data/synth/generate_calls.py`): 11 scam scripts and 9 benign scenarios built from 47 utterance pools, including victim-side lines (reading an OTP, "main transfer kar raha hoon", "mujhe arrest mat karo") with benign twins (a delivery OTP, money for a relative). Each pool has an English, Hinglish and Devanagari rendering, with ASR-style corruption and realistic timing. Scripts are paraphrased from I4C, RBI and bank advisories. | train 8,000 / dev 600 / test 1,000 calls |
 | Hard negatives | genuine bank fraud alerts that say "never share OTP", delivery agents asking for the delivery OTP, relatives asking for money, people *talking about* scams, genuine police calls, office talk about payments and screen sharing | in every split |
 | Held-out phrasing | **template-disjoint splits**: each pool is partitioned by item into train, dev and test, so dev and test contain phrasings never trained on | model selection on dev; test reported once |
+| Caller heard through the speaker | `test_far`: the test calls with 3× ASR errors on the caller's lines only (the victim sits next to the Guardian mic) | reported, never tuned |
 | Independent checks | **30 hand-written calls** (a different author style) and **20 locked held-out calls**, written before any tuning against them and used only for reporting | `data/dev/` |
 | Real ASR noise | 88 English training calls synthesised with Piper TTS, passed through a speaker-phone channel, transcribed by the Guardian's ASR, with stage labels aligned by time | `models/asr/make_asr_noisy_calls.py` |
 | SMS | UCI SMS Spam Collection (CC BY 4.0) + 4,300 synthetic Indian scam and genuine messages (KYC, e-challan APK, electricity, parcel fee, UPI refund, jobs, loans vs real OTP and debit-alert formats) | `sms_model` |
 | URLs | Phishing.Database active phishing domains (MIT, 40k sampled), top-10k popular domains, the genuine Indian domain list, 8k generated Indian look-alikes; split by registrable domain | `url_model` |
+| Network | UNSW-NB15 (Moustafa & Slay 2015) and NSL-KDD (Tavallaee et al. 2009) for the flow model; 25 DGA families (Cucchiarelli et al. 2021, Netlab 360) + Alexa for the domain model; simulated per-app traffic traces | `docs/network_watch.md` |
 | Llama fine-tuning | 4,000 / 400 instruction pairs generated by the same prompt code the phone uses (`models/llama/make_sft_data.py`) | LoRA |
 
 No real victim audio or personal data is used or committed. The final test set must be
@@ -177,17 +246,20 @@ No real victim audio or personal data is used or committed. The final test set m
 * **Single source of truth**: lexicon, playbook, domain lists and model weights live in
   `assets/` and are packaged into both APKs by Gradle.
 * **Parity**: `tests/make_parity_vectors.py` writes golden outputs from Python, and
-  `android/core` checks 196 of them. The checks cover normalisation, hashing, lexicon hits,
+  `android/core` checks 336 of them. The checks cover normalisation, hashing, lexicon hits,
   feature vectors, logits of all three models, URL verdicts, message verdicts, kill-chain
-  steps, retrieval, prompts, JSON validation and full Guardian replays.
+  steps, retrieval, prompts, JSON validation, full Guardian replays, Network Watch traffic
+  traces, domain and flow model scores, DNS parsing and placement SNR.
   Porting found and fixed two real bugs: Python's brand ordering depended on hash
   randomisation, and Java and Python IDNA decoders disagree on some punycode.
-* **Unit tests**: 22 pytest tests. Writing them found a safety bug: `"scam": "maybe"` was
+* **Unit tests**: 35 pytest tests. Writing them found a safety bug: `"scam": "maybe"` was
   being read as *not a scam*; it now fails validation and triggers the re-prompt.
 * **Fail-safe by construction**: if the model is missing, slow or throttled, the
   rule + classifier path still speaks a warning, which is generated from the vetted playbook.
-* **Privacy by construction**: no `INTERNET` permission, audio never stored, transcript
-  kept in memory only, notifications read without SMS permission.
+* **Privacy by construction**: no `INTERNET` permission in the main apps, audio never stored,
+  transcript kept in memory only, notifications read without SMS permission, network
+  watched through byte counters (no contents, no destinations) unless the user installs the
+  optional DNS app.
 
 # 7. Results
 
@@ -195,13 +267,15 @@ No real victim audio or personal data is used or committed. The final test set m
 
 | Model | Task | Test n | Precision | Recall | F1 | ROC-AUC |
 |---|---|---|---|---|---|---|
-| `cue_model` | 120-token call window → scam | 8,755 | 0.935 | 0.873 | **0.903** | 0.953 |
-| `sms_model` | SMS / notification → scam | 1,914 | 0.994 | 0.897 | **0.943** | 0.990 |
+| `cue_model` | 120-token call window → scam | 9,010 | 0.951 | 0.867 | **0.907** | 0.960 |
+| `sms_model` | SMS / notification → scam | 1,914 | 0.996 | 0.888 | **0.939** | 0.990 |
 | `url_model` (rules + model) | URL → phishing | 10,196 | 0.987 | 0.752 | 0.853 | 0.945 |
 
 Model selection on a *template-disjoint* dev split mattered. With a dev split that shared
 templates with training, the cue model looked perfect on dev (F1 0.999) but reached only
-F1 0.817 on test. Adding cue-category features raised test F1 to 0.903.
+F1 0.817 on test. Adding cue-category features raised test F1 to 0.903, and the victim-side
+categories to 0.907. (Retraining with the new lexicon moved the SMS model from F1 0.943 to
+0.939; we kept the retrained model so its features match the lexicon.)
 
 **Link Check** flags 98.5 % of generated Indian look-alikes, **0 %** of genuine Indian
 domains, 3.9 % of popular global domains and 69 % of generic global phishing domains (many
@@ -213,12 +287,20 @@ are random strings with no brand cue; at a ≤3 % false-alarm budget these stay 
 
 | Set | Config | STOP recall | ≥ CAUTION | STOP before money | Median time to STOP from first scam cue | False STOP | False CAUTION |
 |---|---|---|---|---|---|---|---|
-| Synthetic test (503 scam / 497 genuine) | rules only | 79.1 % | 86.1 % | 64.8 % | 16.7 s | 0 % | 0 % |
-| | **shipped** | **86.7 %** | 96.0 % | 77.1 % | 12.8 s | **0 %** | 8.3 % |
-| Hand-written (16 / 14) | rules only | 75.0 % | 87.5 % | 31.3 % | 24.7 s | 14.3 % | 21.4 % |
-| | **shipped** | **93.8 %** | 93.8 % | 62.5 % | 19.1 s | **0 %** | 28.6 % |
+| Synthetic test (511 scam / 489 genuine) | rules only | 80.0 % | 89.2 % | 62.8 % | 17.6 s | 0 % | 0 % |
+| | **shipped** | **90.6 %** | 97.3 % | 78.3 % | 12.7 s | **0 %** | 7.2 % |
+| Test, caller heard through the speaker (502 / 498) | rules only | 60.8 % | 68.7 % | 41.0 % | 19.3 s | 0 % | 0 % |
+| | **shipped** | **71.1 %** | 88.8 % | 55.6 % | 14.7 s | **0 %** | 4.6 % |
+| Hand-written (16 / 14) | rules only | 75.0 % | 87.5 % | 37.5 % | 24.7 s | 14.3 % | 21.4 % |
+| | **shipped** | **93.8 %** | 93.8 % | 68.8 % | 17.0 s | **0 %** | 21.4 % |
 | Locked held-out (10 / 10) | rules only | 40 % | 70 % | 20 % | 21.9 s | 0 % | 10 % |
 | | **shipped** | **70 %** | 80 % | 50 % | 22.6 s | **0 %** | 40 % |
+
+**Effect of the victim-side cues** (same regenerated data, before → after): synthetic test
+STOP 88.3 → 90.6 %, caller-through-speaker 68.5 → 71.1 %, hand-written false CAUTION
+28.6 → 21.4 %, locked held-out unchanged (70 % / 0 % / 40 %; run once each, for reporting only),
+no new false STOP anywhere. The synthetic data was regenerated with the new victim lines, so
+these test numbers are not directly comparable with the earlier 86.7 %.
 
 The proposal targets (median ≤ 30 s to STOP and ≤ 2 % false STOPs) are met on every set.
 The ≥ 90 % "caught before payment" target is **not met yet** (50–77 %), and false CAUTIONs on
@@ -227,7 +309,33 @@ was designed for, and we will measure it in Phase 2 rather than claim it now. Th
 veto removed both rule-only false STOPs on the hand-written set (people *discussing* a
 scam; an office call about screen sharing and payments).
 
-## 7.3 End-to-end audio (host)
+## 7.3 Noisy rooms (host, `bench/e2e_noise.py`)
+
+Four scripted calls (2 scam, 2 genuine) are synthesised with Piper TTS, passed through a
+telephone channel and room reverb, and mixed with **fan/traffic hum, a TV (another voice
+reading news, plus music) or several people talking**, at 30, 15, 8 and 3 dB: 48 noisy calls
+per configuration.
+
+| English recogniser + front-end | Scam STOP 30 / 15 / 8 / 3 dB | Genuine STOP | WER hum / TV / babble | Host RTF |
+|---|---|---|---|---|
+| 20M (previous default) | 3/6 · 3/6 · 0/6 · 0/6 | 0/24 | 0.53 / 0.80 / 0.74 | 0.05 |
+| 20M + GTCRN speech denoiser | 1/24 in total | 0/24 | 0.48 / 0.97 / 1.13 | +0.08 |
+| 20M + scam-word hotwords | 3/24 in total | 0/24 | 0.60 / 0.74 / 0.75 | |
+| **en-2023-06-21 (new default)** | **6/6 · 6/6 · 4/6 · 2/6** | **0/24** | **0.20** / 0.83 / 0.90 | 0.12 |
+| en-2023-06-21 + hotwords | 6/6 · 6/6 · 5/6 · 2/6 | 0/24 | 0.19 / 0.85 / 0.86 | 0.12 |
+
+Decisions from the data: the bigger English model ships (3× more noisy scam calls reach
+STOP). The denoiser stays **off**: it helps on steady hum but invents speech-like fragments
+from TV and babble (WER above 1). Hotwords stay off (+1 call, not worth the beam-search cost;
+the Hindi model is CTC, which has no hotwords anyway). With a TV or people talking, even the
+bigger model transcribes the *background voices*: a "which voice is the call?" problem,
+which is why the Guardian shows a **placement check**. Its SNR estimate reads about 5 dB high
+(true 30/15/8/3 dB read as 35/21/14/10 dB), and its thresholds are set from these runs (≥ 18 dB is "good").
+There is one TTS realisation per condition, so the numbers are small: read them as a
+direction, not as precise rates. (The 20M rows with denoiser / hotwords used the cue model
+from before the victim-side change; the two base rows use the current one.)
+
+## 7.3b End-to-end audio (host, earlier run)
 
 The scripted calls are synthesised with Piper TTS, passed through an 8 kHz telephone channel
 (300–3,400 Hz), room reverb and noise at 30, 15 and 8 dB SNR, then streamed into the
@@ -263,7 +371,33 @@ cause false alarms, so the aliases were discarded.
 | shipped 8da4w `.pte` vs HF | 100 % next-token agreement |
 | Real alert prompts | 1,361-character constant prefix + 1.7–2.0 k-character suffix (`bench/prompts/`) |
 
-## 7.5 Still to measure on phones (Phase 2 week 1–2, scripts ready)
+## 7.6 Network Watch
+
+| Part | Test | Result |
+|---|---|---|
+| App traffic watch | 200 simulated 2-hour traces per scenario at 30 s polling | spyware photo / SMS uploads, slow exfiltration, heartbeats every 60 s, 5 min and jittered 2 min: **100 % detected** (median 30–90 s for uploads, 10–35 min for heartbeats); chat, video sharing, streaming, Play-store backup: **0 % false alarms**; a sideloaded backup app or an exact-timer sideloaded sync is always flagged (by design; "I know this app") |
+| Domain model | 6 DGA families never seen in training | cryptolocker 92 %, necurs 92 %; dictionary-word DGAs (suppobox, matsnu, gozi, pushdo) ≈ 0 % (blind spot); 0.36 % false alarms on 85k popular domains, 0 genuine Indian domains flagged. A single name never alarms: ≥ 3 non-existent machine-generated names from one app in 10 min are required |
+| Flow model, UNSW-NB15 test (82,332 flows) | phone-observable features, threshold for 2 % validation false alarms | P 0.939, R 0.885, **F1 0.911**, 7.1 % false alarms (all-features reference F1 0.934); Fuzzers only 41 %; leave-one-attack-out: Exploits 72 %, Reconnaissance 63 %, Fuzzers 30 % |
+| Flow model, NSL-KDD | same features idea, KDDTest+ used once | F1 0.854; R2L 22 %, U2R 42 % (these need packet contents); new attack types 65 % vs seen 82 % |
+| Flow model on phone-like traffic | replayed capture | flags **60/60 normal HTTPS sessions**: UNSW-NB15 has **zero normal TLS flows**. Kept as research, raises no alerts |
+| Pcap replay demo | Scapy capture: browsing + scan + DGA + look-alike + heartbeat + 2.4 MB upload | rules find **all 5**; no alert on normal browsing |
+
+## 7.7 PS3 scope coverage
+
+| PS3 expectation | KAVACH component | Status at Phase 1 |
+|---|---|---|
+| Scam / fraud call detection on device | Guardian (ASR → cues → classifier → kill-chain → Llama) | built; evaluated on synthetic, hand-written, held-out and noisy-audio sets |
+| Phishing SMS / messages | Message Shield (notifications, SMS model, cues) | built, F1 0.939 |
+| Malicious links | Link Check (allow-list, look-alike rules, URL model) | built; 98.5 % of Indian look-alikes, 0 % of genuine Indian domains |
+| Malicious / fake apps | App Inspector (permissions, sideloading, lure names) | v0 preview |
+| Screen-sharing / remote-access fraud | Screen-share Guard + kill-chain | v0 preview; STOP on a payment app during remote access |
+| Network threats / intrusion | Network Watch: app traffic, DNS watch, flow model | traffic and DNS rules built and evaluated; flow model research only |
+| Cross-channel correlation | kill-chain hub (calls, messages, links, apps, network) | built, parity-tested |
+| On-device, privacy-preserving | no INTERNET in the main apps; audio never stored | by construction |
+| Explainable alerts in Indian languages | Hindi / English reasons, spoken warnings, Llama explanation | built; Llama quality to be measured on phones |
+| Arm optimisation | ExecuTorch + XNNPACK / KleidiAI, int8 ASR, big.LITTLE placement, < 1 ms fast path | export verified; on-phone numbers in Phase 2 week 1 |
+
+## 7.8 Still to measure on phones (Phase 2 week 1–2, scripts ready)
 
 Llama TTFT, decode tok/s and RAM per quantisation rung, with KleidiAI on and off, on big and
 LITTLE cores, on a flagship and a budget phone. Also: Hindi ASR WER on our own speaker-phone
@@ -274,9 +408,12 @@ SpinQuant on a OnePlus 12.
 
 # 8. Limitations and threat model (summary)
 
-* **ASR is the dominant error source.** Speaker-phone Hindi WER is unknown until recorded.
-  Mitigations are a Devanagari lexicon, training on ASR-noisy text, Llama reasoning over
-  noisy text, and adaptation on our own recordings (Phase 2).
+* **ASR is the dominant error source.** Speaker-phone Hindi WER is unknown until recorded;
+  a TV or other people talking near the phones is the hardest case (§7.3). Mitigations: the
+  bigger English model, the placement check, victim-side cues, a Devanagari lexicon,
+  training on ASR-noisy text, Llama over noisy text, and adaptation on our recordings (Phase 2).
+* **Network Watch** sees byte counts only (the DNS app sees names, not contents); its rule
+  numbers come from simulated traces, and the flow model needs phone traffic to be usable.
 * **Synthetic training data**, written by the team. The held-out and hand-written sets reduce
   but do not remove author bias; the human-recorded test set is the real measure.
 * **Adversaries** can avoid trigger words. The classifier, the cue-category combinations and
@@ -284,7 +421,8 @@ SpinQuant on a OnePlus 12.
   (link, APK, screen share) even when the talk is clean.
 * **Platform policy**: notification access, usage access and `QUERY_ALL_PACKAGES` suit a
   side-loaded prototype; `docs/threat_model.md` describes a Play-policy-compliant design.
-* **The Guardian is a second phone**; the production path is dialer integration.
+* **The Guardian needs the call on speaker** unless the phone maker enables system mode. One-phone
+  mode, KAVACH Phone and Standby auto-start reduce that dependence but do not remove it.
 
 # 9. Phase 2 plan
 
@@ -294,8 +432,8 @@ SpinQuant on a OnePlus 12.
    ASR, and build the untouched human-recorded test set.
 3. NPU export of the speech models (ExecuTorch QNN/MediaTek) and a CPU vs NPU energy
    comparison.
-4. Gradient-boosted App Inspector on public malware data; local-VPN Network Watch (DGA and
-   beaconing).
+4. Gradient-boosted App Inspector on public malware data; retrain the Network Watch flow model
+   on Android traffic (CIC-AndMal2017 or our own labelled captures); dictionary-DGA detection.
 5. Budget-phone port, 30-minute thermal soak, and a consent-based pilot with 20–30 family
    volunteers.
 
@@ -308,7 +446,10 @@ python data/synth/generate_calls.py && python data/synth/generate_sms.py && pyth
 python models/classifiers/train_text.py && python models/classifiers/train_url.py
 python bench/eval_calls.py --split test                # + dev / handwritten / heldout
 python -m pytest -q tests && python tests/make_parity_vectors.py
-cd android && ./gradlew :core:test                      # Kotlin parity (196 checks)
+cd android && ./gradlew :core:test                      # Kotlin parity (336 checks)
+python models/netwatch/train_domain.py && python models/netwatch/train_ids.py
+python bench/netwatch_sim.py && python bench/netwatch_pcap_demo.py
+python bench/e2e_noise.py --asr zipformer-en-2023-06-21 --configs base hotwords
 scripts/build_apks.sh                                  # debug APKs (needs Android SDK)
 pip install executorch==1.4.0 transformers && python models/llama/tiny_pipeline_check.py
 pip install sherpa-onnx && python bench/e2e_audio.py --models <asr+tts model dir>

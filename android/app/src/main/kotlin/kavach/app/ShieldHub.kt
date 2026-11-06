@@ -119,7 +119,14 @@ object ShieldHub {
     fun onRemoteAccessActive(ctx: Context, pkg: String) = exec.execute { feed(ctx, KcEvent(now(), "screen", "remote_access_active", 2.0, pkg), forward = true) }
 
     // ------------------------------------------------------------------ call awareness (one-phone mode)
+    @Volatile private var callActive = false
+
+    /** from CallMonitor (phone-state broadcast) or, when KAVACH is the phone app, from KavachInCallService; once per call */
     fun onCallStarted(ctx: Context, number: String?, unknown: Boolean, outgoing: Boolean) = exec.execute {
+        if (callActive) return@execute
+        callActive = true
+        // nudge to press speaker only when a Guardian is actually linked (otherwise nobody would listen)
+        if (unknown && !Dialer.isDefault(ctx) && linkState.contains("connected")) main.post { SpeakerNudge.show(ctx) }
         callState = (if (unknown) "call with an unknown number" else "call with a contact") + if (outgoing) " (outgoing)" else ""
         links.forEach { it.send(linkedMapOf("type" to "call_started", "unknown" to unknown, "outgoing" to outgoing)) }
         if (unknown) {
@@ -131,6 +138,8 @@ object ShieldHub {
     }
 
     fun onCallEnded(ctx: Context) = exec.execute {
+        if (!callActive) return@execute
+        callActive = false
         callState = "no call"
         links.forEach { it.send(linkedMapOf("type" to "call_ended")) }
         feed(ctx, KcEvent(now(), "phone", KillChain.CALL_END, 0.0, ""), forward = true)

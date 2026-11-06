@@ -74,6 +74,8 @@ class MainActivity : Activity(), ShieldHub.Listener {
         row.addView(Ui.button(this, "Scan apps") { scanApps() })
         row.addView(Ui.button(this, if (ShieldHub.lang(this) == "hi") "English" else "हिंदी") { toggleLang() })
         col.addView(row)
+        col.addView(Ui.button(this, if (ShieldHub.lang(this) == "hi") "कवच फ़ोन (वैकल्पिक): अनजान कॉल अपने-आप स्पीकर पर" else "KAVACH Phone (optional): unknown calls on speaker by themselves") {
+            startActivity(Intent(this, DialerActivity::class.java)) })
         col.addView(familyRow())
         trustRow = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }; col.addView(trustRow)
         feed = Ui.text(this, "", 16f); col.addView(feed)

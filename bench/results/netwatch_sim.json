@@ -1,0 +1,122 @@
+{
+ "poll_s": 30.0,
+ "trace_s": 7200.0,
+ "seeds": 200,
+ "scenarios": {
+  "chat_foreground": {
+   "malicious": false,
+   "suspect_app": true,
+   "what": "sideloaded chat app used in the foreground",
+   "false_alarm": 0.0,
+   "event_kinds": {}
+  },
+  "photo_share_foreground": {
+   "malicious": false,
+   "suspect_app": true,
+   "what": "user sends a 25 MB video while the app is open",
+   "false_alarm": 0.0,
+   "event_kinds": {}
+  },
+  "video_streaming": {
+   "malicious": false,
+   "suspect_app": true,
+   "what": "streaming: big downloads, small uploads",
+   "false_alarm": 0.0,
+   "event_kinds": {}
+  },
+  "cloud_backup_store_app": {
+   "malicious": false,
+   "suspect_app": false,
+   "what": "Play-store backup app uploads 60 MB in the background",
+   "false_alarm": 0.0,
+   "event_kinds": {}
+  },
+  "cloud_backup_sideloaded": {
+   "malicious": false,
+   "suspect_app": true,
+   "what": "SIDELOADED backup app uploads 60 MB in the background (hard case)",
+   "false_alarm": 1.0,
+   "event_kinds": {
+    "suspicious_upload": 398
+   }
+  },
+  "push_sync_irregular": {
+   "malicious": false,
+   "suspect_app": true,
+   "what": "background sync every 3-20 min, irregular",
+   "false_alarm": 0.005,
+   "event_kinds": {
+    "beaconing_app": 1
+   }
+  },
+  "regular_sync_sideloaded": {
+   "malicious": false,
+   "suspect_app": true,
+   "what": "sideloaded app syncing exactly every 2 min (hard case)",
+   "false_alarm": 1.0,
+   "event_kinds": {
+    "beaconing_app": 400
+   }
+  },
+  "spyware_photo_exfil": {
+   "malicious": true,
+   "suspect_app": true,
+   "what": "spyware uploads 8-40 MB of photos in the background",
+   "detected": 1.0,
+   "event_kinds": {
+    "suspicious_upload": 276
+   },
+   "median_time_to_detect_s": 30.0
+  },
+  "spyware_sms_contacts": {
+   "malicious": true,
+   "suspect_app": true,
+   "what": "spyware uploads ~6 MB of SMS/contacts/call logs in 2 min",
+   "detected": 1.0,
+   "event_kinds": {
+    "suspicious_upload": 200
+   },
+   "median_time_to_detect_s": 90.0
+  },
+  "rat_beacon_60s": {
+   "malicious": true,
+   "suspect_app": true,
+   "what": "remote-control heartbeat every 60 s (+-5%)",
+   "detected": 1.0,
+   "event_kinds": {
+    "beaconing_app": 400
+   },
+   "median_time_to_detect_s": 600.0
+  },
+  "rat_beacon_300s": {
+   "malicious": true,
+   "suspect_app": true,
+   "what": "remote-control heartbeat every 5 min (+-5%)",
+   "detected": 1.0,
+   "event_kinds": {
+    "beaconing_app": 400
+   },
+   "median_time_to_detect_s": 2100.0
+  },
+  "slow_exfil": {
+   "malicious": true,
+   "suspect_app": true,
+   "what": "spyware trickles 400 KB every 5 min (designed to stay under limits)",
+   "detected": 1.0,
+   "event_kinds": {
+    "suspicious_upload": 400
+   },
+   "median_time_to_detect_s": 2700.0
+  },
+  "rat_beacon_jittery": {
+   "malicious": true,
+   "suspect_app": true,
+   "what": "heartbeat every 2 min with +-40% random jitter",
+   "detected": 1.0,
+   "event_kinds": {
+    "beaconing_app": 386
+   },
+   "median_time_to_detect_s": 930.0
+  }
+ }
+}

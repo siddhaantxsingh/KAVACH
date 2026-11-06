@@ -51,6 +51,35 @@ class ShieldService : Service() {
         }
     }
 
+    // ---- Network Watch: per-app traffic, also while the screen is off (spyware often uploads at night)
+    @Volatile private var fgPkg: String? = null
+    private var netStats: NetStatsWatch? = null
+    private val suspectCache = HashMap<String, Pair<Long, Boolean>>()
+    private val netPoll = object : Runnable {
+        override fun run() {
+            try { pollNet() } catch (_: Throwable) { }
+            handler.postDelayed(this, NetStatsWatch.POLL_MS)
+        }
+    }
+
+    private fun isSuspect(pkg: String): Boolean {
+        val now = System.currentTimeMillis()
+        suspectCache[pkg]?.let { if (now - it.first < 3600_000L) return it.second }
+        val trusted = getSharedPreferences("kavach", Context.MODE_PRIVATE).getStringSet("net_trusted", emptySet()) ?: emptySet()
+        val r = if (pkg in trusted) null else inspector.inspect(pkg)
+        val recent = try { now - packageManager.getPackageInfo(pkg, 0).firstInstallTime < 7 * 24 * 3600 * 1000L } catch (_: Throwable) { false }
+        val sus = r != null && (r.level != "safe" || r.remoteAccess || r.reasons.any { it.startsWith("installed from outside") } || recent)
+        suspectCache[pkg] = now to sus
+        return sus
+    }
+
+    private fun pollNet() {
+        val ns = netStats ?: return
+        val pmgr = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        val fg = if (pmgr.isInteractive) fgPkg else null
+        for (d in ns.poll()) ShieldHub.onAppTraffic(this, d.pkg, d.tx.toDouble(), d.rx.toDouble(), d.pkg == fg, isSuspect(d.pkg))
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -65,7 +94,11 @@ class ShieldService : Service() {
             ShieldHub.attach(core); ShieldHub.startLink(this); ShieldHub.startAdvisor(this); ShieldHub.startCallAwareness(this)
         }
         registerReceiver(pkgReceiver, IntentFilter(Intent.ACTION_PACKAGE_ADDED).apply { addDataScheme("package") })
-        if (hasUsageAccess(this)) handler.post(poll)
+        if (hasUsageAccess(this)) {
+            handler.post(poll)
+            netStats = NetStatsWatch(this)
+            handler.post(netPoll)
+        }
     }
 
     private fun pollUsage() {
@@ -81,7 +114,9 @@ class ShieldService : Service() {
             val pkg = e.packageName ?: continue
             val remote = pkg in inspector.remoteAccessApps
             when (e.eventType) {
+                UsageEvents.Event.ACTIVITY_PAUSED -> if (fgPkg == pkg) fgPkg = null
                 UsageEvents.Event.ACTIVITY_RESUMED -> {
+                    fgPkg = pkg
                     if (remote) { remoteActive[pkg] = e.timeStamp; ShieldHub.onRemoteAccessActive(this, pkg) }
                     else if (pkg in inspector.paymentApps) { ShieldHub.onPaymentAppOpened(this, pkg); onPaymentForeground(pkg, e.timeStamp) }
                 }

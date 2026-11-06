@@ -100,6 +100,29 @@ object ParityChecks {
             }
             check(guardian.rule == g["final_rule"]) { "guardian ${g["id"]} rule ${guardian.rule} expected ${g["final_rule"]}" }
         }
+        // ---- Network Watch
+        val dm = DomainModel(LinearModel.load(File(assets, "models/domain_model.json").readText(), File(assets, "models/domain_model.bin").readBytes(), null))
+        for (row in v["domain"].arr()) {
+            val r = row.arr(); val h = r[0] as String
+            val toks = DomainFeatures.tokens(h)
+            check(toks == r[1]) { "domainTokens($h) = $toks expected ${r[1]}" }
+            check(close(dm.score(h), r[2] as Double, 1e-6)) { "domainScore($h) = ${dm.score(h)} expected ${r[2]}" }
+        }
+        val fm = FlowModel.load(File(assets, "models/flow_model.json").readText())
+        for (row in v["flow"].arr()) {
+            val r = row.arr(); @Suppress("UNCHECKED_CAST") val f = r[0] as Map<String, Any?>
+            check(close(fm.score(f), r[1] as Double, 1e-6)) { "flowScore($f) = ${fm.score(f)} expected ${r[1]}" }
+        }
+        for (sc in v["netwatch"].arr()) {
+            val o = sc.obj(); val nw = NetWatch()
+            val got = ArrayList<List<Any?>>()
+            for (smp in o["samples"].arr()) {
+                val x = smp.arr()
+                for (e in nw.observe(x[0] as Double, x[1] as String, x[2] as Double, x[3] as Double, x[4] as Boolean, x[5] as Boolean))
+                    got.add(listOf(e.t, e.kind, e.weight, e.detail))
+            }
+            check(got == o["events"]) { "netwatch ${o["name"]} events $got expected ${o["events"]}" }
+        }
         println("parity: $checks checks, ${fails.size} failures")
         return fails
     }

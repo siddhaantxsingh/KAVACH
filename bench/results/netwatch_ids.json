@@ -1,0 +1,299 @@
+{
+ "unsw_nb15": {
+  "dataset": "UNSW-NB15 official partitions",
+  "n_train": 158000,
+  "n_val": 17341,
+  "n_test": 82332,
+  "target_val_false_alarm": 0.02,
+  "features": [
+   "dur",
+   "spkts",
+   "dpkts",
+   "sbytes",
+   "dbytes",
+   "rate",
+   "smean",
+   "dmean",
+   "ct_srv_src",
+   "ct_dst_ltm",
+   "ct_src_dport_ltm",
+   "ct_dst_sport_ltm",
+   "ct_dst_src_ltm",
+   "ct_srv_dst",
+   "proto",
+   "state",
+   "service"
+  ],
+  "mlp_phone_features": {
+   "precision": 0.9389,
+   "recall": 0.885,
+   "f1": 0.9112,
+   "false_alarm_rate": 0.0705,
+   "roc_auc": 0.9714,
+   "per_attack": {
+    "Analysis": {
+     "n": 677,
+     "recall": 0.9941,
+     "precision_vs_normal": 0.205,
+     "f1": 0.3399
+    },
+    "Backdoor": {
+     "n": 583,
+     "recall": 0.9897,
+     "precision_vs_normal": 0.181,
+     "f1": 0.3061
+    },
+    "DoS": {
+     "n": 4089,
+     "recall": 0.9538,
+     "precision_vs_normal": 0.5991,
+     "f1": 0.7359
+    },
+    "Exploits": {
+     "n": 11132,
+     "recall": 0.9135,
+     "precision_vs_normal": 0.7958,
+     "f1": 0.8506
+    },
+    "Fuzzers": {
+     "n": 6062,
+     "recall": 0.4117,
+     "precision_vs_normal": 0.4888,
+     "f1": 0.447
+    },
+    "Generic": {
+     "n": 18871,
+     "recall": 0.9857,
+     "precision_vs_normal": 0.877,
+     "f1": 0.9281
+    },
+    "Reconnaissance": {
+     "n": 3496,
+     "recall": 0.9477,
+     "precision_vs_normal": 0.5593,
+     "f1": 0.7035
+    },
+    "Shellcode": {
+     "n": 378,
+     "recall": 0.918,
+     "precision_vs_normal": 0.1173,
+     "f1": 0.2081
+    },
+    "Worms": {
+     "n": 44,
+     "recall": 0.9545,
+     "precision_vs_normal": 0.0158,
+     "f1": 0.0312
+    }
+   }
+  },
+  "mlp_params": 1665,
+  "gbt_phone_features": {
+   "precision": 0.9203,
+   "recall": 0.9312,
+   "f1": 0.9257,
+   "false_alarm_rate": 0.0988,
+   "roc_auc": 0.9803,
+   "per_attack": {
+    "Analysis": {
+     "n": 677,
+     "recall": 0.9217,
+     "precision_vs_normal": 0.1458,
+     "f1": 0.2518
+    },
+    "Backdoor": {
+     "n": 583,
+     "recall": 0.9931,
+     "precision_vs_normal": 0.1367,
+     "f1": 0.2403
+    },
+    "DoS": {
+     "n": 4089,
+     "recall": 0.9843,
+     "precision_vs_normal": 0.524,
+     "f1": 0.6839
+    },
+    "Exploits": {
+     "n": 11132,
+     "recall": 0.972,
+     "precision_vs_normal": 0.7474,
+     "f1": 0.845
+    },
+    "Fuzzers": {
+     "n": 6062,
+     "recall": 0.5713,
+     "precision_vs_normal": 0.4864,
+     "f1": 0.5255
+    },
+    "Generic": {
+     "n": 18871,
+     "recall": 0.9979,
+     "precision_vs_normal": 0.8374,
+     "f1": 0.9107
+    },
+    "Reconnaissance": {
+     "n": 3496,
+     "recall": 0.9914,
+     "precision_vs_normal": 0.4867,
+     "f1": 0.6529
+    },
+    "Shellcode": {
+     "n": 378,
+     "recall": 0.9497,
+     "precision_vs_normal": 0.0894,
+     "f1": 0.1634
+    },
+    "Worms": {
+     "n": 44,
+     "recall": 1.0,
+     "precision_vs_normal": 0.0119,
+     "f1": 0.0235
+    }
+   }
+  },
+  "gbt_all_features_reference": {
+   "precision": 0.923,
+   "recall": 0.9443,
+   "f1": 0.9335,
+   "false_alarm_rate": 0.0965,
+   "roc_auc": 0.9842,
+   "per_attack": {
+    "Analysis": {
+     "n": 677,
+     "recall": 0.9202,
+     "precision_vs_normal": 0.1485,
+     "f1": 0.2557
+    },
+    "Backdoor": {
+     "n": 583,
+     "recall": 0.9931,
+     "precision_vs_normal": 0.1395,
+     "f1": 0.2446
+    },
+    "DoS": {
+     "n": 4089,
+     "recall": 0.9897,
+     "precision_vs_normal": 0.5312,
+     "f1": 0.6913
+    },
+    "Exploits": {
+     "n": 11132,
+     "recall": 0.9802,
+     "precision_vs_normal": 0.7534,
+     "f1": 0.852
+    },
+    "Fuzzers": {
+     "n": 6062,
+     "recall": 0.6442,
+     "precision_vs_normal": 0.5223,
+     "f1": 0.5769
+    },
+    "Generic": {
+     "n": 18871,
+     "recall": 0.9995,
+     "precision_vs_normal": 0.8408,
+     "f1": 0.9133
+    },
+    "Reconnaissance": {
+     "n": 3496,
+     "recall": 0.9931,
+     "precision_vs_normal": 0.4929,
+     "f1": 0.6588
+    },
+    "Shellcode": {
+     "n": 378,
+     "recall": 0.9577,
+     "precision_vs_normal": 0.092,
+     "f1": 0.1679
+    },
+    "Worms": {
+     "n": 44,
+     "recall": 0.9773,
+     "precision_vs_normal": 0.0119,
+     "f1": 0.0235
+    }
+   }
+  },
+  "ttl_only_reference_auc": 0.8899,
+  "leave_one_attack_out": {
+   "Analysis": {
+    "recall_when_unseen": 0.9852,
+    "recall_when_seen": 0.9941
+   },
+   "Backdoor": {
+    "recall_when_unseen": 0.9794,
+    "recall_when_seen": 0.9897
+   },
+   "DoS": {
+    "recall_when_unseen": 0.9406,
+    "recall_when_seen": 0.9538
+   },
+   "Exploits": {
+    "recall_when_unseen": 0.7213,
+    "recall_when_seen": 0.9135
+   },
+   "Fuzzers": {
+    "recall_when_unseen": 0.2969,
+    "recall_when_seen": 0.4117
+   },
+   "Generic": {
+    "recall_when_unseen": 0.9776,
+    "recall_when_seen": 0.9857
+   },
+   "Reconnaissance": {
+    "recall_when_unseen": 0.6259,
+    "recall_when_seen": 0.9477
+   },
+   "Shellcode": {
+    "recall_when_unseen": 0.8783,
+    "recall_when_seen": 0.918
+   },
+   "Worms": {
+    "recall_when_unseen": 0.9318,
+    "recall_when_seen": 0.9545
+   }
+  },
+  "pte_export": "ok (11140 bytes)",
+  "json_vs_torch_max_abs_diff": 5.960464477539062e-07
+ },
+ "nsl_kdd": {
+  "dataset": "NSL-KDD KDDTrain+/KDDTest+",
+  "gbt_phone_features": {
+   "precision": 0.959,
+   "recall": 0.77,
+   "f1": 0.8542,
+   "false_alarm_rate": 0.0435,
+   "roc_auc": 0.9568,
+   "per_attack": {
+    "dos": {
+     "n": 7458,
+     "recall": 0.922,
+     "precision_vs_normal": 0.9422,
+     "f1": 0.932
+    },
+    "probe": {
+     "n": 2421,
+     "recall": 0.9616,
+     "precision_vs_normal": 0.8465,
+     "f1": 0.9004
+    },
+    "r2l": {
+     "n": 2887,
+     "recall": 0.2248,
+     "precision_vs_normal": 0.606,
+     "f1": 0.3279
+    },
+    "u2r": {
+     "n": 67,
+     "recall": 0.4179,
+     "precision_vs_normal": 0.0622,
+     "f1": 0.1083
+    }
+   },
+   "recall_on_attack_types_never_seen_in_training": 0.6541,
+   "n_novel": 3750,
+   "recall_on_attack_types_seen_in_training": 0.8178,
+   "note": "GBT on phone-observable NSL-KDD fields; threshold at 2% val false alarms; KDDTest+ used once"
+  }
+ }
+}

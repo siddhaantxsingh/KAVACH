@@ -108,11 +108,12 @@ class KillChain(private val stageOf: Map<String, String>, val cfg: KillChainConf
         val HOOK_FOR_ACTION = CONTACT_HOOK - "urgency"
         val STRONG_HOOK = setOf("authority_police", "threat", "identity_misuse")
         val CROSS_KINDS = setOf("dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "scam_sms", "scam_call",
-            "suspicious_upload", "beaconing_app")
+            "suspicious_upload", "beaconing_app", "malicious_domain")
         const val CALL_START = "unknown_call_start"
         const val CALL_END = "call_end"
         const val PAYMENT_OPEN = "payment_app_opened"
-        val CALL_ACTIONS = setOf("dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "suspicious_upload")
+        val CALL_ACTIONS = setOf("dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "suspicious_upload",
+            "malicious_domain")
 
         /** Plain-language reason for a rule, for both screens ("which channel triggered it"). */
         fun ruleLabel(rule: String, lang: String): String {
@@ -126,6 +127,7 @@ class KillChain(private val stageOf: Map<String, String>, val cfg: KillChainConf
                 "payment_app_opened" to (if (hi) "पेमेंट ऐप" else "a payment app"), "suspicious_upload" to (if (hi) "संदिग्ध डेटा अपलोड" else "a suspicious data upload"),
                 "scam_sms" to (if (hi) "स्कैम एसएमएस" else "a scam SMS"), "scam_call" to (if (hi) "संदिग्ध कॉल" else "a suspicious call"),
                 "beaconing_app" to (if (hi) "छुपकर डेटा भेजता ऐप" else "an app secretly sending data"),
+                "malicious_domain" to (if (hi) "खतरनाक वेबसाइट से संपर्क" else "contact with a dangerous website"),
             )[what] ?: what
             return when (base) {
                 "isolation+authority" -> if (hi) "कॉल: अधिकारी बनकर बात छुपाने को कहा" else "Call: posed as an officer and demanded secrecy"

@@ -1,0 +1,19 @@
+{
+  "name": "domain_model",
+  "format": "kavach-hashed-linear-v1",
+  "dim": 65536,
+  "bias": 13.687894311805433,
+  "threshold": 0.7651136423391446,
+  "char_n": [
+    3,
+    4,
+    5
+  ],
+  "hash": "fnv1a32-utf8",
+  "values": "1+ln(count), l2-normalised",
+  "cue_features": false,
+  "cue_scale": 3.0,
+  "task": "dga-domain",
+  "tokens": "kavach_core.netwatch.domain_tokens",
+  "trained_on": "dga_domains_full.csv (19 families) + Alexa"
+}

@@ -279,3 +279,83 @@ class NetWatch:
             return None
         self.last_fired[key] = t
         return Event(t, "network", kind, w, detail)
+
+
+# ----------------------------------------------------------------------------- DNS watch
+
+# Only the deterministic brand-impersonation rules of the link checker are used on DNS lookups:
+# its learned score was trained on links in SMS and calls normal background hosts (analytics,
+# push services) "dangerous", which would alarm all day on a phone.
+IMPERSONATION = {"typosquat", "homoglyph", "brand_in_unofficial_domain"}
+
+
+class DnsWatch:
+    """Judges the DNS lookups each app makes (optional VPN flavour / pcap demo) -> malicious_domain.
+
+    * look-alike of a bank / payment / government brand (link-checker rules)  -> event at once
+    * >= 3 different machine-generated-looking domains that DO NOT EXIST (NXDOMAIN) looked up by
+      one app within 10 minutes: the signature of malware hunting for its control server.
+      A single DGA-looking name never alarms (the domain model has ~0.4% false alarms per name)."""
+
+    def __init__(self, domain_model: DomainModel, url_checker=None, window_s: float = 600.0, min_dga: int = 3,
+                 cooldown_s: float = 3600.0):
+        self.dm = domain_model
+        self.uc = url_checker
+        self.window_s = window_s
+        self.min_dga = min_dga
+        self.cooldown_s = cooldown_s
+        self.dga: dict[str, deque] = {}
+        self.last_fired: dict[str, float] = {}
+
+    def observe(self, t: float, app: str, host: str, nxdomain: bool) -> list[Event]:
+        h = host.strip().lower().strip(".")
+        if not h or "." not in h:
+            return []
+        out: list[Event] = []
+        if self.uc is not None:
+            v = self.uc.check(h)
+            if v.level == "dangerous" and IMPERSONATION & set(v.reasons):
+                ev = self._fire(t, app + "|" + h, 2.0, "%s opened a look-alike website %s" % (app, h))
+                if ev:
+                    out.append(ev)
+        if nxdomain and self.dm.score(h) >= self.dm.threshold:
+            q = self.dga.setdefault(app, deque())
+            q.append((t, h))
+            while q and t - q[0][0] > self.window_s:
+                q.popleft()
+            n = len({x for _, x in q})
+            if n >= self.min_dga:
+                ev = self._fire(t, app + "|dga", 1.5, "%s looked up %d machine-generated domains that do not exist" % (app, n))
+                if ev:
+                    out.append(ev)
+        return out
+
+    def _fire(self, t: float, key: str, w: float, detail: str) -> Event | None:
+        if key in self.last_fired and t - self.last_fired[key] < self.cooldown_s:
+            return None
+        self.last_fired[key] = t
+        return Event(t, "network", "malicious_domain", w, detail)
+
+
+def parse_dns(payload: bytes) -> tuple[int, bool, str, int] | None:
+    """Minimal DNS message parser (UDP payload): (id, is_response, first question name, rcode).
+    rcode 3 = NXDOMAIN. Compression pointers are not followed in the question (never used there)."""
+    if len(payload) < 12:
+        return None
+    ident = (payload[0] << 8) | payload[1]
+    flags = (payload[2] << 8) | payload[3]
+    qd = (payload[4] << 8) | payload[5]
+    if qd < 1:
+        return None
+    i, labels = 12, []
+    while True:
+        if i >= len(payload):
+            return None
+        n = payload[i]
+        if n == 0:
+            break
+        if n & 0xC0 or i + 1 + n > len(payload) or len(labels) > 127:
+            return None
+        labels.append(payload[i + 1:i + 1 + n].decode("ascii", "replace").lower())
+        i += 1 + n
+    return ident, bool(flags & 0x8000), ".".join(labels), flags & 0x000F

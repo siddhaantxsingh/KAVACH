@@ -83,6 +83,30 @@ def message_user_prompt(message: str, active: dict[str, float], url_reasons: lis
     )
 
 
+NETWORK_KIND_TEXT = {
+    "suspicious_upload": "an app secretly sent a lot of data from the phone",
+    "beaconing_app": "an app keeps contacting a server in the background at a steady rhythm (remote-control pattern)",
+    "malicious_domain": "an app contacted a fake or malware website",
+}
+
+
+def network_user_prompt(events: list[tuple[str, str]], in_unknown_call: bool, retrieved: list[dict], lang: str) -> str:
+    """Variant used by the user's phone for Network Watch findings (same JSON contract).
+    events: (kind, detail) pairs; details are quoted so 'evidence' can cite them."""
+    pb = "\n".join(f"- {e['id']}: {e['story_en']} TRUTH: {e['truth_en']}" for e in retrieved)
+    language = "Hindi (Devanagari)" if lang == "hi" else "English"
+    lines = "\n".join(f"- {NETWORK_KIND_TEXT.get(k, k)}: \"{d}\"" for k, d in events) or "- none"
+    call = "yes, a call with an unknown number is going on right now" if in_unknown_call else "no"
+    return (
+        f"Relevant scam patterns:\n{pb}\n"
+        f"Network Watch findings on the user's phone:\n{lines}\n"
+        f"During a call from an unknown number: {call}\n"
+        f"Reply language for 'say': {language}\n"
+        "This is NOT a call transcript. Explain simply what the app may be doing (stealing data, remote control) "
+        "and what to do now (uninstall the app, turn off mobile data / Wi-Fi, call 1930)."
+    )
+
+
 def format_llama3(system: str, user: str) -> tuple[str, str]:
     """Return (prefix, suffix). prefix is constant -> prefill once and cache."""
     prefix = f"{BOT}{SH}system{EH}\n\n{system}{EOT}"

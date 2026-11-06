@@ -163,6 +163,21 @@ object ShieldHub {
             record(Item(System.currentTimeMillis(), "network", "caution", title, ev.detail))
             notifyUser(ctx, title, body, "caution")
             feed(ctx, ev.copy(detail = label + ": " + ev.detail), forward = true)
+            explainNetworkWithLlama(ctx, ev.kind, label + ": " + ev.detail)
+        }
+    }
+
+    private fun explainNetworkWithLlama(ctx: Context, kind: String, detail: String) {
+        val a = advisor ?: return
+        val c = core ?: return
+        if (a.state != LlamaAdvisor.State.READY) return
+        val retrieved = c.playbook.entries.filter { it.id == "remote_support" || it.id == "loan_app" }
+        val inCall = callState.startsWith("call with an unknown")
+        val user = LlmContract.networkUserPrompt(listOf(kind to detail), inCall, retrieved, lang(ctx))
+        val (prefix, suffix) = LlmContract.formatLlama3(LlmContract.systemPrompt(c.playbook.typeIds), user)
+        Executors.newSingleThreadExecutor().execute {
+            val verdict = LlmContract.validate(a.generate(prefix, suffix), detail, c.playbook.typeIds).first ?: return@execute
+            if (verdict.say.isNotBlank()) record(Item(System.currentTimeMillis(), "llm", "info", "Llama 3.2 1B explains", verdict.say))
         }
     }
 

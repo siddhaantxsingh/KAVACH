@@ -16,9 +16,9 @@ from kavach_core.features import LinearModel, fnv1a32, vectorize_tokens  # noqa:
 from kavach_core.guardian import Guardian  # noqa: E402
 from kavach_core.killchain import Event, KillChain  # noqa: E402
 from kavach_core.lexicon import Lexicon  # noqa: E402
-from kavach_core.llm import format_llama3, system_prompt, user_prompt, validate  # noqa: E402
+from kavach_core.llm import format_llama3, network_user_prompt, system_prompt, user_prompt, validate  # noqa: E402
 from kavach_core.message_shield import MessageShield  # noqa: E402
-from kavach_core.netwatch import DomainModel, FlowModel, NetWatch, domain_tokens  # noqa: E402
+from kavach_core.netwatch import DnsWatch, DomainModel, FlowModel, NetWatch, domain_tokens, parse_dns  # noqa: E402
 from kavach_core.normalize import normalize, tokens  # noqa: E402
 from kavach_core.retrieval import Playbook  # noqa: E402
 from kavach_core.url_check import UrlChecker, extract_urls, split_url  # noqa: E402
@@ -101,6 +101,13 @@ def main() -> None:
                      "formatted": list(format_llama3(system_prompt(ids), "u"))}
     raws = ['Sure! {"scam": true, "type": "digital_arrest", "stage": "isolation", "confidence": 0.93, "evidence": ["kisi ko mat batana", "made up"], "say": "Phone kaatiye.", "action": "hang_up"}',
             '{"scam": "maybe"}', "no json", '{"scam": false, "type": "bogus", "stage": "x", "confidence": 7, "action": "dance"}']
+    rs = [e for e in pb.entries if e["id"] in ("remote_support", "loan_app")]
+    out["network_prompt"] = [
+        {"events": [["suspicious_upload", "Loan Fast: sent 12.4 MB in the background in 5 min"]], "call": True, "lang": "hi",
+         "text": network_user_prompt([("suspicious_upload", "Loan Fast: sent 12.4 MB in the background in 5 min")], True, rs, "hi")},
+        {"events": [], "call": False, "lang": "en", "text": network_user_prompt([], False, [], "en")},
+        {"events": [["beaconing_app", "x"], ["malicious_domain", "y"], ["other", "z"]], "call": False, "lang": "en",
+         "text": network_user_prompt([("beaconing_app", "x"), ("malicious_domain", "y"), ("other", "z")], False, rs[:1], "en")}]
     out["validate"] = []
     for r in raws:
         vv, _ = validate(r, "main cbi se hoon kisi ko mat batana", ids)
@@ -147,6 +154,23 @@ def main() -> None:
             evs += [[e.t, e.kind, e.weight, e.detail] for e in nw.observe(t, app, tx, rx, fg, sus)]
         nwo.append({"name": name, "samples": [list(x) for x in tr], "events": evs})
     out["netwatch"] = nwo
+    # DNS: packets built with scapy (raw bytes, hex) -> parser; and a DnsWatch scenario
+    from scapy.all import DNS, DNSQR, raw  # noqa: E402
+
+    pk = [raw(DNS(id=0x1234, rd=1, qd=DNSQR(qname="www.Google.com"))),
+          raw(DNS(id=7, qr=1, rcode=3, qd=DNSQR(qname="xjwqkzpvbnfh.biz"))),
+          raw(DNS(id=9, qr=1, rcode=0, qd=DNSQR(qname="sbi-kyc-update.xyz"))),
+          b"\x00\x01\x00", b"\x00" * 12]
+    out["dns_parse"] = [[p_.hex(), list(r) if (r := parse_dns(p_)) else None] for p_ in pk]
+    dw = DnsWatch(dm, uc)
+    looks = [(0.0, "com.chat", "google.com", False), (5.0, "com.chat", "graph.facebook.com", False),
+             (6.0, "com.chat", "app-measurement.com", False), (10.0, "com.evil", "hdfcbnak.com", False),
+             (11.0, "com.evil", "hdfcbnak.com", False), (20.0, "com.rat", "xjwqkzpvbnfhtrq.biz", True),
+             (30.0, "com.rat", "kdjfhgkdjfhgqwpz.ru", True), (35.0, "com.rat", "kdjfhgkdjfhgqwpz.ru", True),
+             (40.0, "com.rat", "cvyh1po636avyrsxebwbkn7.net", True), (50.0, "com.rat", "qpwoeiruty1029.info", True),
+             (900.0, "com.rat", "zmxncbvlaksjdh.top", True), (60.0, "com.ok", "xjwqkzpvbnfhtrq.biz", False)]
+    out["dns_watch"] = {"lookups": [list(x) for x in looks],
+                        "events": [[[e.t, e.kind, e.weight, e.detail] for e in dw.observe(*x)] for x in looks]}
 
     dst = ROOT / "assets/parity/vectors.json"
     dst.parent.mkdir(parents=True, exist_ok=True)

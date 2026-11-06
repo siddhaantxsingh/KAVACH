@@ -164,3 +164,63 @@ class FlowModel(spec: Map<String, Any?>) {
         fun load(json: String) = FlowModel(MiniJson.parse(json).obj())
     }
 }
+
+/** DNS lookups per app -> malicious_domain (port of kavach_core.netwatch.DnsWatch). */
+class DnsWatch(private val dm: DomainModel, private val uc: UrlChecker?, private val windowS: Double = 600.0,
+               private val minDga: Int = 3, private val cooldownS: Double = 3600.0) {
+    private val dga = HashMap<String, ArrayDeque<Pair<Double, String>>>()
+    private val lastFired = HashMap<String, Double>()
+
+    fun observe(t: Double, app: String, host: String, nxdomain: Boolean): List<KcEvent> {
+        val h = host.trim().lowercase().trim('.')
+        if (h.isEmpty() || '.' !in h) return emptyList()
+        val out = ArrayList<KcEvent>()
+        if (uc != null) {
+            val v = uc.check(h)
+            if (v.level == "dangerous" && v.reasons.any { it in IMPERSONATION })
+                fire(t, "$app|$h", 2.0, "$app opened a look-alike website $h")?.let { out.add(it) }
+        }
+        if (nxdomain && dm.score(h) >= dm.threshold) {
+            val q = dga.getOrPut(app) { ArrayDeque() }
+            q.addLast(t to h)
+            while (q.isNotEmpty() && t - q.first().first > windowS) q.removeFirst()
+            val n = q.map { it.second }.toSet().size
+            if (n >= minDga) fire(t, "$app|dga", 1.5, "$app looked up $n machine-generated domains that do not exist")?.let { out.add(it) }
+        }
+        return out
+    }
+
+    private fun fire(t: Double, key: String, w: Double, detail: String): KcEvent? {
+        val last = lastFired[key]
+        if (last != null && t - last < cooldownS) return null
+        lastFired[key] = t
+        return KcEvent(t, "network", "malicious_domain", w, detail)
+    }
+
+    companion object {
+        val IMPERSONATION = setOf("typosquat", "homoglyph", "brand_in_unofficial_domain")
+
+        data class DnsMsg(val id: Int, val isResponse: Boolean, val name: String, val rcode: Int)
+
+        /** Minimal DNS message parser over a UDP payload (offset/len into a packet buffer). */
+        fun parse(buf: ByteArray, off: Int = 0, len: Int = buf.size - off): DnsMsg? {
+            if (len < 12) return null
+            fun b(i: Int) = buf[off + i].toInt() and 0xFF
+            val id = (b(0) shl 8) or b(1)
+            val flags = (b(2) shl 8) or b(3)
+            if (((b(4) shl 8) or b(5)) < 1) return null
+            var i = 12
+            val labels = ArrayList<String>()
+            while (true) {
+                if (i >= len) return null
+                val n = b(i)
+                if (n == 0) break
+                if (n and 0xC0 != 0 || i + 1 + n > len || labels.size > 127) return null
+                val sb = StringBuilder()
+                for (k in 0 until n) { val c = b(i + 1 + k); sb.append(if (c < 128) c.toChar().lowercaseChar() else '\uFFFD') }
+                labels.add(sb.toString()); i += 1 + n
+            }
+            return DnsMsg(id, flags and 0x8000 != 0, labels.joinToString("."), flags and 0x000F)
+        }
+    }
+}

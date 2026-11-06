@@ -123,6 +123,28 @@ object ParityChecks {
             }
             check(got == o["events"]) { "netwatch ${o["name"]} events $got expected ${o["events"]}" }
         }
+        val rs = core.playbook.entries.filter { it.id == "remote_support" || it.id == "loan_app" }
+        for ((i, np) in v["network_prompt"].arr().withIndex()) {
+            val o = np.obj()
+            val evs = o["events"].arr().map { val e = it.arr(); (e[0] as String) to (e[1] as String) }
+            val ret = when (i) { 0 -> rs; 1 -> emptyList(); else -> rs.take(1) }
+            check(LlmContract.networkUserPrompt(evs, o["call"] as Boolean, ret, o["lang"] as String) == o["text"]) { "network prompt $i differs" }
+        }
+        for (row in v["dns_parse"].arr()) {
+            val r = row.arr(); val hex = r[0] as String
+            val bytes = ByteArray(hex.length / 2) { hex.substring(2 * it, 2 * it + 2).toInt(16).toByte() }
+            val m = DnsWatch.parse(bytes)
+            val got = m?.let { listOf(it.id.toDouble(), it.isResponse, it.name, it.rcode.toDouble()) }
+            check(got == r[1]) { "dnsParse($hex) = $got expected ${r[1]}" }
+        }
+        val dw = DnsWatch(dm, core.urlChecker)
+        val dwv = v["dns_watch"].obj()
+        val dexp = dwv["events"].arr()
+        for ((i, lk) in dwv["lookups"].arr().withIndex()) {
+            val x = lk.arr()
+            val got = dw.observe(x[0] as Double, x[1] as String, x[2] as String, x[3] as Boolean).map { listOf(it.t, it.kind, it.weight, it.detail) }
+            check(got == dexp[i]) { "dnsWatch $x = $got expected ${dexp[i]}" }
+        }
         println("parity: $checks checks, ${fails.size} failures")
         return fails
     }

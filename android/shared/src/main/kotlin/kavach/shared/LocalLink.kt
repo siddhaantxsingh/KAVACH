@@ -40,7 +40,8 @@ class LocalLink(
             val raw = i.getStringExtra(EXTRA_JSON) ?: return
             @Suppress("UNCHECKED_CAST")
             val m = try { MiniJson.parse(raw) as? Map<String, Any?> } catch (t: Throwable) { null } ?: return
-            if (!peerSeen) { peerSeen = true; onState("connected (same phone)") }
+            // KAVACH Network Watch (optional app) also sends events here; it is not the Guardian
+            if (!peerSeen && m["source"] != "netwatch") { peerSeen = true; onState("connected (same phone)") }
             when (m["type"]) {
                 "hello" -> send(mapOf("type" to "hello_ack"))
                 "hello_ack" -> Unit

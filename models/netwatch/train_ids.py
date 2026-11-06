@@ -6,6 +6,11 @@ Datasets (data/public/download.sh -> data/public/raw/, never committed):
             that never appear in training: a built-in "new attack" test).
 CICIDS2017 was not reachable from the build machine; see docs/network_watch.md.
 
+KEY FINDING: UNSW-NB15 contains ZERO normal TLS/HTTPS flows (both partitions). A model trained on it
+calls ordinary phone HTTPS "attack" (60/60 normal HTTPS sessions in bench/netwatch_pcap_demo.py).
+The model is therefore kept as an evaluated research component and raises no alerts; Network
+Watch alerts come from explainable rules (kavach_core/netwatch.py, bench/netwatch_pcap_demo.py).
+
 Design choices (honesty first):
   * PHONE-OBSERVABLE features only: what a flow tracker inside a phone VPN can count
     (duration, packets, bytes, rates, mean packet size, protocol/state/service, and how many
@@ -156,7 +161,10 @@ def unsw() -> dict:
     ytr_all, yte = tr["label"].to_numpy(), te["label"].to_numpy()
     ctr_all, cte = tr["attack_cat"].to_numpy(), te["attack_cat"].to_numpy()
     Xtr, ytr, Xv, yv = Xtr_all[~val_mask], ytr_all[~val_mask], Xtr_all[val_mask], ytr_all[val_mask]
-    res: dict = {"dataset": "UNSW-NB15 official partitions", "n_train": int(len(Xtr)), "n_val": int(len(Xv)), "n_test": int(len(Xte)),
+    res: dict = {"dataset": "UNSW-NB15 official partitions",
+                 "normal_tls_flows": {"train": int(((tr.service == "ssl") & (tr.label == 0)).sum()), "test": int(((te.service == "ssl") & (te.label == 0)).sum())},
+                 "deployment_status": "research only, raises no alerts: UNSW-NB15 has no normal TLS/HTTPS flows, so ordinary phone "
+                                      "HTTPS is scored as attack (see bench/netwatch_pcap_demo.py). Needs retraining on phone traffic.", "n_train": int(len(Xtr)), "n_val": int(len(Xv)), "n_test": int(len(Xte)),
                  "target_val_false_alarm": TARGET_FPR, "features": FLOW_NUM + list(FLOW_CAT)}
 
     mlp = train_mlp(Xtr, ytr)
@@ -194,7 +202,8 @@ def unsw() -> dict:
     res["leave_one_attack_out"] = loao
 
     export_json(mlp, thr, ROOT / "assets/models/flow_model.json",
-                {"trained_on": "UNSW-NB15 training partition (phone-observable features)", "val_false_alarm_target": TARGET_FPR})
+                {"trained_on": "UNSW-NB15 training partition (phone-observable features)", "val_false_alarm_target": TARGET_FPR,
+                 "status": "research only: not used for alerts (UNSW-NB15 has zero normal TLS flows; phone traffic is mostly TLS)"})
     res["pte_export"] = export_pte(mlp, Xtr.shape[1], ROOT / "assets/models/flow_model.pte")
     # check the JSON model reproduces torch on 200 test flows
     fm = FlowModel.load(ROOT / "assets/models/flow_model.json")

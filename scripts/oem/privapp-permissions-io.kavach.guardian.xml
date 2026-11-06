@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- For phone makers / custom ROMs only (docs/oem_mode.md).
+     Install the Guardian APK as /system_ext/priv-app/KavachGuardian/KavachGuardian.apk and this file as
+     /system_ext/etc/permissions/privapp-permissions-io.kavach.guardian.xml (or the /system equivalents). -->
+<permissions>
+    <privapp-permissions package="io.kavach.guardian">
+        <permission name="android.permission.CAPTURE_AUDIO_OUTPUT" />
+    </privapp-permissions>
+</permissions>

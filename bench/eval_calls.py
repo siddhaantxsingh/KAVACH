@@ -37,6 +37,7 @@ FILES = {
     "train": ROOT / "data/synth/out/calls_train.jsonl",
     "dev": ROOT / "data/synth/out/calls_dev.jsonl",
     "test": ROOT / "data/synth/out/calls_test.jsonl",
+    "test_far": ROOT / "data/synth/out/calls_test_far.jsonl",  # caller heard through the speaker: 3x ASR errors
     "handwritten": ROOT / "data/dev/handwritten_calls.jsonl",
     "heldout": ROOT / "data/dev/heldout_calls.jsonl",  # locked: report only, never tune
 }

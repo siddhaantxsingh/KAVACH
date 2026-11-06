@@ -145,6 +145,15 @@ object ParityChecks {
             val got = dw.observe(x[0] as Double, x[1] as String, x[2] as String, x[3] as Boolean).map { listOf(it.t, it.kind, it.weight, it.detail) }
             check(got == dexp[i]) { "dnsWatch $x = $got expected ${dexp[i]}" }
         }
+        val ac = v["audio_check"].obj()
+        val sig = ac["signal"].arr().map { (it as Double).toFloat() }.toFloatArray()
+        val pw = AudioCheck.framePowers(sig, 16000)
+        val epw = ac["powers"].arr().map { it as Double }
+        check(pw.size == epw.size && pw.zip(epw).all { (a, b) -> close(a, b, 1e-9) }) { "framePowers differ" }
+        for (row in ac["snr"].arr()) {
+            val r = row.arr(); val p = r[0].arr().map { it as Double }
+            check(close(AudioCheck.estimateFromPowers(p), r[1] as Double, 1e-9)) { "snr($p) = ${AudioCheck.estimateFromPowers(p)} expected ${r[1]}" }
+        }
         println("parity: $checks checks, ${fails.size} failures")
         return fails
     }

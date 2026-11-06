@@ -100,7 +100,7 @@ def segments_for(text: str, t0: float, rate: float, rng: random.Random) -> tuple
     return segs, t
 
 
-def make_call(cid: str, label: int, typ: str, script, split: str, rng: random.Random, noise: float) -> dict:
+def make_call(cid: str, label: int, typ: str, script, split: str, rng: random.Random, noise: float, caller_noise: float = 1.0) -> dict:
     lang = rng.choices([l for l, _ in LANGS], [w for _, w in LANGS])[0]
     t = rng.uniform(0.5, 2.0)
     rate = rng.uniform(2.2, 3.0)
@@ -113,8 +113,9 @@ def make_call(cid: str, label: int, typ: str, script, split: str, rng: random.Ra
             use_lang = "hing" if lang == "en" else "en"
         items = split_pool(P[pool][use_lang], split)
         raw = fill(rng.choice(items), use_lang, rng)
-        text = asr_noise(raw, use_lang, rng, noise)
         speaker = "victim" if pool.startswith("victim") else "caller"
+        # the caller is heard through the speaker, the victim directly: optionally more ASR errors for the caller
+        text = asr_noise(raw, use_lang, rng, noise * (caller_noise if speaker == "caller" else 1.0))
         stage = STAGE_OF_POOL.get(pool) if label == 1 else None
         if label == 1 and pool in MONEY_POOLS and money_t is None:
             money_t = round(t, 2)
@@ -125,17 +126,17 @@ def make_call(cid: str, label: int, typ: str, script, split: str, rng: random.Ra
     return {"id": cid, "label": label, "type": typ, "lang": lang, "split": split, "segments": segs, "money_t": money_t}
 
 
-def generate(n: int, split: str, seed: int, noise: float, scam_frac: float = 0.5) -> list[dict]:
+def generate(n: int, split: str, seed: int, noise: float, scam_frac: float = 0.5, caller_noise: float = 1.0) -> list[dict]:
     rng = random.Random(seed)
     calls = []
     scam_types, benign_types = list(SCAM_SCRIPTS), list(BENIGN_SCRIPTS)
     for k in range(n):
         if rng.random() < scam_frac:
             typ = scam_types[k % len(scam_types)] if rng.random() < 0.5 else rng.choice(scam_types)
-            calls.append(make_call(f"{split}-{k:05d}", 1, typ, SCAM_SCRIPTS[typ], split, rng, noise))
+            calls.append(make_call(f"{split}-{k:05d}", 1, typ, SCAM_SCRIPTS[typ], split, rng, noise, caller_noise))
         else:
             typ = rng.choice(benign_types)
-            calls.append(make_call(f"{split}-{k:05d}", 0, typ, BENIGN_SCRIPTS[typ], split, rng, noise))
+            calls.append(make_call(f"{split}-{k:05d}", 0, typ, BENIGN_SCRIPTS[typ], split, rng, noise, caller_noise))
     return calls
 
 
@@ -150,9 +151,12 @@ def main() -> None:
     a = ap.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    for split, n, seed in (("train", a.train, a.seed), ("dev", a.dev, a.seed + 1), ("test", a.test, a.seed + 2)):
-        pool_split = split  # each split draws from its own partition of every pool
-        calls = generate(n, pool_split, seed, a.noise)
+    # test_far: the test calls' pools, but the caller (heard through the speaker) gets 3x the ASR
+    # errors of the victim (who sits next to the Guardian mic)
+    for split, n, seed, cn in (("train", a.train, a.seed, 1.0), ("dev", a.dev, a.seed + 1, 1.0), ("test", a.test, a.seed + 2, 1.0),
+                               ("test_far", a.test, a.seed + 2, 3.0)):
+        pool_split = "test" if split == "test_far" else split  # each split draws from its own partition of every pool
+        calls = generate(n, pool_split, seed, a.noise, caller_noise=cn)
         for c in calls:
             c["split"] = split
             c["id"] = c["id"].replace(pool_split, split, 1)

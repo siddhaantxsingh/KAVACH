@@ -2,8 +2,8 @@
   "name": "cue_model",
   "format": "kavach-hashed-linear-v1",
   "dim": 262144,
-  "bias": -1.0783077587136174,
-  "threshold": 0.65,
+  "bias": -1.071299665171571,
+  "threshold": 0.7,
   "char_n": [
     3,
     4,

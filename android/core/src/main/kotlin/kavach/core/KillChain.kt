@@ -83,6 +83,7 @@ class KillChain(private val stageOf: Map<String, String>, val cfg: KillChainConf
             cats.containsAll(STRONG_HOOK) -> { level = "stop"; rule = "authority+identity+threat" }
             cats.count { it in ACTION_PAY } >= 2 && !hasSafety -> { level = "stop"; rule = "multi-action" }
             cats.any { it in ACTION_PAY } && cats.any { it in HOOK_FOR_ACTION } && !hasSafety -> { level = "stop"; rule = "hook+action" }
+            cats.any { it in VICTIM_ACT } && cats.any { it in VICTIM_PRETEXT } && !hasSafety -> { level = "stop"; rule = "victim-complying" }
             convo && acts.isNotEmpty() -> { level = "stop"; rule = "call+action:" + acts.last().kind }
             ctx != null && acts.any { it.kind in CALL_ACTIONS } -> { level = "stop"; rule = "unknown-call+" + acts.last { it.kind in CALL_ACTIONS }.kind }
             cross.isNotEmpty() && callScore >= cfg.cautionScore -> { level = "stop"; rule = "cross-channel:" + cross.last().kind }
@@ -103,10 +104,13 @@ class KillChain(private val stageOf: Map<String, String>, val cfg: KillChainConf
 
     companion object {
         val LEVELS = listOf("none", "info", "caution", "stop")
-        val CONTACT_HOOK = setOf("authority_police", "authority_bank", "identity_misuse", "threat", "urgency", "reward_greed", "family_emergency")
+        val CONTACT_HOOK = setOf("authority_police", "authority_bank", "identity_misuse", "threat", "urgency", "reward_greed", "family_emergency", "victim_fear")
         val ACTION_PAY = setOf("credential_request", "remote_access", "link_click", "payment_request")
         val HOOK_FOR_ACTION = CONTACT_HOOK - "urgency"
         val STRONG_HOOK = setOf("authority_police", "threat", "identity_misuse")
+        /** what the person next to the Guardian says; normal alone, STOP only with a scam pretext */
+        val VICTIM_ACT = setOf("victim_sharing", "victim_paying")
+        val VICTIM_PRETEXT = STRONG_HOOK + setOf("victim_fear", "authority_bank")
         val CROSS_KINDS = setOf("dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "scam_sms", "scam_call",
             "suspicious_upload", "beaconing_app", "malicious_domain")
         const val CALL_START = "unknown_call_start"
@@ -135,6 +139,7 @@ class KillChain(private val stageOf: Map<String, String>, val cfg: KillChainConf
                 "multi-action", "hook+action" -> if (hi) "कॉल: ओटीपी / पैसे / ऐप की मांग" else "Call: asked for OTP / money / an app"
                 "call+action" -> if (hi) "संदिग्ध कॉल + $act" else "Suspicious call + $act"
                 "unknown-call" -> if (hi) "अनजान नंबर से कॉल + $act" else "Unknown caller + $act"
+                "victim-complying" -> if (hi) "आप ओटीपी / पैसे दे रहे हैं, और कॉल करने वाला डरा रहा है" else "You are giving an OTP / money to a caller who is scaring you"
                 "long-unknown-call+payment" -> if (hi) "लंबी अनजान कॉल के दौरान पेमेंट ऐप" else "Payment app during a long unknown call"
                 "cross-channel", "cross-channel-multi" -> if (hi) "कॉल + दूसरे चैनल ($act)" else "Call + another channel ($act)"
                 "classifier" -> if (hi) "बातचीत का पैटर्न स्कैम जैसा" else "Conversation pattern matches scams"

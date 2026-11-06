@@ -39,6 +39,7 @@ object GuardianBus {
         fun onAlert(a: Alert) {}
         fun onLlm(v: Verdict, stats: LlamaAdvisor.Stats?) {}
         fun onStatus(msg: String) {}
+        fun onPlacement(snrDb: Double) {}
     }
     private val main = Handler(Looper.getMainLooper())
     private val listeners = LinkedHashSet<Listener>()
@@ -145,13 +146,15 @@ class GuardianService : Service() {
                     demo = DemoPlayer(this, demoScript, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) }).also { it.start() }
                     GuardianBus.status("demo replay: $demoScript")
                 } else {
-                    val a = AsrEngine(models ?: ModelFiles.dir(this), lang, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) })
+                    val a = AsrEngine(models ?: ModelFiles.dir(this), lang, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) },
+                        onPlacement = { snr -> GuardianBus.post { it.onPlacement(snr) } }, callAudio = oemMode(this))
                     val missing = a.missingFiles()
                     if (missing.isNotEmpty()) {
                         GuardianBus.status("ASR model missing: ${missing.first()} — run scripts/push_models.sh")
                     } else {
                         asr = a; a.start()
-                        GuardianBus.status((if (reason == "call_started") "call detected — " else "") + "listening (${if (lang == "hi") "Hindi/Hinglish" else "English"})")
+                        GuardianBus.status((if (reason == "call_started") "call detected — " else "") + "listening (${if (lang == "hi") "Hindi/Hinglish" else "English"})" +
+                            if (oemMode(this)) " · system mode: reading the call audio directly" else "")
                     }
                 }
             }
@@ -289,6 +292,11 @@ class GuardianService : Service() {
     }
 
     companion object {
+        /** OEM/system mode: true only when installed as a privileged system app that was granted
+         *  CAPTURE_AUDIO_OUTPUT (docs/oem_mode.md). Normal installs never get this permission. */
+        fun oemMode(ctx: android.content.Context): Boolean =
+            ctx.checkSelfPermission("android.permission.CAPTURE_AUDIO_OUTPUT") == android.content.pm.PackageManager.PERMISSION_GRANTED
+
         private const val TAG = "GuardianService"
         const val CHANNEL = "guardian"
         const val NOTIF_ID = 7

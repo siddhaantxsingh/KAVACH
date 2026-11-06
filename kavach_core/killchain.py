@@ -49,12 +49,13 @@ ACTION_PAY = {"credential_request", "remote_access", "link_click", "payment_requ
 HOOK_FOR_ACTION = CONTACT_HOOK - {"urgency"}
 STRONG_HOOK = {"authority_police", "threat", "identity_misuse"}
 CROSS_KINDS = {"dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "scam_sms", "scam_call",
-               "suspicious_upload", "beaconing_app"}
+               "suspicious_upload", "beaconing_app", "malicious_domain"}
 # Call awareness (user's phone knows a call with an unknown number is going on, without hearing it)
 CALL_START = "unknown_call_start"  # weight 0: marks the start of an unknown-number call
 CALL_END = "call_end"  # weight 0
 PAYMENT_OPEN = "payment_app_opened"  # weight 0: a payment / banking app came to the foreground
-CALL_ACTIONS = {"dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "suspicious_upload"}
+CALL_ACTIONS = {"dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "suspicious_upload",
+                "malicious_domain"}
 
 
 @dataclass

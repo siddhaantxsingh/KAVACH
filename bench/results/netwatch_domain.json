@@ -1,0 +1,96 @@
+{
+ "threshold": 0.7651136423391446,
+ "target_val_fpr": 0.005,
+ "heldout_families": [
+  "suppobox",
+  "matsnu",
+  "gozi",
+  "cryptolocker",
+  "necurs",
+  "pushdo"
+ ],
+ "splits": {
+  "val": {
+   "n": 56496,
+   "false_alarm_rate": 0.005,
+   "recall": 0.8498,
+   "recall_by_family": {
+    "conficker": 0.5506,
+    "dircrypt": 0.8663,
+    "emotet": 1.0,
+    "fobber": 0.783,
+    "kraken": 0.7441,
+    "murofet": 0.9948,
+    "nymaim": 0.4344,
+    "padcrypt": 0.9589,
+    "pykspa": 0.9073,
+    "qadars": 0.9735,
+    "ramdo": 0.9935,
+    "ramnit": 0.8528,
+    "ranbyus": 0.9948,
+    "rovnix": 0.9942,
+    "simda": 0.9031,
+    "tinba": 0.9324,
+    "vawtrak": 0.5373
+   }
+  },
+  "test": {
+   "n": 83112,
+   "false_alarm_rate": 0.005,
+   "recall": 0.6175,
+   "recall_by_family": {
+    "conficker": 0.637,
+    "corebot": 0.8091,
+    "dircrypt": 0.8603,
+    "emotet": 0.9993,
+    "fobber": 0.7956,
+    "kraken": 0.4255,
+    "murofet": 0.9941,
+    "nymaim": 0.4328,
+    "padcrypt": 0.9532,
+    "pykspa": 0.9088,
+    "qadars": 0.9716,
+    "ramdo": 0.9927,
+    "ramnit": 0.8337,
+    "ranbyus": 0.9935,
+    "rovnix": 0.9948,
+    "simda": 0.8983,
+    "symmi": 0.0693,
+    "tinba": 0.9301,
+    "vawtrak": 0.5646
+   }
+  },
+  "unseen": {
+   "n": 81000,
+   "recall": 0.3096,
+   "recall_by_family": {
+    "cryptolocker": 0.9218,
+    "gozi": 0.0069,
+    "matsnu": 0.0,
+    "necurs": 0.9179,
+    "pushdo": 0.0001,
+    "suppobox": 0.0107
+   }
+  }
+ },
+ "top100k_false_alarm_rate": 0.0036,
+ "top100k_n": 85228,
+ "top100k_false_alarm_examples": [
+  "com-l1jgx3j214ycs1w319vwnrjgqi78cgaug.pw",
+  "com-lfsdgcdoxv8vkkxyks8gbizfeb6.xyz",
+  "dyndns.info",
+  "hidcptqmerifcusymaqddcomolsujibeptsmycmqsrwgrcmywshgnfpjhcc.com",
+  "com-ickt1x2fopg5362hdbjkbizfeb7.xyz",
+  "dyndns.biz",
+  "vadabzauefrpph4xraz8ewblhsbsbxkfq7sx8d9me4nuemgnx2yt5cnyfzzlxek.com",
+  "com-fpp8ce06o9i058a26f8dbizfeb1.xyz",
+  "imprssn.info",
+  "dyndns.tv",
+  "com-s4956j71o408o798czpzbizfeb2.xyz",
+  "com-udlfkammkca5pg63etsabizfeb12.xyz",
+  "smrtgsrtbsourceads.net",
+  "imprssn.name",
+  "com-5oaffv08tiz5di0t68idbizfeb3.xyz"
+ ],
+ "genuine_in_flagged": []
+}

@@ -136,6 +136,36 @@ object ShieldHub {
         feed(ctx, KcEvent(now(), "phone", KillChain.CALL_END, 0.0, ""), forward = true)
     }
 
+    // ------------------------------------------------------------------ Network Watch (app traffic)
+    private val netWatch = kavach.core.NetWatch()
+    /** apps that raised a Network Watch alert: package -> label (for the "I trust this app" buttons) */
+    val netAlertApps = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    fun trustApp(ctx: Context, pkg: String) {
+        val p = ctx.getSharedPreferences("kavach", Context.MODE_PRIVATE)
+        p.edit().putStringSet("net_trusted", (p.getStringSet("net_trusted", emptySet()) ?: emptySet()) + pkg).apply()
+        netAlertApps.remove(pkg); changed()
+    }
+
+    fun onAppTraffic(ctx: Context, pkg: String, tx: Double, rx: Double, foreground: Boolean, suspect: Boolean) = exec.execute {
+        for (ev in netWatch.observe(now(), pkg, tx, rx, foreground, suspect)) {
+            val hi = lang(ctx) == "hi"
+            val label = try { ctx.packageManager.getApplicationLabel(ctx.packageManager.getApplicationInfo(pkg, 0)).toString() } catch (_: Throwable) { pkg }
+            val (title, body) = when (ev.kind) {
+                "suspicious_upload" -> (if (hi) "\"$label\" छुपकर बहुत डेटा भेज रहा है" else "\"$label\" is secretly sending a lot of data") to
+                    (if (hi) "यह ऐप ऐप-स्टोर से नहीं है या नया है। अगर आपने इसे किसी के कहने पर डाला है, तो इसे अभी हटाएँ।"
+                     else "This app is not from an app store or is new. If someone asked you to install it, uninstall it now.")
+                else -> (if (hi) "\"$label\" बार-बार छुपकर इंटरनेट से जुड़ रहा है" else "\"$label\" keeps contacting the internet in the background") to
+                    (if (hi) "यह रिमोट-कंट्रोल ऐप जैसा व्यवहार है। अगर आप इसे नहीं पहचानते, तो हटा दें।"
+                     else "This looks like a remote-control app. If you don't recognise it, uninstall it.")
+            }
+            netAlertApps[pkg] = label
+            record(Item(System.currentTimeMillis(), "network", "caution", title, ev.detail))
+            notifyUser(ctx, title, body, "caution")
+            feed(ctx, ev.copy(detail = label + ": " + ev.detail), forward = true)
+        }
+    }
+
     fun onPaymentAppOpened(ctx: Context, pkg: String) = exec.execute {
         feed(ctx, KcEvent(now(), "app", KillChain.PAYMENT_OPEN, 0.0, pkg), forward = true)
     }

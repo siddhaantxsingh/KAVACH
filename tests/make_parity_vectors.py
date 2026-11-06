@@ -18,6 +18,7 @@ from kavach_core.killchain import Event, KillChain  # noqa: E402
 from kavach_core.lexicon import Lexicon  # noqa: E402
 from kavach_core.llm import format_llama3, system_prompt, user_prompt, validate  # noqa: E402
 from kavach_core.message_shield import MessageShield  # noqa: E402
+from kavach_core.netwatch import DomainModel, FlowModel, NetWatch, domain_tokens  # noqa: E402
 from kavach_core.normalize import normalize, tokens  # noqa: E402
 from kavach_core.retrieval import Playbook  # noqa: E402
 from kavach_core.url_check import UrlChecker, extract_urls, split_url  # noqa: E402
@@ -113,6 +114,39 @@ def main() -> None:
         hist = g.run_transcript(segs)
         gout.append({"id": c["id"], "segments": segs, "levels": [[round(h.t, 3), h.level, round(h.p_scam, 4)] for h in hist], "final_rule": g.rule})
     out["guardian"] = gout
+
+    # ---- Network Watch
+    hosts = ["google.com", "www.onlinesbi.sbi", "sbi.co.in", "mortiscontrastatim.com", "cvyh1po636avyrsxebwbkn7.ddns.net",
+             "xjwqkzpvbn.biz", "a1b2c3d4e5f6.info", "paytm.com", "my-secure-bank-login.xyz", "kdjfhgkdjfhgkdjfhg.ru",
+             "WWW.Example.CO.IN.", "localhost", "", "q.w.e.r.t.y.example.com", "aaaaaaaa.net", "123456789.com",
+             "rooftopsunsetparade.net", "zz9plural-z-alpha.org", "xn--pytm-5cd.com", "ab.cd"]
+    dm = DomainModel.load(ROOT / "assets/models")
+    out["domain"] = [[h, domain_tokens(h), dm.score(h)] for h in hosts]
+    fm = FlowModel.load(ROOT / "assets/models/flow_model.json")
+    import random as _r
+    rr = _r.Random(11)
+    flows = []
+    for i in range(30):
+        f = {k: round(rr.choice([0, 0, rr.uniform(0, 5), rr.uniform(0, 5000), rr.uniform(0, 5e6)]), 4)
+             for k in ["dur", "spkts", "dpkts", "sbytes", "dbytes", "rate", "smean", "dmean", "ct_srv_src", "ct_dst_ltm",
+                       "ct_src_dport_ltm", "ct_dst_sport_ltm", "ct_dst_src_ltm", "ct_srv_dst"]}
+        f["proto"] = rr.choice(["tcp", "udp", "icmp", "sctp"])
+        f["state"] = rr.choice(["FIN", "CON", "INT", "REQ", "RST", "ECO"])
+        f["service"] = rr.choice(["-", "dns", "http", "ssl", "ftp", "irc"])
+        flows.append([f, fm.score(f)])
+    out["flow"] = flows
+    sys.path.insert(0, str(ROOT / "bench"))
+    from netwatch_sim import SCENARIOS, trace  # noqa: E402
+
+    nwo = []
+    for name in SCENARIOS:
+        tr = trace(name, 0)
+        nw = NetWatch()
+        evs = []
+        for t, app, tx, rx, fg, sus in tr:
+            evs += [[e.t, e.kind, e.weight, e.detail] for e in nw.observe(t, app, tx, rx, fg, sus)]
+        nwo.append({"name": name, "samples": [list(x) for x in tr], "events": evs})
+    out["netwatch"] = nwo
 
     dst = ROOT / "assets/parity/vectors.json"
     dst.parent.mkdir(parents=True, exist_ok=True)

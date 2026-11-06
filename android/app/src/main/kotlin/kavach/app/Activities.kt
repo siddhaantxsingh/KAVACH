@@ -75,10 +75,22 @@ class MainActivity : Activity(), ShieldHub.Listener {
         row.addView(Ui.button(this, if (ShieldHub.lang(this) == "hi") "English" else "हिंदी") { toggleLang() })
         col.addView(row)
         col.addView(familyRow())
+        trustRow = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }; col.addView(trustRow)
         feed = Ui.text(this, "", 16f); col.addView(feed)
         setContentView(Ui.scroll(this, col))
         askRuntimePermissions()
         KavachRuntime.ensureLoaded(this) { ShieldHub.attach(it); onChanged() }
+    }
+
+    private lateinit var trustRow: LinearLayout
+
+    /** "I trust this app": for a known app (e.g. a backup app you installed yourself) flagged by Network Watch */
+    private fun refreshTrust() {
+        trustRow.removeAllViews()
+        val hi = ShieldHub.lang(this) == "hi"
+        for ((pkg, label) in ShieldHub.netAlertApps) trustRow.addView(Ui.button(this, if (hi) "मैं \"$label\" को पहचानता हूँ (भरोसा करें)" else "I know \"$label\" - trust it") {
+            ShieldHub.trustApp(this, pkg); refreshTrust()
+        })
     }
 
     private fun familyRow(): LinearLayout {
@@ -141,6 +153,7 @@ class MainActivity : Activity(), ShieldHub.Listener {
 
     override fun onChanged() {
         val lang = ShieldHub.lang(this)
+        if (trustRow.childCount != ShieldHub.netAlertApps.size) refreshTrust()
         val lv = ShieldHub.last?.level ?: "none"
         Ui.setBanner(banner, if (ShieldHub.guardianLevel == "stop") "stop" else lv, lang)
         status.text = "messages: ${if (notificationAccess()) "on" else "OFF"} · screen guard: ${if (ShieldService.hasUsageAccess(this)) "on" else "OFF"}" +

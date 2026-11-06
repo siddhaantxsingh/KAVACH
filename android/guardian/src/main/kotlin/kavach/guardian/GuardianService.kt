@@ -65,30 +65,47 @@ class GuardianService : Service() {
     private var lang = "hi"
     private var startedAt = 0L
 
+    private var standby = false
+    private var sessionActive = false
+    private var sessionStart = 0L
+    private var autoStopAt = 0L
+    private var models: File? = null
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP -> { stopSelf(); return START_NOT_STICKY }
-            ACTION_START -> start(intent.getStringExtra(EXTRA_LANG) ?: "hi", intent.getStringExtra(EXTRA_DEMO), intent.getStringExtra(EXTRA_LINK_ADDR))
+            ACTION_START -> {
+                setup(intent.getStringExtra(EXTRA_LANG) ?: "hi", intent.getStringExtra(EXTRA_LINK_ADDR), standbyMode = false)
+                beginSession(intent.getStringExtra(EXTRA_DEMO), reason = "manual")
+            }
+            ACTION_STANDBY -> setup(intent.getStringExtra(EXTRA_LANG) ?: "hi", intent.getStringExtra(EXTRA_LINK_ADDR), standbyMode = true)
         }
         return START_NOT_STICKY
     }
 
-    private fun start(language: String, demoScript: String?, linkAddr: String?) {
+    /**
+     * Service-level setup, done once: foreground notification (microphone type, started while the
+     * activity is visible, so recording can begin later from the background when a call starts),
+     * engine thread, TTS, Llama, link, detection core.
+     */
+    private fun setup(language: String, linkAddr: String?, standbyMode: Boolean) {
+        lang = language
+        standby = standby || standbyMode
         if (GuardianBus.running) return
         GuardianBus.running = true
-        lang = language
         startedAt = System.currentTimeMillis()
         Ui.ensureChannel(this, CHANNEL, "KAVACH Guardian", android.app.NotificationManager.IMPORTANCE_LOW)
         val pi = PendingIntent.getActivity(this, 0, Intent(this, GuardianActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
-        val n = Ui.ongoing(this, CHANNEL, "KAVACH is guarding this call", "Audio is processed on this phone only and never stored.",
-            android.R.drawable.ic_lock_idle_lock, pi)
+        val n = Ui.ongoing(this, CHANNEL, if (standbyMode) "KAVACH Guardian is on standby" else "KAVACH is guarding this call",
+            if (standbyMode) "It starts listening by itself when the protected phone gets a call from an unknown number."
+            else "Audio is processed on this phone only and never stored.", android.R.drawable.ic_lock_idle_lock, pi)
         if (Build.VERSION.SDK_INT >= 29) startForeground(NOTIF_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE) else startForeground(NOTIF_ID, n)
 
         engine = Executors.newSingleThreadScheduledExecutor { r -> Thread(r, "kavach-engine") }
         speaker = Speaker(this)
-        val models = ModelFiles.dir(this)
+        models = ModelFiles.dir(this)
         advisor = LlamaAdvisor(ModelFiles.llamaPte(this).path, ModelFiles.llamaTokenizer(this).path).also { adv ->
             GuardianBus.status(if (adv.state == LlamaAdvisor.State.MISSING) "Llama model not installed: rule + classifier mode" else "loading Llama…")
             adv.loadAsync { st ->
@@ -98,30 +115,64 @@ class GuardianService : Service() {
         }
         openLog()
         linkAddr?.let { connectLink(it) }
-
         KavachRuntime.ensureLoaded(this) { core ->
             val g = core.newGuardian(GuardianConfig(lang = lang))
             g.onAlert = { a -> onAlert(a) }
             guardian = g
             advisor?.let { adv -> if (adv.state == LlamaAdvisor.State.READY) adv.warm(g.buildLlmPrompt("", emptyMap(), emptyList()).first) }
-            engine.scheduleWithFixedDelay({ tickNow() }, 3, 3, TimeUnit.SECONDS)
+            engine.scheduleWithFixedDelay({ tickNow(); checkAutoStop() }, 3, 3, TimeUnit.SECONDS)
             engine.scheduleWithFixedDelay({ logPerf() }, 5, 5, TimeUnit.SECONDS)
-            if (demoScript != null) {
-                demo = DemoPlayer(this, demoScript, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) }).also { it.start() }
-                GuardianBus.status("demo replay: $demoScript")
-            } else {
-                val a = AsrEngine(models, lang, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) })
-                val missing = a.missingFiles()
-                if (missing.isNotEmpty()) {
-                    GuardianBus.status("ASR model missing: ${missing.first()} — run scripts/push_models.sh")
+            if (standbyMode && !sessionActive) GuardianBus.status("standby: waiting for a call on the protected phone")
+        }
+    }
+
+    /** One guarded call. Resets the engine so every call is judged on its own. */
+    private fun beginSession(demoScript: String?, reason: String) {
+        KavachRuntime.ensureLoaded(this) { _ ->
+            engine.execute {
+                if (sessionActive) return@execute
+                val g = guardian ?: return@execute
+                g.reset()
+                g.cfg.lang = lang
+                synchronized(finals) { finals.clear() }
+                sessionStart = System.currentTimeMillis()
+                sessionActive = true
+                autoStopAt = 0L
+                // the protected phone's call is part of this session's kill-chain
+                if (reason == "call_started") g.addExternal(kavach.core.KcEvent(0.0, "phone", kavach.core.KillChain.CALL_START, 0.0, "auto-start"))
+                logLine("session", reason)
+                if (demoScript != null) {
+                    demo = DemoPlayer(this, demoScript, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) }).also { it.start() }
+                    GuardianBus.status("demo replay: $demoScript")
                 } else {
-                    asr = a; a.start(); GuardianBus.status("listening (${if (lang == "hi") "Hindi/Hinglish" else "English"})")
+                    val a = AsrEngine(models ?: ModelFiles.dir(this), lang, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) })
+                    val missing = a.missingFiles()
+                    if (missing.isNotEmpty()) {
+                        GuardianBus.status("ASR model missing: ${missing.first()} — run scripts/push_models.sh")
+                    } else {
+                        asr = a; a.start()
+                        GuardianBus.status((if (reason == "call_started") "call detected — " else "") + "listening (${if (lang == "hi") "Hindi/Hinglish" else "English"})")
+                    }
                 }
             }
         }
     }
 
-    private fun callTime(): Double = asr?.now() ?: demo?.now() ?: ((System.currentTimeMillis() - startedAt) / 1000.0)
+    private fun endSession(reason: String) {
+        if (!sessionActive) return
+        asr?.stop(); asr = null
+        demo?.stop(); demo = null
+        sessionActive = false
+        logLine("session_end", reason)
+        GuardianBus.status(if (standby) "call ended — back on standby" else "stopped listening")
+        if (!standby) stopSelf()
+    }
+
+    private fun checkAutoStop() {
+        if (autoStopAt > 0 && System.currentTimeMillis() >= autoStopAt) { autoStopAt = 0L; endSession("call_ended") }
+    }
+
+    private fun callTime(): Double = asr?.now() ?: demo?.now() ?: ((System.currentTimeMillis() - (if (sessionStart > 0) sessionStart else startedAt)) / 1000.0)
 
     private fun onFinalSegment(text: String) {
         val t = callTime()
@@ -146,6 +197,7 @@ class GuardianService : Service() {
     }
 
     private fun tickNow() {
+        if (!sessionActive) return
         val g = guardian ?: return
         try {
             val st = g.tick(callTime())
@@ -181,8 +233,16 @@ class GuardianService : Service() {
 
     private fun connectLink(address: String) {
         val onMsg: (Map<String, Any?>) -> Unit = { m ->
-            // events from the user's phone (dangerous link, risky APK, screen share) join this call's kill-chain
-            DeviceLink.eventFrom(m, callTime())?.let { ev -> engine.execute { guardian?.addExternal(ev); tickNow() } }
+            when (m["type"]) {
+                // the protected phone got / ended a call from an unknown number -> auto-start / auto-stop
+                "call_started" -> if (standby && autoStartEnabled() && m["unknown"] != false) {
+                    autoStopAt = 0L
+                    beginSession(null, reason = "call_started")
+                }
+                "call_ended" -> if (sessionActive) autoStopAt = System.currentTimeMillis() + AUTO_STOP_DELAY_MS
+                // events from the user's phone (dangerous link, risky APK, screen share, payment app) join this call's kill-chain
+                else -> DeviceLink.eventFrom(m, callTime())?.let { ev -> engine.execute { if (sessionActive) { guardian?.addExternal(ev); tickNow() } } }
+            }
         }
         if (address == LocalLink.SAME_PHONE) {
             link = LocalLink(this, LocalLink.SHIELD_PACKAGE, onMsg) { s -> GuardianBus.status("Shield link: $s") }.also { it.start() }
@@ -214,8 +274,11 @@ class GuardianService : Service() {
         } catch (t: Throwable) { Log.w(TAG, "perf log failed", t) }
     }
 
+    private fun autoStartEnabled(): Boolean = getSharedPreferences("guardian", Context.MODE_PRIVATE).getBoolean(PREF_AUTOSTART, true)
+
     override fun onDestroy() {
         GuardianBus.running = false
+        sessionActive = false; standby = false
         asr?.stop(); demo?.stop(); link?.stop()
         if (::engine.isInitialized) engine.shutdownNow()
         llmQueue.shutdownNow()
@@ -231,6 +294,9 @@ class GuardianService : Service() {
         const val NOTIF_ID = 7
         const val ACTION_START = "kavach.guardian.START"
         const val ACTION_STOP = "kavach.guardian.STOP"
+        const val ACTION_STANDBY = "kavach.guardian.STANDBY"
+        const val AUTO_STOP_DELAY_MS = 30_000L
+        const val PREF_AUTOSTART = "autostart"
         const val EXTRA_LANG = "lang"
         const val EXTRA_DEMO = "demo_script"
         const val EXTRA_LINK_ADDR = "link_addr"

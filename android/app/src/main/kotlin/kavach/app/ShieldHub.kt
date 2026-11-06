@@ -47,6 +47,9 @@ object ShieldHub {
     @Volatile var last: Assessment? = null
     @Volatile var linkState = "not started"
     @Volatile var guardianLevel = "none"
+    @Volatile var callState = "no call"
+    /** kinds forwarded to the Guardian so the call it is listening to is judged with them */
+    private val FORWARD = KillChain.CROSS_KINDS + setOf(KillChain.CALL_START, KillChain.CALL_END, KillChain.PAYMENT_OPEN)
     private var btLink: DeviceLink? = null
     private var localLink: LocalLink? = null
     private val links: List<KavachLink> get() = listOfNotNull(btLink, localLink)
@@ -115,6 +118,28 @@ object ShieldHub {
 
     fun onRemoteAccessActive(ctx: Context, pkg: String) = exec.execute { feed(ctx, KcEvent(now(), "screen", "remote_access_active", 2.0, pkg), forward = true) }
 
+    // ------------------------------------------------------------------ call awareness (one-phone mode)
+    fun onCallStarted(ctx: Context, number: String?, unknown: Boolean, outgoing: Boolean) = exec.execute {
+        callState = (if (unknown) "call with an unknown number" else "call with a contact") + if (outgoing) " (outgoing)" else ""
+        links.forEach { it.send(linkedMapOf("type" to "call_started", "unknown" to unknown, "outgoing" to outgoing)) }
+        if (unknown) {
+            record(Item(System.currentTimeMillis(), "call", "info", if (lang(ctx) == "hi") "अनजान नंबर से कॉल" else "Call from an unknown number",
+                if (lang(ctx) == "hi") "KAVACH इस कॉल के दौरान लिंक, ऐप, स्क्रीन शेयर और पेमेंट पर नज़र रखेगा।"
+                else "KAVACH watches links, apps, screen sharing and payments during this call."))
+            feed(ctx, KcEvent(now(), "phone", KillChain.CALL_START, 0.0, if (outgoing) "outgoing" else "incoming"), forward = true)
+        } else changed()
+    }
+
+    fun onCallEnded(ctx: Context) = exec.execute {
+        callState = "no call"
+        links.forEach { it.send(linkedMapOf("type" to "call_ended")) }
+        feed(ctx, KcEvent(now(), "phone", KillChain.CALL_END, 0.0, ""), forward = true)
+    }
+
+    fun onPaymentAppOpened(ctx: Context, pkg: String) = exec.execute {
+        feed(ctx, KcEvent(now(), "app", KillChain.PAYMENT_OPEN, 0.0, pkg), forward = true)
+    }
+
     /** Messages from the Guardian about the live call. */
     private fun onGuardianMessage(ctx: Context, m: Map<String, Any?>) = exec.execute {
         DeviceLink.eventFrom(m, now())?.let { feed(ctx, it, forward = false) }
@@ -137,12 +162,15 @@ object ShieldHub {
     private fun feed(ctx: Context, ev: KcEvent, forward: Boolean) {
         val kc = killChain ?: return
         kc.add(ev)
-        if (forward && ev.kind in KillChain.CROSS_KINDS) links.forEach { it.sendEvent(ev) }
+        if (forward && ev.kind in FORWARD) links.forEach { it.sendEvent(ev) }
         val a = kc.assess(now())
         val prev = last?.level
         last = a
         changed()
         if (a.level == "stop" && prev != "stop") showStop(ctx, force = false, reason = null)
+        else if (a.level == "caution" && prev != "caution" && prev != "stop")
+            notifyUser(ctx, KillChain.ruleLabel(a.rule, lang(ctx)), if (lang(ctx) == "hi") "सावधान रहें। किसी अनजान कॉल पर पैसे या ओटीपी न दें।"
+                else "Be careful. Never pay or share an OTP during a call from an unknown number.", "caution")
     }
 
     fun showStop(ctx: Context, force: Boolean, reason: String?) {
@@ -157,7 +185,7 @@ object ShieldHub {
         val text = reason?.takeIf { it.isNotBlank() }
             ?: LlmContract.fallbackVerdict("stop", a?.active ?: emptyMap(), retrieved, labels, a?.stages ?: emptyList(), lang).say
         val i = Intent(ctx, StopActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            .putExtra(StopActivity.EXTRA_TEXT, text).putExtra(StopActivity.EXTRA_RULE, a?.rule ?: "")
+            .putExtra(StopActivity.EXTRA_TEXT, text).putExtra(StopActivity.EXTRA_RULE, a?.rule?.let { KillChain.ruleLabel(it, lang) } ?: "")
         // full-screen intent works from the background on Android 10+ (USE_FULL_SCREEN_INTENT)
         Ui.ensureChannel(ctx, ALERT_CHANNEL, "KAVACH alerts", NotificationManager.IMPORTANCE_HIGH)
         val pi = PendingIntent.getActivity(ctx, 1, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
@@ -217,6 +245,12 @@ object ShieldHub {
     }
 
     // ------------------------------------------------------------------ link to the Guardian
+    private var calls: CallMonitor? = null
+
+    fun startCallAwareness(ctx: Context) {
+        if (calls == null) calls = CallMonitor(ctx.applicationContext).also { it.start() }
+    }
+
     fun startLink(ctx: Context) {
         val app = ctx.applicationContext
         // same-phone link (Guardian installed on this phone) - always on, costs nothing
@@ -230,5 +264,5 @@ object ShieldHub {
         btLink = DeviceLink(app, onMessage = { m -> onGuardianMessage(app, m) }, onState = { s -> linkState = s; changed() }).also { it.startServer() }
     }
 
-    fun stopLink() { btLink?.stop(); btLink = null; localLink?.stop(); localLink = null }
+    fun stopLink() { btLink?.stop(); btLink = null; localLink?.stop(); localLink = null; calls?.stop(); calls = null }
 }

@@ -27,6 +27,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     private lateinit var status: TextView
     private lateinit var transcript: TextView
     private lateinit var explain: TextView
+    private lateinit var why: TextView
     private lateinit var perf: TextView
     private var lang = "hi"
     private var linkAddr: String? = null
@@ -55,12 +56,23 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         row1.addView(Ui.button(this, "▶ English") { startGuard("en", null) })
         row1.addView(Ui.button(this, "■ Stop") { stopGuard() })
         col.addView(row1)
+        val row0 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        row0.addView(Ui.button(this, "⏸ Standby: start by itself on calls") { startStandby() })
+        val prefs = getSharedPreferences("guardian", Context.MODE_PRIVATE)
+        row0.addView(Ui.button(this, if (prefs.getBoolean(GuardianService.PREF_AUTOSTART, true)) "Auto-start: ON" else "Auto-start: OFF") {
+            val on = !prefs.getBoolean(GuardianService.PREF_AUTOSTART, true)
+            prefs.edit().putBoolean(GuardianService.PREF_AUTOSTART, on).apply()
+            recreate()
+        })
+        col.addView(row0)
         val row2 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         row2.addView(Ui.button(this, "Demo replay") { pickDemo() })
         row2.addView(Ui.button(this, "Link phone") { pickPhone() })
         row2.addView(Ui.button(this, "Perf") { togglePerf() })
         col.addView(row2)
 
+        why = Ui.text(this, "", 16f, color = Color.DKGRAY)
+        col.addView(why)
         explain = Ui.text(this, "", 20f, bold = true)
         col.addView(explain)
         col.addView(Ui.text(this, if (lang == "hi") "बातचीत (सिर्फ इसी फोन पर):" else "Live transcript (stays on this phone):", 14f, color = Color.GRAY))
@@ -94,6 +106,16 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         val i = Intent(this, GuardianService::class.java).setAction(GuardianService.ACTION_START)
             .putExtra(GuardianService.EXTRA_LANG, lang).putExtra(GuardianService.EXTRA_DEMO, demo).putExtra(GuardianService.EXTRA_LINK_ADDR, linkAddr)
         startForegroundService(i)
+    }
+
+    /** Standby: the service starts now (while this screen is visible, as Android requires for the
+     *  microphone) and begins listening by itself when the protected phone reports an unknown call. */
+    private fun startStandby() {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) { requestPermissionsIfNeeded(); return }
+        if (linkAddr == null) { status.text = "Link the protected phone first (Link phone)."; return }
+        startForegroundService(Intent(this, GuardianService::class.java).setAction(GuardianService.ACTION_STANDBY)
+            .putExtra(GuardianService.EXTRA_LANG, lang).putExtra(GuardianService.EXTRA_LINK_ADDR, linkAddr))
+        status.text = "Standby: waiting for a call on the protected phone."
     }
 
     private fun stopGuard() { startService(Intent(this, GuardianService::class.java).setAction(GuardianService.ACTION_STOP)) }
@@ -130,6 +152,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
 
     override fun onState(s: GuardState) {
         Ui.setBanner(banner, s.level, lang)
+        why.text = if (s.rule.isNotBlank() && s.level != "none") (if (lang == "hi") "कारण: " else "Why: ") + kavach.core.KillChain.ruleLabel(s.rule, lang) else ""
         if (perf.visibility == View.VISIBLE) status.text = "p(scam)=${"%.2f".format(s.pScam)} score=${s.score} stages=${s.stages} rule=${s.rule}"
     }
 

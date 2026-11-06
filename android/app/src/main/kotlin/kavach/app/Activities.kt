@@ -97,6 +97,10 @@ class MainActivity : Activity(), ShieldHub.Listener {
         val want = ArrayList<String>()
         if (Build.VERSION.SDK_INT >= 33) want.add(Manifest.permission.POST_NOTIFICATIONS)
         if (Build.VERSION.SDK_INT >= 31) want.add(Manifest.permission.BLUETOOTH_CONNECT)
+        // call awareness: know that a call with an unknown number is going on (never its audio)
+        want.add(Manifest.permission.READ_PHONE_STATE)
+        want.add(Manifest.permission.READ_CALL_LOG)
+        want.add(Manifest.permission.READ_CONTACTS)
         val missing = want.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
         if (missing.isNotEmpty()) requestPermissions(missing.toTypedArray(), 2)
     }
@@ -140,7 +144,8 @@ class MainActivity : Activity(), ShieldHub.Listener {
         val lv = ShieldHub.last?.level ?: "none"
         Ui.setBanner(banner, if (ShieldHub.guardianLevel == "stop") "stop" else lv, lang)
         status.text = "messages: ${if (notificationAccess()) "on" else "OFF"} · screen guard: ${if (ShieldService.hasUsageAccess(this)) "on" else "OFF"}" +
-            " · Guardian link: ${ShieldHub.linkState}" + (ShieldHub.last?.let { "\nkill-chain: ${it.level} ${it.rule} stages=${it.stages} channels=${it.channels}" } ?: "")
+            " · Guardian link: ${ShieldHub.linkState} · ${ShieldHub.callState}" +
+            (ShieldHub.last?.let { a -> if (a.level != "none") "\n" + (if (lang == "hi") "कारण: " else "Why: ") + kavach.core.KillChain.ruleLabel(a.rule, lang) + "  (channels: ${a.channels.joinToString()})" else "" } ?: "")
         val items = synchronized(ShieldHub.items) { ShieldHub.items.take(15) }
         feed.text = items.joinToString("\n\n") { "[${it.channel}] ${it.level.uppercase()} — ${it.title}\n${it.detail}" }
     }

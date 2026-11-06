@@ -61,7 +61,9 @@ class ShieldService : Service() {
             android.R.drawable.ic_lock_idle_lock, pi)
         if (Build.VERSION.SDK_INT >= 34) startForeground(3, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE) else startForeground(3, n)
         inspector = AppInspector(this)
-        KavachRuntime.ensureLoaded(this) { core -> ShieldHub.attach(core); ShieldHub.startLink(this); ShieldHub.startAdvisor(this) }
+        KavachRuntime.ensureLoaded(this) { core ->
+            ShieldHub.attach(core); ShieldHub.startLink(this); ShieldHub.startAdvisor(this); ShieldHub.startCallAwareness(this)
+        }
         registerReceiver(pkgReceiver, IntentFilter(Intent.ACTION_PACKAGE_ADDED).apply { addDataScheme("package") })
         if (hasUsageAccess(this)) handler.post(poll)
     }
@@ -81,7 +83,7 @@ class ShieldService : Service() {
             when (e.eventType) {
                 UsageEvents.Event.ACTIVITY_RESUMED -> {
                     if (remote) { remoteActive[pkg] = e.timeStamp; ShieldHub.onRemoteAccessActive(this, pkg) }
-                    else if (pkg in inspector.paymentApps) onPaymentForeground(pkg, e.timeStamp)
+                    else if (pkg in inspector.paymentApps) { ShieldHub.onPaymentAppOpened(this, pkg); onPaymentForeground(pkg, e.timeStamp) }
                 }
                 FOREGROUND_SERVICE_START -> if (remote) { remoteFgs.add(pkg); remoteActive[pkg] = e.timeStamp; ShieldHub.onRemoteAccessActive(this, pkg) }
                 FOREGROUND_SERVICE_STOP -> if (remote) remoteFgs.remove(pkg)

@@ -28,6 +28,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     private lateinit var transcript: TextView
     private lateinit var explain: TextView
     private lateinit var why: TextView
+    private lateinit var placement: TextView
     private lateinit var perf: TextView
     private var lang = "hi"
     private var linkAddr: String? = null
@@ -73,6 +74,8 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
 
         why = Ui.text(this, "", 16f, color = Color.DKGRAY)
         col.addView(why)
+        placement = Ui.text(this, "", 16f, bold = true)
+        col.addView(placement)
         explain = Ui.text(this, "", 20f, bold = true)
         col.addView(explain)
         col.addView(Ui.text(this, if (lang == "hi") "बातचीत (सिर्फ इसी फोन पर):" else "Live transcript (stays on this phone):", 14f, color = Color.GRAY))
@@ -169,4 +172,16 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     }
 
     override fun onStatus(msg: String) { status.text = msg }
+
+    /** live placement check: is this phone close enough to the speaker-phone? */
+    override fun onPlacement(snrDb: Double) {
+        val hi = lang == "hi"
+        val (txt, col) = when (kavach.core.AudioCheck.verdict(snrDb)) {
+            "good" -> (if (hi) "आवाज़ साफ़ है ✓" else "Placement: good ✓") to Color.rgb(46, 125, 50)
+            "move_closer" -> (if (hi) "फ़ोन को स्पीकर के और पास रखें" else "Placement: move this phone closer to the speaker") to Color.rgb(239, 108, 0)
+            else -> (if (hi) "बहुत शोर है: फ़ोन स्पीकर के पास रखें, टीवी धीमा करें" else "Too noisy: put this phone next to the speaker, turn the TV down") to Color.rgb(198, 40, 40)
+        }
+        placement.text = "$txt  (${"%.0f".format(snrDb)} dB)"
+        placement.setTextColor(col)
+    }
 }

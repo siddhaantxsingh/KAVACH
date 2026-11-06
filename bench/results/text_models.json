@@ -5,56 +5,56 @@
     "grid": [
       {
         "C": 0.1,
-        "dev_pr_auc": 0.997
+        "dev_pr_auc": 0.9973
       },
       {
         "C": 0.25,
-        "dev_pr_auc": 0.9969
+        "dev_pr_auc": 0.9972
       },
       {
         "C": 0.5,
-        "dev_pr_auc": 0.9968
+        "dev_pr_auc": 0.9971
       },
       {
         "C": 1.0,
-        "dev_pr_auc": 0.9966
+        "dev_pr_auc": 0.9969
       },
       {
         "C": 2.0,
-        "dev_pr_auc": 0.9963
+        "dev_pr_auc": 0.9966
       },
       {
         "C": 4.0,
-        "dev_pr_auc": 0.996
+        "dev_pr_auc": 0.9962
       },
       {
         "C": 8.0,
-        "dev_pr_auc": 0.9956
+        "dev_pr_auc": 0.9957
       }
     ],
     "dim": 262144,
-    "train_n": 73845,
-    "seconds": 128.8,
-    "nonzero_weights": 52663,
+    "train_n": 76221,
+    "seconds": 118.8,
+    "nonzero_weights": 54709,
     "dev": {
-      "n": 5346,
-      "pos": 3116,
-      "threshold": 0.65,
-      "precision": 0.9781,
-      "recall": 0.9746,
-      "f1": 0.9764,
-      "roc_auc": 0.9951,
-      "pr_auc": 0.997
+      "n": 5471,
+      "pos": 3163,
+      "threshold": 0.7,
+      "precision": 0.9916,
+      "recall": 0.9674,
+      "f1": 0.9794,
+      "roc_auc": 0.9958,
+      "pr_auc": 0.9973
     },
     "test": {
-      "n": 8755,
-      "pos": 5276,
-      "threshold": 0.65,
-      "precision": 0.9274,
-      "recall": 0.8743,
-      "f1": 0.9001,
-      "roc_auc": 0.9527,
-      "pr_auc": 0.9716
+      "n": 9010,
+      "pos": 5557,
+      "threshold": 0.7,
+      "precision": 0.9512,
+      "recall": 0.8672,
+      "f1": 0.9073,
+      "roc_auc": 0.9597,
+      "pr_auc": 0.9768
     }
   },
   {
@@ -71,7 +71,7 @@
       },
       {
         "C": 0.5,
-        "dev_pr_auc": 0.9966
+        "dev_pr_auc": 0.9965
       },
       {
         "C": 1.0,
@@ -79,7 +79,7 @@
       },
       {
         "C": 2.0,
-        "dev_pr_auc": 0.9983
+        "dev_pr_auc": 0.9981
       },
       {
         "C": 4.0,
@@ -92,14 +92,14 @@
     ],
     "dim": 262144,
     "train_n": 6903,
-    "seconds": 5.7,
-    "nonzero_weights": 88245,
+    "seconds": 5.6,
+    "nonzero_weights": 88246,
     "dev": {
       "n": 1057,
       "pos": 318,
-      "threshold": 0.4,
-      "precision": 0.9937,
-      "recall": 0.9969,
+      "threshold": 0.45,
+      "precision": 1.0,
+      "recall": 0.9906,
       "f1": 0.9953,
       "roc_auc": 0.9987,
       "pr_auc": 0.9985
@@ -107,12 +107,12 @@
     "test": {
       "n": 1914,
       "pos": 555,
-      "threshold": 0.4,
-      "precision": 0.994,
-      "recall": 0.8973,
-      "f1": 0.9432,
-      "roc_auc": 0.9898,
-      "pr_auc": 0.982
+      "threshold": 0.45,
+      "precision": 0.996,
+      "recall": 0.8883,
+      "f1": 0.939,
+      "roc_auc": 0.9895,
+      "pr_auc": 0.9815
     }
   }
 ]

@@ -34,6 +34,8 @@ TEXTS = [
     "482913 is your OTP for transaction of INR 1,299 at AMAZON. Do not share it with anyone. - HDFC Bank",
     "ओटीपी किसी को शेयर मत करना",
     "pay the withdrawal tax first then you can take out your profit",
+    "sir please mujhe arrest mat karo, main transfer kar raha hoon, mera otp hai 482913",
+    "मुझे गिरफ्तार मत करो, मैंने पैसे भेज दिए",
     "",
 ]
 URLS = ["https://onlinesbi.sbi.bank.in/", "sbi-kyc-update.xyz/login", "hdfcbnak.com", "http://paytrn.com/refund", "https://xn--pytm-5cd.com",
@@ -171,6 +173,13 @@ def main() -> None:
              (900.0, "com.rat", "zmxncbvlaksjdh.top", True), (60.0, "com.ok", "xjwqkzpvbnfhtrq.biz", False)]
     out["dns_watch"] = {"lookups": [list(x) for x in looks],
                         "events": [[[e.t, e.kind, e.weight, e.detail] for e in dw.observe(*x)] for x in looks]}
+
+    from kavach_core.audio_check import estimate_from_powers, frame_powers  # noqa: E402
+
+    rr2 = _r.Random(5)
+    sig = [round(rr2.uniform(-0.3, 0.3) * (1.0 if (i // 400) % 3 else 0.05), 6) for i in range(3200)]
+    out["audio_check"] = {"signal": sig, "powers": frame_powers(sig, 16000),
+                          "snr": [[pw, estimate_from_powers(pw)] for pw in [frame_powers(sig, 16000), [], [1e-6] * 5, [0.0, 1.0, 2.0, 0.5, 1e-3]]]}
 
     dst = ROOT / "assets/parity/vectors.json"
     dst.parent.mkdir(parents=True, exist_ok=True)

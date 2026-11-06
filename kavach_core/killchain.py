@@ -44,10 +44,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 LEVELS = ["none", "info", "caution", "stop"]
-CONTACT_HOOK = {"authority_police", "authority_bank", "identity_misuse", "threat", "urgency", "reward_greed", "family_emergency"}
+CONTACT_HOOK = {"authority_police", "authority_bank", "identity_misuse", "threat", "urgency", "reward_greed", "family_emergency", "victim_fear"}
 ACTION_PAY = {"credential_request", "remote_access", "link_click", "payment_request"}
 HOOK_FOR_ACTION = CONTACT_HOOK - {"urgency"}
 STRONG_HOOK = {"authority_police", "threat", "identity_misuse"}
+# what the person next to the Guardian says: reading an OTP / account number, sending money.
+# Normal on their own (delivery OTP, money for family); STOP only together with a scam pretext.
+VICTIM_ACT = {"victim_sharing", "victim_paying"}
+VICTIM_PRETEXT = STRONG_HOOK | {"victim_fear", "authority_bank"}
 CROSS_KINDS = {"dangerous_link", "risky_apk", "remote_access_active", "payment_app_while_sharing", "scam_sms", "scam_call",
                "suspicious_upload", "beaconing_app", "malicious_domain"}
 # Call awareness (user's phone knows a call with an unknown number is going on, without hearing it)
@@ -161,6 +165,8 @@ class KillChain:
             level, rule = "stop", "multi-action"
         elif cats & ACTION_PAY and cats & HOOK_FOR_ACTION and not has_safety:
             level, rule = "stop", "hook+action"
+        elif cats & VICTIM_ACT and cats & VICTIM_PRETEXT and not has_safety:
+            level, rule = "stop", "victim-complying"
         elif convo and acts:
             level, rule = "stop", "call+action:" + acts[-1].kind
         elif ctx is not None and any(e.kind in CALL_ACTIONS for e in acts):

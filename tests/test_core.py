@@ -250,3 +250,22 @@ def test_model_roundtrip_matches_explain():
     m = LinearModel.load(MODELS, "cue_model")
     ex = m.explain("aapke aadhaar par money laundering ka case hai kisi ko mat batana")
     assert ex and all(c > 0 for _, c in ex)
+
+
+def test_victim_cues_need_a_pretext():
+    lex = Lexicon()
+    hits = {h.category for h in lex.match("mera otp hai 482913")}
+    assert "victim_sharing" in hits
+    assert "victim_paying" in {h.category for h in lex.match("theek hai main transfer kar raha hoon")}
+    assert "victim_fear" in {h.category for h in lex.match("sir please mujhe arrest mat karo")}
+    # delivery OTP alone: not STOP; with police pretext + fear: STOP
+    kc = KillChain({n: c.stage for n, c in lex.categories.items()})
+    for h in lex.match("delivery otp hai 4821"):
+        kc.add(Event(10.0, "call", h.category, h.weight))
+    assert kc.assess(11.0).level != "stop"
+    kc2 = KillChain({n: c.stage for n, c in lex.categories.items()})
+    for t, txt in [(5.0, "mujhe arrest mat karo"), (20.0, "main transfer kar raha hoon")]:
+        for h in lex.match(txt):
+            kc2.add(Event(t, "call", h.category, h.weight))
+    a = kc2.assess(21.0)
+    assert a.level == "stop" and a.rule in ("victim-complying", "hook+action", "score")

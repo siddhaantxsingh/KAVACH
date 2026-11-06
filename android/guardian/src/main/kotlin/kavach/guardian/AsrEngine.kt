@@ -35,7 +35,15 @@ class AsrEngine(
     private val lang: String,
     private val onPartial: (String) -> Unit,
     private val onFinal: (text: String, tSeconds: Double) -> Unit,
+    /** placement check: speech-to-noise ratio of the last 5 s, every second (no audio kept) */
+    private val onPlacement: ((snrDb: Double) -> Unit)? = null,
+    /** OEM/system mode: the app holds CAPTURE_AUDIO_OUTPUT (privileged system app), so it may
+     *  read the call audio itself (VOICE_CALL = both sides, VOICE_DOWNLINK = the caller). */
+    private val callAudio: Boolean = false,
 ) {
+    /** which microphone / call source is actually in use (shown on the Guardian screen) */
+    @Volatile var source: String = "mic"
+        private set
     @Volatile private var running = false
     private var thread: Thread? = null
     @Volatile var rtf: Double? = null
@@ -43,6 +51,7 @@ class AsrEngine(
     @Volatile var speechRatio: Double = 0.0
         private set
     private var t0 = 0L
+    private val placement = kavach.core.AudioCheck.Live(SAMPLE_RATE)
 
     fun missingFiles(): List<String> = requiredFiles().filter { !it.exists() }.map { it.path }
 
@@ -93,9 +102,7 @@ class AsrEngine(
             val vad = vad()
             var stream: OnlineStream = rec.createStream("")
             val minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
-            // VOICE_RECOGNITION disables AGC/noise suppression that smear speaker-phone audio
-            val audio = AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT, maxOf(minBuf, SAMPLE_RATE / 5 * 2))
+            val audio = openAudio(maxOf(minBuf, SAMPLE_RATE / 5 * 2))
             val chunk = ShortArray(SAMPLE_RATE / 10)
             val vadBuf = FloatArray(VAD_WINDOW)
             var vadFill = 0
@@ -110,6 +117,7 @@ class AsrEngine(
                     val n = audio.read(chunk, 0, chunk.size)
                     if (n <= 0) continue
                     val samples = FloatArray(n) { chunk[it] / 32768f }
+                    placement.add(samples)
                     audioSeconds += n.toDouble() / SAMPLE_RATE
                     val c0 = SystemClock.elapsedRealtime()
                     for (s in samples) {
@@ -134,6 +142,7 @@ class AsrEngine(
                         lastPartial = ""
                     }
                     computeMs += SystemClock.elapsedRealtime() - c0
+                    if (chunks % 10 == 0 && placement.ready()) onPlacement?.invoke(placement.snrDb())
                     if (chunks % 50 == 0) { rtf = computeMs / 1000.0 / audioSeconds; speechRatio = speechChunks.toDouble() / chunks }
                 }
                 // flush the last words
@@ -147,6 +156,21 @@ class AsrEngine(
                 audio.release(); stream.release(); rec.release(); vad.release()
             }
         }, "kavach-asr").also { it.start() }
+    }
+
+    /** Call audio first in OEM/system mode (falls back if this phone's audio HAL refuses it);
+     *  otherwise VOICE_RECOGNITION, which disables AGC/noise suppression that smear speaker-phone audio. */
+    @android.annotation.SuppressLint("MissingPermission")
+    private fun openAudio(buf: Int): AudioRecord {
+        val tries = if (callAudio) listOf(MediaRecorder.AudioSource.VOICE_CALL to "call (both sides)",
+            MediaRecorder.AudioSource.VOICE_DOWNLINK to "call (caller)", MediaRecorder.AudioSource.VOICE_RECOGNITION to "mic")
+        else listOf(MediaRecorder.AudioSource.VOICE_RECOGNITION to "mic")
+        for ((src, name) in tries) {
+            val a = try { AudioRecord(src, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, buf) } catch (t: Throwable) { null }
+            if (a != null && a.state == AudioRecord.STATE_INITIALIZED) { source = name; return a }
+            a?.release()
+        }
+        throw IllegalStateException("no audio source available")
     }
 
     /** Seconds since start(): the guardian's call clock. */

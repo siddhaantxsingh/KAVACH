@@ -25,6 +25,8 @@ SLOTS = {
     "hours": ["2", "two", "24", "3"],
     "courier": ["FedEx", "DHL", "Blue Dart", "DTDC", "India Post"],
     "app": ["AnyDesk", "TeamViewer QuickSupport", "Secure KYC app", "RustDesk", "support app"],
+    "otp": ["four eight two nine one three", "4 8 2 9 1 3", "482913", "seven seven one zero", "5 0 3 8", "nine one six two four eight", "306127", "two five five eight"],
+    "acct": ["3 2 1 0 9 8 7 6 5 4", "five six seven eight nine zero one two", "30219876543", "1 1 0 0 4 5 6 7"],
     "relation": ["beta", "son", "grandson", "nephew", "daughter"],
     "company": ["Amazon", "Flipkart", "Meesho", "Myntra"],
     "name": ["Ramesh ji", "Sunita ji", "Mr Verma", "aunty", "uncle ji", "madam", "sir"],
@@ -41,6 +43,8 @@ SLOTS_HI = {
     "hours": ["दो", "चौबीस", "तीन"],
     "courier": ["फेडएक्स", "डीएचएल", "ब्लू डार्ट", "डीटीडीसी", "इंडिया पोस्ट"],
     "app": ["एनीडेस्क", "टीमव्यूअर क्विक सपोर्ट", "सिक्योर केवाईसी ऐप", "सपोर्ट ऐप"],
+    "otp": ["चार आठ दो नौ एक तीन", "482913", "सात सात एक शून्य", "5038", "नौ एक छह दो चार आठ"],
+    "acct": ["तीन दो एक शून्य नौ आठ सात छह", "30219876543"],
     "relation": ["बेटा", "पोता", "भतीजा", "बेटी"],
     "company": ["अमेज़न", "फ्लिपकार्ट", "मीशो"],
     "name": ["रमेश जी", "सुनीता जी", "वर्मा जी", "आंटी", "अंकल जी", "मैडम", "सर"],
@@ -69,6 +73,49 @@ P["victim_comply"] = {
     "en": ["Okay sir, I will do what you say.", "Okay, tell me what to do.", "Fine, I am listening.", "Yes sir, I understand.", "Alright, one minute.", "Okay I am opening it."],
     "hing": ["Theek hai sir, jaisa aap bolo.", "Achha batao kya karna hai.", "Theek hai, main sun raha hoon.", "Ji sir, samajh gaya.", "Achha ek minute.", "Haan khol raha hoon."],
     "hi": ["ठीक है सर, जैसा आप बोलो।", "अच्छा बताइए क्या करना है।", "ठीक है, मैं सुन रहा हूं।", "जी सर, समझ गया।", "अच्छा एक मिनट।", "हां खोल रहा हूं।"],
+}
+
+# victim-side lines that the Guardian mic hears best (the victim is next to it, the caller is
+# on the speaker). Scam-side and benign-side versions overlap on purpose (reading an OTP to a
+# delivery agent, sending money to a relative) so the models cannot treat them as scam alone.
+P["victim_otp_read"] = {
+    "en": ["My OTP is {otp}.", "Okay the OTP is {otp}.", "I got the code, it is {otp}.", "Yes the OTP came, {otp}.", "The number on the message is {otp}.",
+           "Wait, the OTP is {otp}, did you get it?", "It says {otp}, is that the OTP?", "The code is {otp}.", "I am reading the OTP, {otp}."],
+    "hing": ["Mera OTP hai {otp}.", "OTP aaya hai, {otp}.", "Haan code aa gaya, {otp} hai.", "OTP {otp} hai sir.", "Message mein {otp} likha hai.",
+             "Ruko OTP bata raha hoon, {otp}.", "Sir OTP aaya {otp}, mil gaya?", "Code hai {otp}.", "OTP padh raha hoon, {otp}."],
+    "hi": ["मेरा ओटीपी है {otp}।", "ओटीपी आया है, {otp}।", "हां कोड आ गया, {otp} है।", "ओटीपी {otp} है सर।", "मैसेज में {otp} लिखा है।",
+           "रुकिए ओटीपी बता रहा हूं, {otp}।", "सर ओटीपी आया {otp}, मिल गया?", "कोड है {otp}।", "ओटीपी पढ़ रहा हूं, {otp}।"],
+}
+P["victim_paying"] = {
+    "en": ["Okay I am transferring the money now.", "I am sending the amount, one minute.", "I have transferred it, please check.", "Which account should I transfer to?",
+           "How much should I send?", "I am doing the payment now.", "Okay I will transfer {amount} now.", "Sending it now sir, please don't do anything.", "I have sent the money."],
+    "hing": ["Main transfer kar raha hoon.", "Paise bhej raha hoon, ek minute.", "Transfer kar diya sir, check kijiye.", "Kis account mein bhejna hai?",
+             "Kitna bhejna hai sir?", "Payment kar raha hoon abhi.", "Theek hai {amount} transfer karta hoon.", "Bhej raha hoon sir, kuch mat karna.", "Maine paise bhej diye."],
+    "hi": ["मैं ट्रांसफर कर रहा हूं।", "पैसे भेज रहा हूं, एक मिनट।", "ट्रांसफर कर दिया सर, देख लीजिए।", "किस खाते में भेजना है?",
+           "कितना भेजना है सर?", "पेमेंट कर रहा हूं अभी।", "ठीक है {amount} ट्रांसफर करता हूं।", "भेज रहा हूं सर, कुछ मत करना।", "मैंने पैसे भेज दिए।"],
+}
+P["victim_fear"] = {
+    "en": ["Please don't arrest me.", "Sir please, I will cooperate, don't arrest me.", "I am not a criminal, please believe me.", "Please don't send the police to my house.",
+           "I will do anything, just don't put me in jail.", "Please sir, my family will be ruined.", "I promise I didn't do it, please help me.", "Don't file a case against me please.", "I am very scared, what will happen to me?"],
+    "hing": ["Mujhe arrest mat karo.", "Sir please main cooperate karunga, arrest mat karna.", "Main criminal nahi hoon, yakeen kijiye.", "Please police ghar mat bhejna.",
+             "Main kuch bhi karunga, bas jail mat bhejo.", "Sir please, mera parivaar barbaad ho jayega.", "Kasam se maine nahi kiya, meri madad kijiye.", "Mere upar case mat karo please.", "Mujhe bahut dar lag raha hai, mera kya hoga?"],
+    "hi": ["मुझे गिरफ्तार मत करो।", "सर प्लीज़ मैं सहयोग करूंगा, गिरफ्तार मत करना।", "मैं अपराधी नहीं हूं, यकीन कीजिए।", "प्लीज़ पुलिस घर मत भेजना।",
+           "मैं कुछ भी करूंगा, बस जेल मत भेजो।", "सर प्लीज़, मेरा परिवार बर्बाद हो जाएगा।", "कसम से मैंने नहीं किया, मेरी मदद कीजिए।", "मेरे ऊपर केस मत करो प्लीज़।", "मुझे बहुत डर लग रहा है, मेरा क्या होगा?"],
+}
+P["victim_account"] = {
+    "en": ["My account number is {acct}.", "The account number is {acct}.", "Card number is {acct}.", "My debit card number is {acct}.", "The IFSC and account number, {acct}.", "My net banking password is ..."],
+    "hing": ["Mera account number hai {acct}.", "Account number {acct} hai.", "Card number hai {acct}.", "Debit card number {acct} hai.", "IFSC aur account number, {acct}.", "Net banking password hai ..."],
+    "hi": ["मेरा खाता नंबर है {acct}।", "खाता नंबर {acct} है।", "कार्ड नंबर है {acct}।", "डेबिट कार्ड नंबर {acct} है।", "आईएफएससी और खाता नंबर, {acct}।", "नेट बैंकिंग पासवर्ड है ..."],
+}
+P["victim_benign_otp"] = {
+    "en": ["The delivery OTP is {otp}.", "Okay the OTP is {otp}.", "Yes the code is {otp}.", "It says {otp} in the app.", "OTP is {otp}, please leave it at the gate.", "Code is {otp}."],
+    "hing": ["Delivery OTP hai {otp}.", "OTP {otp} hai.", "Haan code hai {otp}.", "App mein {otp} likha hai.", "OTP {otp} hai, gate pe rakh dena.", "Code hai {otp}."],
+    "hi": ["डिलीवरी ओटीपी है {otp}।", "ओटीपी {otp} है।", "हां कोड है {otp}।", "ऐप में {otp} लिखा है।", "ओटीपी {otp} है, गेट पर रख देना।", "कोड है {otp}।"],
+}
+P["victim_benign_pay"] = {
+    "en": ["Okay beta, I am transferring the money now.", "I will send it on UPI in five minutes.", "I have sent the fees, check your account.", "How much do you need for the books?", "Sending it now, tell me when you get it.", "I transferred it to your account."],
+    "hing": ["Theek hai beta, abhi transfer kar raha hoon.", "Paanch minute mein UPI kar deta hoon.", "Fees bhej di, account check karo.", "Kitaabon ke liye kitna chahiye?", "Bhej raha hoon, mil jaye toh batana.", "Tumhare account mein transfer kar diya."],
+    "hi": ["ठीक है बेटा, अभी ट्रांसफर कर रहा हूं।", "पांच मिनट में यूपीआई कर देता हूं।", "फीस भेज दी, खाता देख लो।", "किताबों के लिए कितना चाहिए?", "भेज रहा हूं, मिल जाए तो बताना।", "तुम्हारे खाते में ट्रांसफर कर दिया।"],
 }
 
 # ----------------------------------------------------------------- contact (scam)
@@ -284,13 +331,13 @@ P["victim_benign"] = {
 # [(pool, p), ...] from which one is chosen. 'stage' marks the kill-chain stage of
 # caller utterances (for annotations); victim pools are stage None.
 SCAM_SCRIPTS = {
-    "digital_arrest": [("greet_caller", 0.7), ("victim_ack", 0.8), ("c_police", 1), ("victim_ack", 0.6), ("h_identity", 1), ("victim_worried", 0.9), ("h_threat_police", 1), ("victim_worried", 0.6), ("iso", 1), ("victim_comply", 0.7), ("h_urgency", 0.5), ("pay_safe", 1), ("victim_comply", 0.5)],
-    "courier_parcel": [("c_courier", 1), ("victim_ack", 0.8), ("h_identity", 1), ("victim_worried", 0.9), ("c_police", 0.8), ("h_threat_police", 0.9), ("iso", 0.7), ("victim_comply", 0.6), ("pay_safe", 0.6), ("pay_fee", 0.4)],
+    "digital_arrest": [("greet_caller", 0.7), ("victim_ack", 0.8), ("c_police", 1), ("victim_ack", 0.6), ("h_identity", 1), ("victim_worried", 0.9), ("h_threat_police", 1), ("victim_fear", 0.5), ("iso", 1), ("victim_comply", 0.7), ("h_urgency", 0.5), ("pay_safe", 1), ("victim_paying", 0.5), ("victim_account", 0.2)],
+    "courier_parcel": [("c_courier", 1), ("victim_ack", 0.8), ("h_identity", 1), ("victim_worried", 0.9), ("c_police", 0.8), ("h_threat_police", 0.9), ("victim_fear", 0.4), ("iso", 0.7), ("victim_comply", 0.6), ("pay_safe", 0.6), ("pay_fee", 0.4), ("victim_paying", 0.4)],
     "sim_telecom": [("c_telecom", 1), ("victim_ack", 0.7), ("h_identity", 0.9), ("victim_worried", 0.8), ("c_police", 0.7), ("h_threat_police", 0.8), ("iso", 0.7), ("pay_safe", 0.6)],
-    "kyc_bank": [("greet_caller", 0.6), ("c_bank", 1), ("victim_ack", 0.8), ("h_threat_bank", 1), ("victim_worried", 0.6), ("h_urgency", 0.6), ("a_link", 0.6), ("a_remote", 0.4), ("victim_comply", 0.6), ("a_credential", 1), ("victim_comply", 0.4)],
-    "remote_support": [("c_support", 1), ("victim_ack", 0.8), ("h_reward", 0.8), ("a_remote", 1), ("victim_comply", 0.7), ("a_credential", 0.7), ("pay_collect", 0.4)],
+    "kyc_bank": [("greet_caller", 0.6), ("c_bank", 1), ("victim_ack", 0.8), ("h_threat_bank", 1), ("victim_worried", 0.6), ("h_urgency", 0.6), ("a_link", 0.6), ("a_remote", 0.4), ("victim_comply", 0.6), ("a_credential", 1), ("victim_otp_read", 0.6), ("victim_account", 0.3)],
+    "remote_support": [("c_support", 1), ("victim_ack", 0.8), ("h_reward", 0.8), ("a_remote", 1), ("victim_comply", 0.7), ("a_credential", 0.7), ("victim_otp_read", 0.4), ("pay_collect", 0.4)],
     "upi_collect_refund": [("greet_caller", 0.5), ("c_support", 0.6), ("victim_ack", 0.6), ("h_reward", 1), ("victim_ack", 0.5), ("pay_collect", 1), ("victim_comply", 0.5), ("a_credential", 0.5)],
-    "family_emergency": [("c_relative", 1), ("victim_worried", 0.9), ("h_family", 1), ("victim_worried", 0.8), ("iso", 0.5), ("h_urgency", 0.7), ("pay_family", 1)],
+    "family_emergency": [("c_relative", 1), ("victim_worried", 0.9), ("h_family", 1), ("victim_worried", 0.8), ("iso", 0.5), ("h_urgency", 0.7), ("pay_family", 1), ("victim_paying", 0.5)],
     "electricity_bill": [("greet_caller", 0.5), ("c_electricity", 1), ("victim_ack", 0.8), ("h_threat_power", 1), ("victim_worried", 0.6), ("a_remote", 0.8), ("a_link", 0.4), ("pay_fee", 1)],
     "investment_trading": [("greet_caller", 0.6), ("c_investment", 1), ("victim_ack", 0.7), ("h_reward", 1), ("a_link", 0.7), ("a_remote", 0.3), ("victim_comply", 0.5), ("pay_fee", 1)],
     "job_task": [("c_job", 1), ("victim_ack", 0.8), ("h_reward", 1), ("a_link", 0.7), ("victim_comply", 0.5), ("pay_fee", 1)],
@@ -298,8 +345,8 @@ SCAM_SCRIPTS = {
 }
 BENIGN_SCRIPTS = {
     "bank_fraud_alert": [("b_bank_alert", 1), ("victim_benign", 1), ("b_bank_alert_safety", 1), ("b_close", 0.8)],
-    "delivery": [("b_delivery", 1), ("victim_benign", 1), ("b_delivery", 0.8), ("victim_benign", 0.6), ("b_close", 0.6)],
-    "relative_money": [("greet_caller", 0.4), ("b_family_chat", 0.7), ("b_relative_money", 1), ("victim_benign", 1), ("b_family_chat", 0.5), ("b_close", 0.8)],
+    "delivery": [("b_delivery", 1), ("victim_benign", 1), ("b_delivery", 0.8), ("victim_benign_otp", 0.7), ("victim_benign", 0.6), ("b_close", 0.6)],
+    "relative_money": [("greet_caller", 0.4), ("b_family_chat", 0.7), ("b_relative_money", 1), ("victim_benign", 1), ("victim_benign_pay", 0.6), ("b_family_chat", 0.5), ("b_close", 0.8)],
     "family_chat": [("greet_caller", 0.5), ("b_family_chat", 1), ("victim_benign", 0.8), ("b_family_chat", 1), ("b_close", 0.7)],
     "scam_gossip": [("greet_caller", 0.4), ("b_scam_gossip", 1), ("victim_benign", 0.7), ("b_scam_gossip", 0.8), ("b_family_chat", 0.5), ("b_close", 0.6)],
     "doctor": [("b_doctor", 1), ("victim_benign", 1), ("b_doctor", 0.7), ("b_close", 0.8)],

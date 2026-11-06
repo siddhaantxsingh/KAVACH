@@ -88,7 +88,7 @@ it runs the rule + classifier path, which is the fail-safe design.
 
 - [x] Source code on GitHub — Guardian + Message/Link modules (plus previews of App Inspector & Screen-share Guard)
 - [x] Technical report — `docs/KAVACH_Phase1_Technical_Report.pdf`
-- [ ] Debug APKs — run `scripts/build_apks.sh` on a machine with the Android SDK; attach both APKs to a GitHub release
+- [x] Debug APKs — built by GitHub on every push: Releases → `apks-latest`
 - [ ] Push ASR + Llama models to the Android and do one live rehearsal (`demo/jury_demo_runbook.md`, written for 1 Android + 2 iPhones)
 - [ ] Record the 3-minute demo video (live scam call + perf overlay + benchmark slide)
 - [ ] Run `bench/llama_bench.sh` on one phone and add the table to report §7.8 (optional for Phase 1, strong signal)

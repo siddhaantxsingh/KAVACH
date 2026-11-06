@@ -13,10 +13,12 @@ app has the INTERNET permission, and audio is never stored.
 
 ## 0. Once, on a computer (both setups)
 
-1. Install Android Studio (SDK 34) and JDK 17. Clone the repo.
-2. `scripts/build_apks.sh` builds **all APKs on the same computer** (they must share the signing
-   key for the same-phone link and for Network Watch to talk to Shield):
-   `dist/kavach-shield-debug.apk`, `dist/kavach-guardian-debug.apk`, optional `dist/kavach-netwatch-debug.apk`.
+1. **Get the APKs (no Android Studio needed):** GitHub builds them on every push. Open the repo's
+   **Releases → apks-latest** and download `kavach-shield-debug.apk`, `kavach-guardian-debug.apk`
+   and (optional) `kavach-netwatch-debug.apk` into a `dist/` folder.
+   (Or build yourself with Android Studio / JDK 17: `scripts/build_apks.sh`.) All builds use the
+   same demo signing key (`android/kavach-shared-debug.keystore`), so the apps always work together.
+2. Install `adb` (Android platform-tools) for pushing the speech models.
 3. Turn on Developer options → USB debugging on each Android and connect it.
 
 ## Setup A: 1 Android + 2 iPhones

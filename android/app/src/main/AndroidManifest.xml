@@ -18,6 +18,10 @@
          the same key can hold this permission, so no other app can read or fake messages -->
     <permission android:name="io.kavach.permission.LINK" android:protectionLevel="signature" />
     <uses-permission android:name="io.kavach.permission.LINK" />
+    <!-- call awareness: THAT a call is on and whether the number is saved; never the audio -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <queries>
         <package android:name="io.kavach.guardian" />
     </queries>

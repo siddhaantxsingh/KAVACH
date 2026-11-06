@@ -128,7 +128,40 @@ def test_killchain_cross_channel(lex):
     kc.add(Event(6, "call", "urgency", 0.75))
     kc.add(Event(40, "link", "dangerous_link", 2.5))
     a = kc.assess(41)
-    assert a.level == "stop" and a.rule.startswith("cross-channel")
+    assert a.level == "stop" and a.rule == "call+action:dangerous_link"
+
+
+def _run(lex, evs, now):
+    kc = _kc(lex)
+    for e in evs:
+        kc.add(Event(*e))
+    a = kc.assess(now)
+    return a.level, a.rule
+
+
+def test_one_phone_mode_unknown_call_plus_action(lex):
+    # no conversation heard at all: unknown call + dangerous link during it -> STOP
+    assert _run(lex, [(0, "phone", "unknown_call_start", 0.0), (60, "link", "dangerous_link", 2.5)], 61) == ("stop", "unknown-call+dangerous_link")
+    # risky APK installed 6 min after the unknown call ended still belongs to it
+    assert _run(lex, [(0, "phone", "unknown_call_start", 0.0), (100, "phone", "call_end", 0.0), (460, "app", "risky_apk", 2.5)], 461)[0] == "stop"
+    # ... but not 15 min later (falls back to the single-channel CAUTION)
+    assert _run(lex, [(0, "phone", "unknown_call_start", 0.0), (100, "phone", "call_end", 0.0), (1000, "app", "risky_apk", 2.5)], 1001)[0] == "caution"
+
+
+def test_payment_app_during_unknown_call(lex):
+    # paying during a short unknown call (e.g. a delivery agent) is not an alarm
+    assert _run(lex, [(0, "phone", "unknown_call_start", 0.0), (30, "app", "payment_app_opened", 0.0)], 31)[0] == "none"
+    # during a long unknown call it is a CAUTION
+    assert _run(lex, [(0, "phone", "unknown_call_start", 0.0), (200, "app", "payment_app_opened", 0.0)], 201) == ("caution", "long-unknown-call+payment")
+
+
+def test_fused_conversation_plus_action(lex):
+    # Guardian said the conversation is suspicious + victim opens a payment app in the same call -> STOP at once
+    assert _run(lex, [(0, "phone", "unknown_call_start", 0.0), (10, "call", "scam_call", 2.0), (30, "app", "payment_app_opened", 0.0)], 31) == \
+        ("stop", "call+action:payment_app_opened")
+    # same on the Guardian, which heard the cues itself (no call-awareness events)
+    assert _run(lex, [(0, "call", "authority_police", 2.0), (5, "call", "urgency", 0.75), (8, "call", "threat", 1.5),
+                      (20, "app", "payment_app_opened", 0.0)], 21)[1] == "call+action:payment_app_opened"
 
 
 def test_killchain_decay_and_sticky(lex):

@@ -69,6 +69,14 @@ def main() -> None:
         [[0, "call", "authority_bank", 1.0], [5, "call", "threat", 1.5], [6, "call", "urgency", 0.75], [40, "link", "dangerous_link", 2.5]],
         [[0, "call", "payment_request", 2.5], [3, "call", "link_click", 1.25]],
         [[0, "call", "credential_request", 2.5], [600, "call", "payment_request", 2.5]],
+        # call awareness / one-phone mode / fused rule
+        [[0, "phone", "unknown_call_start", 0.0], [60, "link", "dangerous_link", 2.5]],
+        [[0, "phone", "unknown_call_start", 0.0], [30, "app", "payment_app_opened", 0.0], [200, "app", "payment_app_opened", 0.0]],
+        [[0, "phone", "unknown_call_start", 0.0], [10, "call", "scam_call", 2.0], [30, "app", "payment_app_opened", 0.0]],
+        [[0, "phone", "unknown_call_start", 0.0], [100, "phone", "call_end", 0.0], [460, "app", "risky_apk", 2.5]],
+        [[0, "phone", "unknown_call_start", 0.0], [100, "phone", "call_end", 0.0], [1000, "app", "risky_apk", 2.5]],
+        [[0, "call", "authority_police", 2.0], [5, "call", "urgency", 0.75], [8, "call", "threat", 1.5], [20, "app", "payment_app_opened", 0.0]],
+        [[0, "network", "beaconing_app", 1.5], [40, "network", "suspicious_upload", 2.0]],
     ]
     kc_out = []
     for sc in scripts:

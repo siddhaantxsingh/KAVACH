@@ -21,7 +21,8 @@ Words used below: **Shield** = the "KAVACH Shield" app, **Guardian** = the "KAVA
 
 ### 1.3 Install adb (Android platform-tools)
 1. Open https://developer.android.com/tools/releases/platform-tools → **Download SDK Platform-Tools for Windows** → tick the agreement → **Download**.
-2. Open the downloaded `.zip` → **Extract all** → choose `C:\` → **Extract**. You now have `C:\platform-tools`.
+2. Open the downloaded `.zip` → **Extract all** → **Extract**. Windows usually puts it in a folder like
+   `Downloads\platform-tools-latest-windows\platform-tools` (the folder that contains `adb.exe`).
 
 ### 1.4 Get the project
 1. Press the **Windows key**, type `Git Bash`, press **Enter**. A black window opens. (All commands below go here: paste with **Shift+Insert** or right-click → **Paste**, then press **Enter**.)
@@ -30,7 +31,8 @@ Words used below: **Shield** = the "KAVACH Shield" app, **Guardian** = the "KAVA
    cd ~
    git clone https://github.com/siddhaantxsingh/KAVACH
    cd KAVACH
-   echo 'export PATH="$PATH:/c/platform-tools"' >> ~/.bashrc && source ~/.bashrc
+   ls ~/Downloads/platform-tools*/platform-tools/adb.exe
+   echo 'export PATH="$PATH:'"$(dirname "$(ls ~/Downloads/platform-tools*/platform-tools/adb.exe | head -1)")"'"' >> ~/.bashrc && source ~/.bashrc
    pip install -U huggingface_hub
    ```
    (If `git clone` asks you to sign in, click **Sign in with your browser** and allow it.)

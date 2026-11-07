@@ -16,8 +16,12 @@ S=io.kavach.shield
 dst() { echo "/sdcard/Android/data/$1/files/models"; }
 # Git Bash on Windows rewrites arguments that start with "/" into Windows paths; keep phone paths as they are
 export MSYS2_ARG_CONV_EXCL="/sdcard;/data"
-# Python launcher: python3 (Linux/macOS), python or py (Windows)
-PY=$(command -v python3 || command -v python || echo "py -3")
+# Python launcher that really runs Python 3 (paths may contain spaces; Windows may have a fake python3 alias)
+PY=()
+for cand in "python3" "python" "py -3"; do
+  read -r -a c <<< "$cand"
+  if command -v "${c[0]}" >/dev/null 2>&1 && "${c[@]}" -c 'import sys; sys.exit(sys.version_info < (3,))' >/dev/null 2>&1; then PY=("${c[@]}"); break; fi
+done
 # Hugging Face download through Python, so it works even when the hf command is not on PATH.
 #   hfdl <repo> <file>... --local-dir <dir>
 hfdl() {
@@ -25,7 +29,8 @@ hfdl() {
   while [[ $# -gt 0 ]]; do
     if [[ $1 == --local-dir ]]; then dir=$2; shift 2; else files+=("$1"); shift; fi
   done
-  $PY -c 'import sys
+  [[ ${#PY[@]} -gt 0 ]] || { echo "Python 3 not found"; exit 1; }
+  "${PY[@]}" -c 'import sys
 from huggingface_hub import hf_hub_download
 repo, d = sys.argv[1], sys.argv[2]
 for f in sys.argv[3:]:

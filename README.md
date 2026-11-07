@@ -9,7 +9,7 @@ with **no internet**: neither main app even requests the `INTERNET` permission.
 
 Three on-device pipelines feed one kill chain: **Guardian** (the conversation), **Shield**
 (messages, links, apps, screen sharing, payments, and *that* an unknown-number call is going on)
-and **Network Watch** (what apps send over the network). Setup steps: [`docs/SETUP_STEPS.md`](docs/SETUP_STEPS.md).
+and **Network Watch** (what apps send over the network). Setup steps: [`docs/SETUP_STEPS.md`](docs/SETUP_STEPS.md); every click: [`docs/CLICK_BY_CLICK.md`](docs/CLICK_BY_CLICK.md).
 
 * 📄 **Phase 1 technical report:** [`docs/KAVACH_Phase1_Technical_Report.pdf`](docs/KAVACH_Phase1_Technical_Report.pdf) ([markdown](docs/technical_report.md))
 * 🏗 Architecture: speech (VAD → streaming ASR on the Arm CPU) and reasoning (Llama 3.2 1B, 4-bit, ExecuTorch + XNNPACK/KleidiAI) on the Guardian; a sub-millisecond rule + classifier + kill-chain screen in front of the LLM on both phones; Network Watch on the user's phone ([`docs/network_watch.md`](docs/network_watch.md)).

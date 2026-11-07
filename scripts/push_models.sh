@@ -14,8 +14,24 @@ mkdir -p "$CACHE"
 G=io.kavach.guardian
 S=io.kavach.shield
 dst() { echo "/sdcard/Android/data/$1/files/models"; }
-# Hugging Face download: new installs have `hf`, older ones `huggingface-cli`
-hfdl() { if command -v hf >/dev/null 2>&1; then hf download "$@"; else huggingface-cli download "$@"; fi; }
+# Git Bash on Windows rewrites arguments that start with "/" into Windows paths; keep phone paths as they are
+export MSYS2_ARG_CONV_EXCL="/sdcard;/data"
+# Python launcher: python3 (Linux/macOS), python or py (Windows)
+PY=$(command -v python3 || command -v python || echo "py -3")
+# Hugging Face download through Python, so it works even when the hf command is not on PATH.
+#   hfdl <repo> <file>... --local-dir <dir>
+hfdl() {
+  local repo=$1; shift; local files=() dir=.
+  while [[ $# -gt 0 ]]; do
+    if [[ $1 == --local-dir ]]; then dir=$2; shift 2; else files+=("$1"); shift; fi
+  done
+  $PY -c 'import sys
+from huggingface_hub import hf_hub_download
+repo, d = sys.argv[1], sys.argv[2]
+for f in sys.argv[3:]:
+    print("downloading", f, "from", repo, flush=True)
+    hf_hub_download(repo_id=repo, filename=f, local_dir=d)' "$repo" "$dir" "${files[@]}"
+}
 
 asr() {
   local R=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models

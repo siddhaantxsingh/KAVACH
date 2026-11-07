@@ -38,11 +38,24 @@ jobs:
           tail -c 900000 build.log > dist/build.log || true
           ls -la dist
       - name: Publish release apks-latest
-        if: always()
+        # replace the files in place (never delete the release), and only when the build succeeded,
+        # so the download links always work
+        if: success()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete apks-latest --yes --cleanup-tag || true
-          gh release create apks-latest dist/* --target "$GITHUB_SHA" --prerelease \
-            --title "KAVACH debug APKs ${GITHUB_SHA::7} (${{ job.status }})" \
-            --notes "Built from ${GITHUB_SHA}. Status: ${{ job.status }}. Install: adb install kavach-shield-debug.apk, kavach-guardian-debug.apk (optional kavach-netwatch-debug.apk). Then scripts/push_models.sh --asr."
+          if gh release view apks-latest >/dev/null 2>&1; then
+            gh release upload apks-latest dist/* --clobber
+            gh release edit apks-latest --title "KAVACH debug APKs ${GITHUB_SHA::7}"
+          else
+            gh release create apks-latest dist/* --target "$GITHUB_SHA" --prerelease \
+              --title "KAVACH debug APKs ${GITHUB_SHA::7}" \
+              --notes "Built on every push. Install: adb install kavach-shield-debug.apk and kavach-guardian-debug.apk (optional kavach-netwatch-debug.apk). Then scripts/push_models.sh --asr."
+          fi
+      - name: Publish build log on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view build-failed >/dev/null 2>&1 || gh release create build-failed --prerelease --title "Last failed build log" --notes "Log of the last failed build."
+          gh release upload build-failed dist/build.log --clobber

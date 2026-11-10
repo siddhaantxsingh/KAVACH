@@ -156,7 +156,8 @@ class GuardianService : Service() {
                     GuardianBus.status("demo replay: $demoScript"); GuardianBus.mode("demo")
                 } else {
                     val a = AsrEngine(models ?: ModelFiles.dir(this), lang, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) },
-                        onPlacement = { snr -> GuardianBus.post { it.onPlacement(snr) } }, callAudio = oemMode(this))
+                        onPlacement = { snr -> GuardianBus.post { it.onPlacement(snr) } }, callAudio = oemMode(this),
+                        isMuted = { speaker?.isSpeakingOrJustSpoke(700) == true })
                     val missing = a.missingFiles()
                     if (missing.isNotEmpty()) {
                         GuardianBus.status("ASR model missing: ${missing.first()} — run scripts/push_models.sh")
@@ -191,7 +192,7 @@ class GuardianService : Service() {
     private fun onFinalSegment(text: String) {
         val t = callTime()
         // The microphone also hears KAVACH's own spoken warning; never treat it as the caller.
-        if (speaker?.isSpeakingOrJustSpoke() == true) {
+        if (speaker?.isSpeakingOrJustSpoke() == true || isEchoOfOurWarning(text)) {
             ignoredOwnVoice++
             GuardianBus.status("ignored our own spoken warning ($ignoredOwnVoice)")
             return
@@ -203,6 +204,18 @@ class GuardianService : Service() {
             publishTranscript("")
             tickNow()
         }
+    }
+
+    /** Backup for the microphone mute: a sentence that mostly repeats what KAVACH said in the last
+     *  20 s is our own warning coming back through the microphone, not the caller. */
+    private fun isEchoOfOurWarning(text: String): Boolean {
+        val sp = speaker ?: return false
+        if (android.os.SystemClock.elapsedRealtime() - sp.lastSpokenAt > 20_000L) return false
+        val said = kavach.core.Normalize.tokens(sp.lastSpokenText).toSet()
+        val heard = kavach.core.Normalize.tokens(text)
+        if (said.isEmpty() || heard.size < 3) return false
+        val overlap = heard.count { it in said }.toDouble() / heard.size
+        return overlap >= 0.6
     }
 
     private fun publishTranscript(partial: String) {

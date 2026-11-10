@@ -236,7 +236,7 @@ class GuardianService : Service() {
 
     /** Runs on the engine thread (called from Guardian.tick via onAlert). */
     private fun onAlert(a: Alert) {
-        speaker?.speak(a.verdict.say, lang)
+        speaker?.speak(spoken(a.level, a.verdict.say), lang)
         GuardianBus.post { it.onAlert(a) }
         link?.send(linkedMapOf("type" to "level", "level" to a.level, "rule" to a.rule, "scam_type" to a.verdict.type, "say" to a.verdict.say))
         logLine("alert", a.level, a.rule, a.verdict.type)
@@ -246,6 +246,18 @@ class GuardianService : Service() {
     }
 
     private var pendingAlert: Alert? = null
+
+    /** What is said ALOUD. The microphone is muted while KAVACH speaks (so it never transcribes
+     *  itself), so a long spoken warning would make it miss the caller's next sentences, which are
+     *  often the decisive ones ("tell me the OTP"). Caution: one short line (~5 s). Stop: the headline
+     *  and the action (~10 s). The full explanation is always on screen. */
+    private fun spoken(level: String, full: String): String {
+        val hi = lang == "hi"
+        if (level != "stop") return if (hi) "सावधान। यह कॉल संदिग्ध लग रही है। कोई ओटीपी मत बताइए, पैसे मत भेजिए।"
+            else "Careful. This call looks suspicious. Do not share any OTP or send money."
+        val head = Regex("""^.{8,160}?[.!?।]""").find(full.trim())?.value ?: (if (hi) "रुकिए! यह कॉल स्कैम लग रही है।" else "Stop! This call looks like a scam.")
+        return head + if (hi) " पैसे मत भेजिए, ओटीपी मत बताइए। कॉल काटिए और 1930 पर कॉल कीजिए।" else " Do not send money or share any OTP. Hang up and call 1930."
+    }
 
     /** Ask Llama to explain an alert (asynchronous: the warning itself never waits for this). Every
      *  outcome is reported on screen: ran (with measured speed), too slow, rejected, or error. */
@@ -265,7 +277,7 @@ class GuardianService : Service() {
                 g.applyLlmVerdict(callTime(), v, a.retrieved, a.window)
                 if (before != "stop" && g.level == "stop") {
                     val say = v.say.ifBlank { a.verdict.say }
-                    speaker?.speak(say, lang)
+                    speaker?.speak(spoken("stop", say), lang)
                     link?.send(linkedMapOf("type" to "level", "level" to "stop", "rule" to "llm-early-warning", "scam_type" to v.type, "say" to say))
                 }
                 GuardianBus.post { it.onLlm(v, adv.lastStats) }

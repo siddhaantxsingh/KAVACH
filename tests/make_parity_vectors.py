@@ -102,7 +102,8 @@ def main() -> None:
     out["prompt"] = {"system": system_prompt(ids), "user": user_prompt("kisi ko mat batana", {"isolation": 2.5}, pb.entries[:1], "hi"),
                      "formatted": list(format_llama3(system_prompt(ids), "u"))}
     raws = ['Sure! {"scam": true, "type": "digital_arrest", "stage": "isolation", "confidence": 0.93, "evidence": ["kisi ko mat batana", "made up"], "say": "Phone kaatiye.", "action": "hang_up"}',
-            '{"scam": "maybe"}', "no json", '{"scam": false, "type": "bogus", "stage": "x", "confidence": 7, "action": "dance"}']
+            '{"scam": "maybe"}', "no json", '{"scam": false, "type": "bogus", "stage": "x", "confidence": 7, "action": "dance"}',
+            '{"scam": true, "type": "digital_arrest", "stage": "isolation", "confidence": 0, "evidence": [], "say": "Main CBI se hoon, kisi ko mat batana.", "action": "hang_up"}']
     rs = [e for e in pb.entries if e["id"] in ("remote_support", "loan_app")]
     out["network_prompt"] = [
         {"events": [["suspicious_upload", "Loan Fast: sent 12.4 MB in the background in 5 min"]], "call": True, "lang": "hi",

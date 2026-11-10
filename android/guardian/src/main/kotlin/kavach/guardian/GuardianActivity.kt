@@ -195,7 +195,15 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
             .putExtra(GuardianService.EXTRA_LANG, lang).putExtra(GuardianService.EXTRA_LINK_ADDR, linkAddr))
     }
 
-    private fun stopGuard() { startService(Intent(this, GuardianService::class.java).setAction(GuardianService.ACTION_STOP)) }
+    private fun stopGuard() {
+        if (!GuardianBus.running) {
+            android.widget.Toast.makeText(this, t("अभी सुन नहीं रहा है।", "Not listening right now."), android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+        startService(Intent(this, GuardianService::class.java).setAction(GuardianService.ACTION_STOP))
+        android.widget.Toast.makeText(this, t("सुनना बंद किया।", "Stopped listening."), android.widget.Toast.LENGTH_SHORT).show()
+        renderMode("idle")
+    }
 
     private fun pickDemo() {
         val names = assets.list("demo")?.filter { it.endsWith(".json") }?.map { it.removeSuffix(".json") } ?: emptyList()

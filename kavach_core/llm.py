@@ -49,11 +49,15 @@ def system_prompt(type_ids: list[str]) -> str:
         "- Quote evidence only as exact words from the transcript.\n"
         "- 'say' is spoken to a frightened, possibly elderly person: short, calm, clear, in the requested language, "
         "and must include the next step. Helpline: 1930.\n"
+        "- 'say' is YOUR advice to the user in your own words. Never repeat what the caller said.\n"
         "Answer with ONE JSON object and nothing else, keys in this order:\n"
         '{"scam": true|false, "type": one of [' + ", ".join(type_ids) + ', "other", "none"], '
         '"stage": one of [' + ", ".join(STAGES) + '], "confidence": 0.0-1.0, '
         '"evidence": [up to 3 short exact quotes], "say": "max 35 words", '
-        '"action": one of [' + ", ".join(ACTIONS) + "]}"
+        '"action": one of [' + ", ".join(ACTIONS) + "]}\n"
+        'Example: {"scam": true, "type": "digital_arrest", "stage": "payment", "confidence": 0.9, '
+        '"evidence": ["arrest warrant has been issued"], "say": "This is a scam. Real police never ask for money on a call. '
+        'Do not send anything. Hang up and call 1930.", "action": "hang_up"}'
     )
 
 
@@ -204,6 +208,8 @@ def validate(raw: str, transcript: str, type_ids: list[str]) -> tuple[Verdict | 
         conf = min(conf, 0.6)  # claimed evidence that is not in the transcript
 
     say = str(d.get("say", "")).strip()
+    if say_copies_transcript(say, transcript):
+        return None, ["'say' repeats the caller's words; write short advice TO THE USER instead"]
     words = say.split()
     if len(words) > MAX_SAY_WORDS:
         say = " ".join(words[:MAX_SAY_WORDS])
@@ -214,6 +220,16 @@ def validate(raw: str, transcript: str, type_ids: list[str]) -> tuple[Verdict | 
     if not scam:
         typ = "none" if typ == "other" else typ
     return Verdict(scam, typ, stage, round(conf, 3), evidence, say, action, "llm"), errors
+
+
+def say_copies_transcript(say: str, transcript: str) -> bool:
+    """True when the advice mostly repeats the call itself (seen on a phone: the model echoed the
+    scammer's own instruction as 'advice'). >= 60% of its words, at least 4, come from the call."""
+    words = normalize(say).split()
+    if len(words) < 4:
+        return False
+    heard = set(normalize(transcript).split())
+    return sum(1 for w in words if w in heard) / len(words) >= 0.6
 
 
 def repair_prompt(errors: list[str]) -> str:

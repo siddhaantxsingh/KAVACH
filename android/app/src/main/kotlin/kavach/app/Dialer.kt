@@ -121,9 +121,11 @@ class KavachInCallService : InCallService() {
 /** Big-button call screen. */
 class InCallActivity : Activity(), ShieldHub.Listener {
     private lateinit var who: TextView
-    private lateinit var level: TextView
+    private lateinit var sub: TextView
+    private lateinit var level: Ui.Hero
     private lateinit var stopBox: LinearLayout
-    private lateinit var speakerBtn: android.widget.Button
+    private lateinit var answerBtn: Ui.Btn
+    private lateinit var speakerBtn: Ui.Btn
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -132,23 +134,23 @@ class InCallActivity : Activity(), ShieldHub.Listener {
         Ui.theme(this)
         current = this
         val hi = ShieldHub.lang(this) == "hi"
-        val col = Ui.column(this, 20)
-        who = Ui.text(this, "", 30f, bold = true).apply { gravity = Gravity.CENTER }
+        val col = Ui.column(this, 22)
+        col.addView(Ui.space(this, 28))
+        who = Ui.text(this, "", 32f, weight = 700).apply { gravity = Gravity.CENTER }
         col.addView(who)
-        level = Ui.banner(this); col.addView(level)
-        stopBox = Ui.card(this).apply { visibility = android.view.View.GONE
-            background = android.graphics.drawable.GradientDrawable().apply { cornerRadius = Ui.dp(this@InCallActivity, 20).toFloat(); setColor(Ui.BAD) } }
-        stopBox.addView(Ui.text(this, if (hi) "रुकिए! यह कॉल स्कैम लग रहा है।" else "STOP! This call looks like a scam.", 26f, true, Color.WHITE))
-        stopBox.addView(Ui.solid(this, if (hi) "कॉल काटें" else "END CALL NOW", Color.WHITE, Ui.BAD) { Dialer.end() }.apply { textSize = 28f })
+        sub = Ui.text(this, "", 15f, color = Ui.MUTED).apply { gravity = Gravity.CENTER; setPadding(0, 0, 0, Ui.dp(this@InCallActivity, 22)) }
+        col.addView(sub)
+        level = Ui.banner(this, compact = true); col.addView(level)
+        stopBox = Ui.card(this).apply { visibility = android.view.View.GONE; background = Ui.shape(this@InCallActivity, Ui.P.stop, 22f) }
+        stopBox.addView(Ui.text(this, if (hi) "रुकिए! यह कॉल स्कैम लग रहा है।" else "Stop! This call looks like a scam.", 22f, color = Color.WHITE, weight = 700))
+        stopBox.addView(Ui.solid(this, if (hi) "अभी कॉल काटें" else "End call now", Color.WHITE, Ui.P.stop, Ui.Ic.phoneOff) { Dialer.end() })
         col.addView(stopBox)
-        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        row.addView(Ui.solid(this, if (hi) "उठाएँ" else "Answer", Ui.GOOD, Color.WHITE) { Dialer.call?.answer(VideoProfile.STATE_AUDIO_ONLY) }.apply { textSize = 22f },
-            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-        speakerBtn = Ui.button(this, "") { toggleSpeaker() }.apply { textSize = 24f }
-        row.addView(speakerBtn, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-        col.addView(row)
-        col.addView(Ui.solid(this, if (hi) "कॉल काटें" else "End call", Ui.BAD, Color.WHITE) { Dialer.end() }.apply { textSize = 28f })
-        col.addView(Ui.text(this, if (hi) "कवच कॉल की आवाज़ रिकॉर्ड नहीं करता।" else "KAVACH never records the call.", 14f, color = Color.DKGRAY))
+        col.addView(Ui.space(this, 10))
+        answerBtn = Ui.solid(this, if (hi) "उठाएँ" else "Answer", 0xFF1F7A45.toInt(), Color.WHITE, Ui.Ic.phone) { Dialer.call?.answer(VideoProfile.STATE_AUDIO_ONLY) }
+        speakerBtn = Ui.button(this, "", Ui.Ic.volume) { toggleSpeaker() }
+        col.addView(Ui.row(this, answerBtn, speakerBtn))
+        col.addView(Ui.solid(this, if (hi) "कॉल काटें" else "End call", Ui.P.stop, Color.WHITE, Ui.Ic.phoneOff) { Dialer.end() })
+        col.addView(Ui.footnote(this, if (hi) "कवच कॉल की आवाज़ रिकॉर्ड नहीं करता" else "KAVACH never records the call"))
         setContentView(Ui.scroll(this, col))
         render()
     }
@@ -168,13 +170,15 @@ class InCallActivity : Activity(), ShieldHub.Listener {
             Call.STATE_ACTIVE -> if (hi) "बात हो रही है" else "On call"
             else -> ""
         }
-        who.text = (Dialer.number.ifBlank { if (hi) "छुपा नंबर" else "Hidden number" }) + "\n" +
-            (if (Dialer.unknown) (if (hi) "अनजान नंबर" else "Unknown number") else (if (hi) "संपर्क" else "Contact")) + " · " + state
+        who.text = Dialer.number.ifBlank { if (hi) "छुपा नंबर" else "Hidden number" }
+        sub.text = listOf(if (Dialer.unknown) (if (hi) "अनजान नंबर" else "Unknown number") else (if (hi) "संपर्क" else "Contact"), state).filter { it.isNotEmpty() }.joinToString(" · ")
         val lv = if (ShieldHub.guardianLevel == "stop") "stop" else ShieldHub.last?.level ?: "none"
-        Ui.setBanner(level, lv, ShieldHub.lang(this))
+        if (lv == "stop" || lv == "caution") Ui.setBanner(level, lv, ShieldHub.lang(this))
+        else Ui.setState(level, "ready", if (hi) "कवच इस कॉल पर नज़र रख रहा है" else "KAVACH is watching this call", if (hi) "अभी कोई खतरे का संकेत नहीं। यह गारंटी नहीं है।" else "No warning signs so far. Not a guarantee.")
         stopBox.visibility = if (lv == "stop") android.view.View.VISIBLE else android.view.View.GONE
+        answerBtn.visibility = if (c?.state == Call.STATE_RINGING) android.view.View.VISIBLE else android.view.View.GONE
         val sp = Dialer.service?.callAudioState?.route == CallAudioState.ROUTE_SPEAKER
-        speakerBtn.text = if (sp) (if (hi) "स्पीकर: चालू" else "Speaker: ON") else (if (hi) "स्पीकर: बंद" else "Speaker: OFF")
+        speakerBtn.text = if (sp) (if (hi) "स्पीकर चालू" else "Speaker on") else (if (hi) "स्पीकर बंद" else "Speaker off")
     }
 
     override fun onChanged() { runOnUiThread { render() } }
@@ -191,33 +195,38 @@ class InCallActivity : Activity(), ShieldHub.Listener {
 
 /** Keypad (needed to hold the dialer role) + the opt-in switches. */
 class DialerActivity : Activity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState); build() }
+    override fun onResume() { super.onResume(); build() }
+
+    private fun build() {
         val hi = ShieldHub.lang(this) == "hi"
         Ui.theme(this)
-        val col = Ui.column(this, 20)
-        col.addView(Ui.header(this, "KAVACH Phone", if (hi) "अनजान कॉल पर अपने-आप सुरक्षा" else "Safer calls from unknown numbers"))
-        val num = EditText(this).apply { inputType = InputType.TYPE_CLASS_PHONE; textSize = 30f
-            setText(intent?.data?.schemeSpecificPart ?: "") }
-        col.addView(num)
-        col.addView(Ui.primary(this, if (hi) "कॉल करें" else "Call") {
+        val col = Ui.column(this)
+        col.addView(Ui.backHeader(this, if (hi) "कवच फ़ोन" else "KAVACH Phone"))
+        val card = Ui.card(this)
+        val num = Ui.input(this, if (hi) "नंबर डालें" else "Enter a number", InputType.TYPE_CLASS_PHONE).apply {
+            textSize = 26f; gravity = Gravity.CENTER; typeface = Ui.font(600); setText(intent?.data?.schemeSpecificPart ?: "") }
+        card.addView(num)
+        card.addView(Ui.primary(this, if (hi) "कॉल करें" else "Call", Ui.Ic.phone) {
             val n = num.text.toString().trim()
             if (n.isEmpty()) return@primary
             if (checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(arrayOf(Manifest.permission.CALL_PHONE), 5); return@primary
             }
             (getSystemService(Context.TELECOM_SERVICE) as TelecomManager).placeCall(Uri.fromParts("tel", n, null), Bundle())
-        }.apply { textSize = 26f })
-        val isDef = Dialer.isDefault(this)
-        col.addView(Ui.text(this, if (isDef) (if (hi) "कवच अभी आपका फ़ोन ऐप है।" else "KAVACH is your phone app.")
-            else (if (hi) "कवच को फ़ोन ऐप बनाने से अनजान कॉल अपने-आप स्पीकर पर आएँगी और STOP पर एक बटन से कॉल कटेगी।"
-                  else "Make KAVACH your phone app: unknown calls go on speaker by themselves and STOP gets a one-tap End call."), 16f))
-        if (!isDef) col.addView(Ui.primary(this, if (hi) "कवच को फ़ोन ऐप बनाएँ" else "Make KAVACH my phone app") { Dialer.requestRole(this) })
-        val p = getSharedPreferences("kavach", Context.MODE_PRIVATE)
-        col.addView(Ui.button(this, (if (hi) "अनजान कॉल पर अपने-आप स्पीकर: " else "Auto speaker for unknown calls: ") +
-            if (Dialer.autoSpeaker(this)) "ON" else "OFF") {
-            p.edit().putBoolean("auto_speaker", !Dialer.autoSpeaker(this)).apply(); recreate()
         })
+        col.addView(card)
+        col.addView(Ui.label(this, if (hi) "अनजान कॉल पर सुरक्षा" else "Protection on unknown calls"))
+        val isDef = Dialer.isDefault(this)
+        val p = getSharedPreferences("kavach", Context.MODE_PRIVATE)
+        col.addView(Ui.group(this,
+            if (isDef) Ui.status(this, if (hi) "कवच आपका फ़ोन ऐप है" else "KAVACH is your phone app", true, if (hi) "Stop पर एक बटन से कॉल कटेगी" else "A Stop warning gets a one-tap End call")
+            else Ui.item(this, Ui.Ic.phone, if (hi) "कवच को फ़ोन ऐप बनाएँ" else "Make KAVACH your phone app",
+                if (hi) "अनजान कॉल अपने-आप स्पीकर पर; Stop पर एक बटन से कॉल कटेगी" else "Unknown calls go on speaker; a Stop warning gets a one-tap End call",
+                trailing = Ui.small(this, if (hi) "चुनें" else "Set") { Dialer.requestRole(this) }),
+            Ui.item(this, Ui.Ic.volume, if (hi) "अपने-आप स्पीकर" else "Auto speaker", if (hi) "अनजान नंबर की कॉल स्पीकर पर रखें" else "Put calls from unknown numbers on speaker",
+                trailing = Ui.toggle(this, Dialer.autoSpeaker(this), "Auto speaker") { p.edit().putBoolean("auto_speaker", it).apply() })))
+        col.addView(Ui.footnote(this, if (hi) "कवच कॉल की आवाज़ रिकॉर्ड नहीं करता" else "KAVACH never records the call"))
         setContentView(Ui.scroll(this, col))
     }
 }

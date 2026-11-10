@@ -68,15 +68,32 @@ object ShieldHub {
     fun removeListener(l: Listener) { main.post { listeners.remove(l) } }
     private fun changed() { main.post { listeners.toList().forEach { it.onChanged() } } }
 
-    private fun record(it: Item) { synchronized(items) { items.add(0, it); while (items.size > 50) items.removeAt(items.size - 1) }; changed() }
+    private fun record(it: Item) {
+        synchronized(items) { items.add(0, it); while (items.size > 50) items.removeAt(items.size - 1) }
+        if (tone(it.level) != "info") appCtx?.let { c -> bump(c, "stat_alerts") }
+        changed()
+    }
 
-    fun lang(ctx: Context): String = ctx.getSharedPreferences("kavach", Context.MODE_PRIVATE).getString("lang", "hi") ?: "hi"
+    /** "urgent" | "caution" | "info" for any of the level names used by the detectors. */
+    fun tone(level: String): String = when (level) { "stop", "dangerous" -> "urgent"; "caution", "suspicious" -> "caution"; else -> "info" }
+
+    // real counters shown on the home screen (kept on this phone only)
+    @Volatile private var appCtx: Context? = null
+    fun stat(ctx: Context, key: String): Int = ctx.getSharedPreferences("kavach", Context.MODE_PRIVATE).getInt(key, 0)
+    private fun bump(ctx: Context, key: String) {
+        val p = ctx.getSharedPreferences("kavach", Context.MODE_PRIVATE)
+        synchronized(this) { p.edit().putInt(key, p.getInt(key, 0) + 1).apply() }
+    }
+
+    fun lang(ctx: Context): String { if (appCtx == null) appCtx = ctx.applicationContext; return langOf(ctx) }
+    private fun langOf(ctx: Context): String = ctx.getSharedPreferences("kavach", Context.MODE_PRIVATE).getString("lang", "hi") ?: "hi"
 
     // ------------------------------------------------------------------ inputs
     fun onMessage(ctx: Context, source: String, text: String) = exec.execute {
         val c = core ?: return@execute
         val v = c.shield.check(text)
-        if (v.level == "safe") return@execute
+        bump(ctx, "stat_msgs")
+        if (v.level == "safe") { changed(); return@execute }
         val lang = lang(ctx)
         val reasons = v.urls.flatMap { it.reasonText(lang) }.distinct()
         val title = if (v.level == "dangerous") (if (lang == "hi") "खतरनाक मैसेज" else "Dangerous message") else (if (lang == "hi") "संदिग्ध मैसेज" else "Suspicious message")
@@ -95,6 +112,7 @@ object ShieldHub {
         val c = core ?: return@execute
         val v = c.urlChecker.check(url)
         val lang = lang(ctx)
+        bump(ctx, "stat_links")
         record(Item(System.currentTimeMillis(), "link", if (v.level == "dangerous") "dangerous" else v.level, url, v.reasonText(lang).joinToString("\n")))
         if (v.level == "dangerous") feed(ctx, KcEvent(now(), "link", "dangerous_link", 2.5, v.host), forward = true)
     }

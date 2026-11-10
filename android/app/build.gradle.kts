@@ -13,7 +13,8 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "0.1-phase1"
-        ndk { abiFilters += listOf("arm64-v8a") }
+        // -PextraAbi=x86_64 adds the emulator ABI (used only by the CI screenshot job)
+        ndk { abiFilters += listOf("arm64-v8a") + (if (project.hasProperty("extraAbi")) listOf(project.property("extraAbi") as String) else emptyList()) }
     }
     // one shared demo key for every build (GitHub or a laptop): Shield, Guardian and Network Watch
     // only talk to each other when signed with the same key. Debug-only key, not for the Play Store.

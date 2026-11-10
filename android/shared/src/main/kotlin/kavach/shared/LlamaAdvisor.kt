@@ -26,7 +26,7 @@ import java.util.concurrent.TimeoutException
  *    verdict has already been spoken, so a slow or throttled phone only loses the refinement.
  * All calls run on one dedicated high-priority thread ("kavach-llm").
  */
-class LlamaAdvisor(private val modelPath: String, private val tokenizerPath: String, private val timeoutMs: Long = 8000) : LlmFn {
+class LlamaAdvisor(private val modelPath: String, private val tokenizerPath: String, private val timeoutMs: Long = 25_000) : LlmFn {
     enum class State { MISSING, LOADING, READY, FAILED }
 
     data class Stats(
@@ -39,6 +39,11 @@ class LlamaAdvisor(private val modelPath: String, private val tokenizerPath: Str
     @Volatile var lastStats: Stats? = null
         private set
     @Volatile var loadMs: Long = 0
+        private set
+    /** what happened on the last generate(): "ok", "timeout", "error: …" (shown on screen, never hidden) */
+    @Volatile var lastOutcome: String = ""
+        private set
+    @Volatile var lastElapsedMs: Long = 0
         private set
     private val exec = Executors.newSingleThreadExecutor { r ->
         Thread({ Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_DISPLAY); r.run() }, "kavach-llm")
@@ -85,17 +90,21 @@ class LlamaAdvisor(private val modelPath: String, private val tokenizerPath: Str
     /** Blocking generate (called from a worker thread, never the main thread). */
     override fun generate(prefix: String, suffix: String): String {
         if (state != State.READY) return ""
+        val t0 = SystemClock.elapsedRealtime()
         val task = exec.submit<String> { runGenerate(prefix, suffix) }
         return try {
-            task.get(timeoutMs, TimeUnit.MILLISECONDS)
+            task.get(timeoutMs, TimeUnit.MILLISECONDS).also { lastOutcome = "ok" }
         } catch (e: TimeoutException) {
             module?.stop()
+            lastOutcome = "timeout"
             Log.w(TAG, "Llama timed out after $timeoutMs ms")
             ""
         } catch (t: Throwable) {
+            lastOutcome = "error: ${t.javaClass.simpleName}"
             Log.e(TAG, "Llama generate failed", t)
             ""
         } finally {
+            lastElapsedMs = SystemClock.elapsedRealtime() - t0
             warm(prefix) // re-arm the cache for the next alert, off the critical path
         }
     }

@@ -109,6 +109,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         more.addView(Ui.button(this, t("भाषा: English", "Language: हिंदी")) {
             lang = if (hi) "en" else "hi"; getPreferences(Context.MODE_PRIVATE).edit().putString("lang", lang).apply(); recreate()
         })
+        more.addView(Ui.button(this, t("Llama अभी जाँचें (नमूना कॉल)", "Test Llama now (sample call)")) { testLlama() })
         more.addView(Ui.button(this, t("तकनीकी जानकारी", "Technical details")) { togglePerf() })
         col.addView(more)
         status = Ui.text(this, GuardianBus.lastStatus, 14f, color = Ui.MUTED); col.addView(status)
@@ -221,6 +222,47 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
             getPreferences(Context.MODE_PRIVATE).edit().putString("link", linkAddr).apply()
             refreshReadiness()
         }.show()
+    }
+
+    /** Proof that Llama runs on this phone: load it, explain a short scripted scam transcript, show the
+     *  answer and the measured speed. Clearly labelled as a sample, separate from real calls. */
+    private fun testLlama() {
+        if (GuardianBus.running) { status.visibility = View.VISIBLE
+            status.text = t("पहले 'सुनना बंद करें' दबाएँ (Llama अभी उपयोग में है)।", "Tap Stop listening first (Llama is in use)."); return }
+        if (!ModelFiles.llamaPte(this).isFile) { status.visibility = View.VISIBLE; status.text = t("Llama फ़ाइल फ़ोन पर नहीं है।", "The Llama file is not on this phone."); return }
+        explainCard.visibility = View.VISIBLE
+        explain.text = t("Llama लोड हो रहा है और नमूना कॉल समझा रहा है (30–60 सेकंड)…", "Loading Llama and explaining a sample call (30–60 s)…")
+        Thread {
+            val adv = LlamaAdvisor(ModelFiles.llamaPte(this).path, ModelFiles.llamaTokenizer(this).path, timeoutMs = 60_000)
+            val latch = java.util.concurrent.CountDownLatch(1)
+            adv.loadAsync { latch.countDown() }
+            latch.await(120, java.util.concurrent.TimeUnit.SECONDS)
+            GuardianBus.llamaState = adv.state.name.lowercase()
+            if (adv.state != LlamaAdvisor.State.READY) {
+                runOnUiThread { explain.text = t("Llama लोड नहीं हो सका।", "Llama failed to load on this phone."); refreshReadiness() }
+                adv.close(); return@Thread
+            }
+            kavach.shared.KavachRuntime.ensureLoaded(this) { core ->
+                Thread {
+                    val g = core.newGuardian(kavach.core.GuardianConfig(lang = "en"))
+                    val window = "I am Inspector Vikram Singh from Mumbai cyber crime branch. A parcel booked on your Aadhaar card " +
+                        "contains drugs and fake passports. An arrest warrant has been issued. Do not tell anyone about this call. " +
+                        "To prove your innocence transfer your savings to the RBI safe account now."
+                    val active = mapOf("authority_police" to 1.0, "identity_misuse" to 1.0, "threat" to 1.0, "isolation" to 1.0, "payment_request" to 1.0)
+                    val retrieved = core.playbook.entries.filter { it.id == "digital_arrest" || it.id == "courier_parcel" }
+                    val v = g.askLlm(adv, window, active, retrieved)
+                    val run = GuardianService.describeLlamaRun(adv, v != null)
+                    GuardianBus.llamaLastRun = run
+                    adv.close()
+                    runOnUiThread {
+                        explain.text = t("नमूना कॉल (स्क्रिप्ट) पर Llama का जवाब:\n", "Llama on a sample (scripted) call:\n") +
+                            (v?.let { "${it.say}\n\n" + t("प्रकार: ", "Type: ") + "${it.type} · ${"%.0f".format(it.confidence * 100)}%" } ?: t("कोई मान्य जवाब नहीं।", "No valid answer.")) +
+                            "\n\n" + run
+                        refreshReadiness()
+                    }
+                }.start()
+            }
+        }.start()
     }
 
     private fun togglePerf() {

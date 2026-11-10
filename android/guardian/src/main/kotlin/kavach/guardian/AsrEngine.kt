@@ -40,6 +40,9 @@ class AsrEngine(
     /** OEM/system mode: the app holds CAPTURE_AUDIO_OUTPUT (privileged system app), so it may
      *  read the call audio itself (VOICE_CALL = both sides, VOICE_DOWNLINK = the caller). */
     private val callAudio: Boolean = false,
+    /** true while KAVACH's own spoken warning is playing: that audio is replaced by silence so the
+     *  recogniser never transcribes our own voice */
+    private val isMuted: (() -> Boolean)? = null,
 ) {
     /** which microphone / call source is actually in use (shown on the Guardian screen) */
     @Volatile var source: String = "mic"
@@ -116,8 +119,9 @@ class AsrEngine(
                 while (running) {
                     val n = audio.read(chunk, 0, chunk.size)
                     if (n <= 0) continue
-                    val samples = FloatArray(n) { chunk[it] / 32768f }
-                    placement.add(samples)
+                    val muted = isMuted?.invoke() == true
+                    val samples = if (muted) FloatArray(n) else FloatArray(n) { chunk[it] / 32768f }
+                    if (!muted) placement.add(samples)
                     audioSeconds += n.toDouble() / SAMPLE_RATE
                     val c0 = SystemClock.elapsedRealtime()
                     for (s in samples) {

@@ -47,8 +47,15 @@ class Speaker(context: Context) : TextToSpeech.OnInitListener {
         speaking || SystemClock.elapsedRealtime() - lastSpokeAt < tailMs
 
     /** Interrupts anything being spoken: a STOP warning must never queue behind a CAUTION. */
+    /** what was last spoken, and when (lets the listener drop an echo of it) */
+    @Volatile var lastSpokenText: String = ""
+        private set
+    @Volatile var lastSpokenAt = 0L
+        private set
+
     fun speak(text: String, lang: String, id: String = "kavach-${System.nanoTime()}") {
         if (!ready || text.isBlank()) return
+        lastSpokenText = text; lastSpokenAt = SystemClock.elapsedRealtime()
         val loc = if (lang == "hi" && hindiAvailable) HINDI else ENGLISH_IN
         tts.language = loc
         speaking = true

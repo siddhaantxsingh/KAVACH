@@ -96,3 +96,21 @@ Out of scope before Phase 1: Pi hub, NPU offload, Llama fine-tuning, payment int
 - **Privacy:** strong by design (no INTERNET in the main apps; audio never stored). Weakened by the public demo key and the unauthenticated Bluetooth pairing.
 - **Usability:** much improved and truthful now, but not tested with real older users; onboarding and the activity timeline are missing.
 - **Demo readiness:** the demo replay works on a real phone; the live path is still to be confirmed.
+
+
+## UI redesign (11 Nov)
+
+Reviewed on real screenshots: the CI job `screens` runs both apps on an Android 14 emulator and saves
+every main screen in dark and light mode to the release `ui-screens` (`scripts/ci_screens.sh`).
+
+- Shield: bottom tabs (Home, Check, Activity, Settings); status dial; setup steps with progress;
+  real on-phone counters (messages checked, links checked, warnings); alert cards with icon, level in
+  words and time; a "clear the warning" button.
+- Guardian: two tabs (Listen, Setup); status dial that pulses while listening; one Start/Stop button;
+  explanation as headline + body with an "on this phone" tag; transcript as bubbles; readiness rows.
+- Typeface Inter (SIL OFL, bundled); Lucide line icons (ISC). Contrast table: `docs/design_tokens.md`, 0 failures.
+- Wording fixes found in the review: a Stop caused by a message or link no longer says "this call" or
+  names a scam type Shield cannot know; fallback explanation grammar; scam-type matching now uses
+  telltale words (the KYC demo call was being explained as an electricity scam).
+- Not restyled: the optional Network Watch app (it does not use the shared UI module).
+- Not checked on screenshots: TalkBack, very large font sizes, the in-call screen (needs a real call).

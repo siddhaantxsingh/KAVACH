@@ -114,3 +114,23 @@ every main screen in dark and light mode to the release `ui-screens` (`scripts/c
   telltale words (the KYC demo call was being explained as an electricity scam).
 - Not restyled: the optional Network Watch app (it does not use the shared UI module).
 - Not checked on screenshots: TalkBack, very large font sizes, the in-call screen (needs a real call).
+
+
+## Phone test, 11 Nov (six synthetic calls through a laptop speaker)
+
+| Call | Expected | Result on the phone |
+|---|---|---|
+| genuine bank (Hindi) | not red | not red (after the "OTP kisi ko mat batana" fix; it was red before) |
+| genuine bank (English) | not red | not red |
+| delivery (English) | not red | not red |
+| digital arrest (Hindi) | red | **no warning** (under investigation; Hindi speech model cannot be run on the build machine) |
+| digital arrest (English) | red | yellow |
+| KYC bank (English) | red | yellow |
+
+Cause of the two yellows (reproduced on the build machine with the same English speech model):
+the yellow warning was read aloud for 19–33 s, and the microphone is muted while KAVACH speaks, so
+the caller's decisive sentences ("tell me the OTP", "transfer to the safe account") were never heard.
+Fixes: the spoken yellow warning is one short line (~6 s) and the spoken red warning is headline +
+action (~11 s); the full explanation stays on screen. Spelled-out letters from the speech recogniser
+("o t p", "s b i k y c") are now joined into words ("otp", "sbi kyc") in Python and Kotlin.
+Evaluation sets (dev, test, hand-written, held-out): no change in detection or false alarms.

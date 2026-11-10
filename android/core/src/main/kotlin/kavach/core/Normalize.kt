@@ -23,7 +23,41 @@ object Normalize {
                 else -> sb.append(if (Character.isLetterOrDigit(cp)) ch else " ")
             }
         }
-        return sb.toString().split(' ').filter { it.isNotEmpty() }.joinToString(" ")
+        return joinSpelled(sb.toString().split(' ').filter { it.isNotEmpty() }).joinToString(" ")
+    }
+
+    /** Short forms callers spell out; used only to split a joined run ("sbikyc" -> "sbi kyc"). */
+    private val SPELLED = setOf("otp", "pin", "kyc", "sbi", "rbi", "cbi", "cvv", "upi", "atm", "pan", "ed", "ncb", "trai", "hdfc", "icici",
+        "pnb", "bob", "npci", "it", "id", "sim", "emi", "apk", "sms", "ats", "fir", "dgp", "ips", "ias", "uidai")
+
+    private fun splitKnown(run: String): List<String>? {
+        if (run.isEmpty()) return emptyList()
+        for (n in minOf(5, run.length) downTo 2) {
+            val head = run.substring(0, n)
+            if (head in SPELLED) { val rest = splitKnown(run.substring(n)); if (rest != null) return listOf(head) + rest }
+        }
+        return null
+    }
+
+    private fun single(w: String) = w.length == 1 && w[0] in 'a'..'z'
+
+    /** "o t p" -> "otp", "s b i" -> "sbi"; "a c v v" -> "a cvv" (rule 7 in normalize.py). */
+    private fun joinSpelled(words: List<String>): List<String> {
+        val out = ArrayList<String>(words.size)
+        var i = 0
+        while (i < words.size) {
+            var j = i
+            while (j < words.size && single(words[j])) j++
+            if (j - i >= 2) {
+                var run = words.subList(i, j)
+                if (run[0] == "a" && run.size >= 3) { out.add("a"); run = run.subList(1, run.size) }
+                val joined = run.joinToString("")
+                val parts = splitKnown(joined)
+                if (parts != null && parts.size > 1) out.addAll(parts) else out.add(joined)
+                i = j
+            } else { out.add(words[i]); i++ }
+        }
+        return out
     }
 
     fun tokens(text: String): List<String> {

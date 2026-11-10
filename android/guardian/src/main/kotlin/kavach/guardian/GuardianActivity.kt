@@ -264,7 +264,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
                     adv.close()
                     runOnUiThread {
                         explain.text = t("नमूना कॉल (स्क्रिप्ट) पर Llama का जवाब:\n", "Llama on a sample (scripted) call:\n") +
-                            (v?.let { "${it.say}\n\n" + t("प्रकार: ", "Type: ") + "${it.type} · ${"%.0f".format(it.confidence * 100)}%" } ?: t("कोई मान्य जवाब नहीं।", "No valid answer.")) +
+                            (v?.let { "${it.say}\n\n" + t("प्रकार: ", "Type: ") + it.type + (if (it.confidence > 0.0) " · ${"%.0f".format(it.confidence * 100)}%" else "") } ?: t("कोई मान्य जवाब नहीं।", "No valid answer.")) +
                             "\n\n" + run
                         refreshReadiness()
                     }

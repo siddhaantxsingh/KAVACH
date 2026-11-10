@@ -251,11 +251,13 @@ def fallback_verdict(level: str, active: dict[str, float], retrieved: list[dict]
     k = 0 if lang == "en" else 1
     signs = "; ".join(labels[c][k] for c in cats)
     if lang == "hi":
-        head = "रुकिए! यह कॉल " + top["name_hi"] + " स्कैम जैसी लग रही है।" if level == "stop" else "सावधान! यह कॉल संदिग्ध है।"
-        say = f"{head} {signs}. {top['truth_hi']} {top['action_hi']}"
+        head = "रुकिए! यह कॉल एक जाने-पहचाने स्कैम जैसी है: " + top["name_hi"] + "।" if level == "stop" else "सावधान! यह कॉल संदिग्ध है।"
+        why = f" संकेत: {signs}।" if signs else ""
+        say = f"{head}{why} {top['truth_hi']} {top['action_hi']}"
     else:
-        head = f"Stop! This call looks like a {top['name_en']} scam." if level == "stop" else "Caution: this call looks suspicious."
-        say = f"{head} {signs}. {top['truth_en']} {top['action_en']}"
+        head = f"Stop! This call matches a known scam: {top['name_en']}." if level == "stop" else "Caution: this call looks suspicious."
+        why = f" Signs: {signs}." if signs else ""
+        say = f"{head}{why} {top['truth_en']} {top['action_en']}"
     action = "hang_up" if level == "stop" else "verify_independently"
     stage = stages[-1] if stages else "contact"
     return Verdict(True, top["id"], stage, 0.9 if level == "stop" else 0.6, [], say, action, "fallback")

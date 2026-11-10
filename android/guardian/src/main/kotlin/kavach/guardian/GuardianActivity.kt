@@ -38,6 +38,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     private var perf: TextView? = null
     private var bubbles: LinearLayout? = null
     private var explain: TextView? = null
+    private var explainLead: TextView? = null
     private var explainFoot: Ui.Chip? = null
     private var explainCard: LinearLayout? = null
     private var actionHolder: LinearLayout? = null
@@ -72,7 +73,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         lang = getPreferences(Context.MODE_PRIVATE).getString("lang", "hi") ?: "hi"
         linkAddr = getPreferences(Context.MODE_PRIVATE).getString("link", null)
         tab = savedInstanceState?.getInt("tab") ?: intent.getIntExtra("tab", 0)
-        intent.getStringExtra("lang")?.let { lang = it }
+        intent.getStringExtra("lang")?.let { lang = it; getPreferences(Context.MODE_PRIVATE).edit().putString("lang", it).apply() }
         build()
         if (!intent.getBooleanExtra("quiet", false)) requestPermissionsIfNeeded()
         intent.getStringExtra("demo")?.let { d -> intent.removeExtra("demo"); startGuard(if (d.endsWith("_en")) "en" else "hi", d) }
@@ -83,7 +84,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     /** Builds the whole screen for the current tab, then re-applies the last known state. */
     private fun build() {
         Ui.theme(this, Ui.P.card)
-        status = null; perf = null; bubbles = null; explain = null; explainCard = null; actionHolder = null; ready = null; explainFoot = null
+        status = null; perf = null; bubbles = null; explain = null; explainLead = null; explainCard = null; actionHolder = null; ready = null; explainFoot = null
         val (root, holder) = Ui.tabs(this, listOf(t("सुनें", "Listen"), t("सेटअप", "Setup")), listOf(Ui.Ic.ear, Ui.Ic.settings), tab) { tab = it; build() }
         val col = Ui.column(this)
         col.addView(Ui.header(this, "KAVACH Guardian", t("कॉल सुनकर स्कैम पहचानता है", "Hears the call. Spots the scam."), true,
@@ -113,7 +114,9 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         eh.addView(Ui.icon(this, Ui.Ic.sparkles, Ui.GOLD, 18))
         eh.addView(Ui.text(this, t("कवच ने क्या देखा", "What KAVACH noticed"), 14f, color = Ui.GOLD, weight = 600).apply { setPadding(Ui.dp(this@GuardianActivity, 8), 0, 0, 0) })
         explainCard!!.addView(eh)
-        explain = Ui.text(this, "", 17f).apply { setPadding(0, Ui.dp(this@GuardianActivity, 10), 0, 0); setTextIsSelectable(true) }
+        explainLead = Ui.text(this, "", 18f, weight = 600).apply { setPadding(0, Ui.dp(this@GuardianActivity, 10), 0, 0) }
+        explainCard!!.addView(explainLead)
+        explain = Ui.text(this, "", 15.5f, color = Ui.MUTED).apply { setPadding(0, Ui.dp(this@GuardianActivity, 6), 0, 0); setLineSpacing(Ui.dp(this@GuardianActivity, 4).toFloat(), 1f) }
         explainCard!!.addView(explain)
         explainFoot = Ui.pill(this); explainCard!!.addView(explainFoot)
         col.addView(explainCard)
@@ -217,7 +220,9 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     private fun renderExplain() {
         val c = explainCard ?: return
         c.visibility = if (explainText.isBlank()) View.GONE else View.VISIBLE
-        explain?.text = explainText
+        val (lead, rest) = Ui.splitLead(explainText)
+        explainLead?.text = lead
+        explain?.text = rest; explain?.visibility = if (rest.isEmpty()) View.GONE else View.VISIBLE
         explainFoot?.let { if (explainBy.isNotEmpty()) Ui.setPill(it, explainBy, Ui.P.accentText, Ui.P.accentSoft, Ui.Ic.cpu) else it.visibility = View.GONE }
     }
 
@@ -261,11 +266,12 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         if (demo == null && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             requestPermissionsIfNeeded(); return
         }
+        val langChanged = language != lang
         lang = language
         getPreferences(Context.MODE_PRIVATE).edit().putString("lang", lang).apply()
         level = "none"
         explainText = ""; explainBy = ""; whyText = ""; snr = null; finals = emptyList(); partial = ""
-        if (tab != 0) { tab = 0; build() } else { renderTranscript(); renderExplain() }
+        if (tab != 0 || langChanged) { tab = 0; build() } else { renderTranscript(); renderExplain() }
         val i = Intent(this, GuardianService::class.java).setAction(GuardianService.ACTION_START)
             .putExtra(GuardianService.EXTRA_LANG, lang).putExtra(GuardianService.EXTRA_DEMO, demo).putExtra(GuardianService.EXTRA_LINK_ADDR, linkAddr)
         startForegroundService(i)

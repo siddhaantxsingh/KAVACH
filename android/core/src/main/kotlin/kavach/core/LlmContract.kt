@@ -165,11 +165,13 @@ object LlmContract {
         val cats = active.entries.sortedByDescending { it.value }.map { it.key }.filter { it in labels && it != "safety_advice" }.take(2)
         val signs = cats.joinToString("; ") { if (lang == "en") labels[it]!!.first else labels[it]!!.second }
         val say = if (lang == "hi") {
-            val head = if (level == "stop") "रुकिए! यह कॉल ${top.nameHi} स्कैम जैसी लग रही है।" else "सावधान! यह कॉल संदिग्ध है।"
-            "$head $signs. ${top.truthHi} ${top.actionHi}"
+            val head = if (level == "stop") "रुकिए! यह कॉल एक जाने-पहचाने स्कैम जैसी है: ${top.nameHi}।" else "सावधान! यह कॉल संदिग्ध है।"
+            val why = if (signs.isNotEmpty()) " संकेत: $signs।" else ""
+            "$head$why ${top.truthHi} ${top.actionHi}"
         } else {
-            val head = if (level == "stop") "Stop! This call looks like a ${top.nameEn} scam." else "Caution: this call looks suspicious."
-            "$head $signs. ${top.truthEn} ${top.actionEn}"
+            val head = if (level == "stop") "Stop! This call matches a known scam: ${top.nameEn}." else "Caution: this call looks suspicious."
+            val why = if (signs.isNotEmpty()) " Signs: $signs." else ""
+            "$head$why ${top.truthEn} ${top.actionEn}"
         }
         return Verdict(true, top.id, stages.lastOrNull() ?: "contact", if (level == "stop") 0.9 else 0.6, emptyList(), say,
             if (level == "stop") "hang_up" else "verify_independently", "fallback")

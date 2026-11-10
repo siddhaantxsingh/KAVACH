@@ -124,12 +124,14 @@ class MainActivity : Activity(), ShieldHub.Listener {
         }
 
         val items = synchronized(ShieldHub.items) { ShieldHub.items.toList() }
-        val key = "$lang$n$u$p${ShieldHub.stat(this, "stat_msgs")}/${ShieldHub.stat(this, "stat_links")}/${ShieldHub.stat(this, "stat_alerts")}" +
+        val key = "$lang$n$u$p$stopNow$lv${ShieldHub.stat(this, "stat_msgs")}/${ShieldHub.stat(this, "stat_links")}/${ShieldHub.stat(this, "stat_alerts")}" +
             "${ShieldHub.linkState}${ShieldHub.callState}${items.firstOrNull()?.wallMs}${ShieldHub.netAlertApps.size}"
         if (key == homeKey) return
         homeKey = key
         val body = homeBody ?: return
         body.removeAllViews()
+
+        if (stopNow || lv == "caution") body.addView(Ui.button(this, t("मैंने पढ़ लिया — चेतावनी हटाएँ", "I've read this — clear the warning"), Ui.Ic.check) { ShieldHub.clearWarning() })
 
         // setup: numbered steps with a progress bar; disappears when all three are done
         val done = listOf(n, u, p).count { it }
@@ -160,8 +162,8 @@ class MainActivity : Activity(), ShieldHub.Listener {
 
         body.addView(Ui.label(this, t("अभी की स्थिति", "Right now")))
         body.addView(Ui.group(this,
-            Ui.item(this, Ui.Ic.phoneCall, t("कॉल", "Call"), ShieldHub.callState.replaceFirstChar { it.uppercase() }),
-            Ui.item(this, Ui.Ic.ear, "Guardian", ShieldHub.linkState.replaceFirstChar { it.uppercase() })))
+            Ui.item(this, Ui.Ic.phoneCall, t("कॉल", "Call"), stateWords(ShieldHub.callState)),
+            Ui.item(this, Ui.Ic.ear, "Guardian", stateWords(ShieldHub.linkState))))
 
         for ((pkg, label) in ShieldHub.netAlertApps) body.addView(Ui.button(this, t("मैं \"$label\" को पहचानता हूँ — भरोसा करें", "I know \"$label\" — trust it"), Ui.Ic.check) {
             ShieldHub.trustApp(this, pkg); homeKey = ""; onChanged() })
@@ -171,6 +173,12 @@ class MainActivity : Activity(), ShieldHub.Listener {
             body.addView(alertCard(latest))
             body.addView(Ui.button(this, t("सारी गतिविधि देखें", "See all activity"), Ui.Ic.history) { tab = 2; build() })
         }
+    }
+
+    /** Hub status strings are English; show the common ones in Hindi too. */
+    private fun stateWords(s: String): String {
+        val known = mapOf("no call" to "कोई कॉल नहीं", "not started" to "शुरू नहीं हुआ", "waiting for guardian" to "Guardian का इंतज़ार", "guardian connected" to "Guardian जुड़ा है")
+        return if (hi) known[s.lowercase()] ?: s else s.replaceFirstChar { it.uppercase() }
     }
 
     // ------------------------------------------------------------------ Check

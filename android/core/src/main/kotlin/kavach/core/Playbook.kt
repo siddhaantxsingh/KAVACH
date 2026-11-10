@@ -13,6 +13,7 @@ class PlaybookEntry(val raw: Map<String, Any?>) {
     val truthHi = raw["truth_hi"] as String
     val actionEn = raw["action_en"] as String
     val actionHi = raw["action_hi"] as String
+    val keywords: List<String> = if (raw["keywords"] != null) raw["keywords"].strList() else emptyList()
 }
 
 class Playbook(playbookJson: String) {
@@ -30,7 +31,9 @@ class Playbook(playbookJson: String) {
     val typeIds: List<String> get() = entries.map { it.id }
 
     fun rank(active: Map<String, Double>, text: String = "", k: Int = 3): List<Pair<PlaybookEntry, Double>> {
-        val tv = if (text.isNotEmpty()) Features.vectorize(Normalize.tokens(text), RET_DIM, null).values else emptyMap()
+        val toks = if (text.isNotEmpty()) Normalize.tokens(text) else emptyList()
+        val tv = if (text.isNotEmpty()) Features.vectorize(toks, RET_DIM, null).values else emptyMap()
+        val words = toks.toSet()
         val scored = entries.indices.map { i ->
             val e = entries[i]
             var overlap = 0.0
@@ -38,10 +41,11 @@ class Playbook(playbookJson: String) {
             overlap /= sqrt(e.keyCues.size.toDouble())
             var cos = 0.0
             for ((idx, v) in tv) cos += v * (vecs[i][idx] ?: 0.0)
-            e to (0.7 * overlap + 0.3 * cos)
+            val bonus = if (e.keywords.any { it in words }) KEYWORD_BONUS else 0.0
+            e to (0.7 * overlap + 0.3 * cos + bonus)
         }
         return scored.sortedByDescending { it.second }.take(k)
     }
 
-    companion object { const val RET_DIM = 1 shl 16 }
+    companion object { const val RET_DIM = 1 shl 16; const val KEYWORD_BONUS = 0.3 }
 }

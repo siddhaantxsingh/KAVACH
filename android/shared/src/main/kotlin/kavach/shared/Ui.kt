@@ -516,7 +516,7 @@ object Ui {
 
     fun input(ctx: Context, hint: String, type: Int = InputType.TYPE_CLASS_TEXT): EditText = EditText(ctx).apply {
         this.hint = hint; inputType = type; textSize = 16f; typeface = font(400)
-        setTextColor(P.text); setHintTextColor(if (P.dark) 0xFF8C96AB.toInt() else 0xFF6B7489.toInt())
+        setTextColor(P.text); setHintTextColor(if (P.dark) 0xFF8C96AB.toInt() else 0xFF5A6378.toInt())
         val p = dp(ctx, 16); setPadding(p, p, p, p)
         minHeight = dp(ctx, 54)
         background = shape(ctx, if (P.dark) P.bg else P.cardHi, 16f, P.stroke)
@@ -571,6 +571,13 @@ object Ui {
         layoutParams = LinearLayout.LayoutParams(WRAP, WRAP).apply { topMargin = dp(ctx, 4); bottomMargin = dp(ctx, 4); rightMargin = dp(ctx, 24) }
     }
 
+    /** First sentence of an explanation (shown as a headline) and the rest (shown as body text). */
+    fun splitLead(s: String): Pair<String, String> {
+        val t = s.trim()
+        val m = Regex("""^(.{12,140}?[.!?।])\s+(.+)$""", RegexOption.DOT_MATCHES_ALL).find(t) ?: return t to ""
+        return m.groupValues[1] to m.groupValues[2]
+    }
+
     /** Centered icon + two lines, for empty lists. */
     fun empty(ctx: Context, iconRes: Int, title: String, subtitle: String): LinearLayout = LinearLayout(ctx).apply {
         orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
@@ -618,7 +625,7 @@ object Ui {
                 val pillBox = FrameLayout(a).apply { background = if (on) shape(a, P.accentSoft, 16f) else null
                     val s = dp(a, 22); addView(ImageView(a).apply { setImageDrawable(a.getDrawable(icons[i])?.mutate()?.apply { setTint(if (on) P.accentText else P.muted) }) }, FrameLayout.LayoutParams(s, s, Gravity.CENTER)) }
                 addView(pillBox, LinearLayout.LayoutParams(dp(a, 60), dp(a, 32)))
-                addView(TextView(a).apply { text = l; textSize = 12f; typeface = font(if (on) 600 else 500); setTextColor(if (on) P.text else P.muted); setPadding(0, dp(a, 4), 0, 0); maxLines = 1 })
+                addView(TextView(a).apply { text = l; textSize = 12f; typeface = font(if (on) 600 else 500); setTextColor(if (on) P.text else P.muted); setPadding(0, dp(a, 4), 0, 0); maxLines = 1; gravity = Gravity.CENTER })
                 background = ripple(a, null, 16f); isClickable = true; isFocusable = true; isSelected = on
                 contentDescription = l
                 setOnClickListener { if (!on) onSelect(i) }

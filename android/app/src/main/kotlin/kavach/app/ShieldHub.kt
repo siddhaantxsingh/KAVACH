@@ -64,6 +64,13 @@ object ShieldHub {
         killChain = KillChain(c.lexicon.stageOf)
     }
 
+    /** The user has read the warning and dismissed it: start watching afresh (the activity list is kept). */
+    fun clearWarning() = exec.execute {
+        core?.let { killChain = KillChain(it.lexicon.stageOf) }
+        last = null; guardianLevel = "none"
+        changed()
+    }
+
     fun addListener(l: Listener) { main.post { listeners.add(l) } }
     fun removeListener(l: Listener) { main.post { listeners.remove(l) } }
     private fun changed() { main.post { listeners.toList().forEach { it.onChanged() } } }
@@ -254,8 +261,18 @@ object ShieldHub {
         val lang = lang(ctx)
         val retrieved = if (c != null && a != null) c.playbook.rank(a.active).map { it.first } else emptyList()
         val labels = c?.lexicon?.categories?.mapValues { it.value.labelEn to it.value.labelHi } ?: emptyMap()
+        // Shield usually has no speech cues of its own: without them, say plainly what was seen
+        // (a message / link, or risky activity during a call) instead of naming a scam type it cannot know.
+        val inCall = callActive || guardianLevel == "stop"
+        val generic = when {
+            inCall && lang == "hi" -> "रुकिए! इस कॉल के दौरान स्कैम के संकेत मिले हैं। पैसे मत भेजिए, ओटीपी या पिन मत बताइए, कोई ऐप इंस्टॉल मत कीजिए। कॉल काटिए और 1930 पर कॉल कीजिए।"
+            inCall -> "Stop! There are scam signs during this call. Do not send money, do not share any OTP or PIN, and do not install any app. Hang up and call 1930."
+            lang == "hi" -> "रुकिए! यह मैसेज या लिंक स्कैम जैसा लग रहा है। लिंक मत खोलिए, ओटीपी या पिन मत बताइए और पैसे मत भेजिए। अगर पैसे जा चुके हैं तो तुरंत 1930 पर कॉल कीजिए।"
+            else -> "Stop! This message or link looks like a scam. Do not open the link, do not share any OTP or PIN, and do not send money. If money has already gone, call 1930 right away."
+        }
         val text = reason?.takeIf { it.isNotBlank() }
-            ?: LlmContract.fallbackVerdict("stop", a?.active ?: emptyMap(), retrieved, labels, a?.stages ?: emptyList(), lang).say
+            ?: if (a == null || a.active.isEmpty()) generic
+            else LlmContract.fallbackVerdict("stop", a.active, retrieved, labels, a.stages, lang).say.ifBlank { generic }
         val i = Intent(ctx, StopActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             .putExtra(StopActivity.EXTRA_TEXT, text).putExtra(StopActivity.EXTRA_RULE, a?.rule?.let { KillChain.ruleLabel(it, lang) } ?: "")
         // full-screen intent works from the background on Android 10+ (USE_FULL_SCREEN_INTENT)

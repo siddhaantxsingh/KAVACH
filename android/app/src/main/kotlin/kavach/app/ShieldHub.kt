@@ -271,7 +271,7 @@ object ShieldHub {
             else -> "Stop! This message or link looks like a scam. Do not open the link, do not share any OTP or PIN, and do not send money. If money has already gone, call 1930 right away."
         }
         val text = reason?.takeIf { it.isNotBlank() }
-            ?: if (a == null || a.active.isEmpty()) generic
+            ?: if (!inCall || a == null || a.active.isEmpty()) generic
             else LlmContract.fallbackVerdict("stop", a.active, retrieved, labels, a.stages, lang).say.ifBlank { generic }
         val i = Intent(ctx, StopActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             .putExtra(StopActivity.EXTRA_TEXT, text).putExtra(StopActivity.EXTRA_RULE, a?.rule?.let { KillChain.ruleLabel(it, lang) } ?: "")

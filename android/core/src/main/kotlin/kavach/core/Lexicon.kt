@@ -87,7 +87,11 @@ class Lexicon(cuesJson: String) {
                 }
             }
         }
-        return hits.sortedWith(compareBy<CueHit>({ it.start }, { it.category }))
+        // "never tell your OTP to anyone" is the bank's safety advice, not a scammer's "tell no one":
+        // an isolation hit whose words overlap a safety-advice hit is dropped.
+        val safe = hits.filter { it.category == "safety_advice" }.map { it.start to it.end }
+        val kept = if (safe.isEmpty()) hits else hits.filter { h -> !(h.category == "isolation" && safe.any { (s, e) -> h.start < e && s < h.end }) }
+        return kept.sortedWith(compareBy<CueHit>({ it.start }, { it.category }))
     }
 
     fun match(text: String): List<CueHit> = matchTokens(Normalize.tokens(text))

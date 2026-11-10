@@ -133,6 +133,11 @@ class Lexicon:
                         continue
                     hits.append(CueHit(cat.name, raw, i, e, cat.stage, cat.weight))
                     covered.update(range(i, e))
+        # "never tell your OTP to anyone" is the bank's safety advice, not a scammer's "tell no one":
+        # an isolation hit whose words overlap a safety-advice hit is dropped.
+        safe = [(h.start, h.end) for h in hits if h.category == "safety_advice"]
+        if safe:
+            hits = [h for h in hits if not (h.category == "isolation" and any(h.start < e and s < h.end for s, e in safe))]
         hits.sort(key=lambda h: (h.start, h.category))
         return hits
 

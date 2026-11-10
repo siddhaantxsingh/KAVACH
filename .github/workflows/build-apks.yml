@@ -59,3 +59,48 @@ jobs:
         run: |
           gh release view build-failed >/dev/null 2>&1 || gh release create build-failed --prerelease --title "Last failed build log" --notes "Log of the last failed build."
           gh release upload build-failed dist/build.log --clobber
+
+  # Runs the freshly built apps on an Android emulator and saves screenshots of every main screen
+  # (dark and light) to the release "ui-screens", so the look can be reviewed without a phone.
+  screens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Fetch sherpa-onnx AAR
+        run: bash scripts/fetch_android_deps.sh
+      - name: Build emulator APKs
+        run: |
+          set -o pipefail
+          cd android
+          chmod +x gradlew
+          ./gradlew --no-daemon -PextraAbi=x86_64 :guardian:assembleDebug :app:assembleDebug 2>&1 | tee ../screens-build.log | tail -40
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Screenshots on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: bash scripts/ci_screens.sh
+      - name: Publish screenshots
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p shots; cp screens-build.log shots/ || true
+          cd shots && zip -q -r ../ui-screens.zip . && cd ..
+          gh release view ui-screens >/dev/null 2>&1 || gh release create ui-screens --prerelease --title "UI screenshots" --notes "Emulator screenshots of the latest build."
+          gh release upload ui-screens ui-screens.zip --clobber
+          gh release edit ui-screens --title "UI screenshots ${GITHUB_SHA::7}"

@@ -120,6 +120,8 @@ class GuardianService : Service() {
             adv.loadAsync { st ->
                 GuardianBus.llamaState = st.name.lowercase()
                 GuardianBus.status("Llama: $st")
+                // a warning fired while Llama was still loading: explain it now
+                if (st == LlamaAdvisor.State.READY) pendingAlert?.let { pa -> pendingAlert = null; if (sessionActive) engine.execute { askLlamaFor(pa) } }
                 if (st == LlamaAdvisor.State.READY) guardian?.let { adv.warm(it.buildLlmPrompt("", emptyMap(), emptyList()).first) }
             }
         }
@@ -239,11 +241,25 @@ class GuardianService : Service() {
         link?.send(linkedMapOf("type" to "level", "level" to a.level, "rule" to a.rule, "scam_type" to a.verdict.type, "say" to a.verdict.say))
         logLine("alert", a.level, a.rule, a.verdict.type)
         val adv = advisor ?: return
+        if (adv.state == LlamaAdvisor.State.LOADING) { pendingAlert = a; return }
+        askLlamaFor(a)
+    }
+
+    private var pendingAlert: Alert? = null
+
+    /** Ask Llama to explain an alert (asynchronous: the warning itself never waits for this). Every
+     *  outcome is reported on screen: ran (with measured speed), too slow, rejected, or error. */
+    private fun askLlamaFor(a: Alert) {
+        val adv = advisor ?: return
         if (adv.state != LlamaAdvisor.State.READY) return
         val g = guardian ?: return
         val active = g.kc.assess(callTime()).active
+        GuardianBus.status("Llama is explaining…")
         llmQueue.execute {
-            val v = g.askLlm(adv, a.window, active, a.retrieved) ?: return@execute
+            val v = g.askLlm(adv, a.window, active, a.retrieved)
+            GuardianBus.llamaLastRun = describeLlamaRun(adv, v != null)
+            GuardianBus.status("Llama: " + GuardianBus.llamaLastRun)
+            if (v == null) return@execute
             engine.execute {
                 val before = g.level
                 g.applyLlmVerdict(callTime(), v, a.retrieved, a.window)
@@ -252,7 +268,6 @@ class GuardianService : Service() {
                     speaker?.speak(say, lang)
                     link?.send(linkedMapOf("type" to "level", "level" to "stop", "rule" to "llm-early-warning", "scam_type" to v.type, "say" to say))
                 }
-                adv.lastStats?.let { st -> GuardianBus.llamaLastRun = "ran on this phone: ${st.generatedTokens} tokens, first token ${st.ttftMs} ms, ${"%.1f".format(st.decodeTokPerS)} tokens/s" }
                 GuardianBus.post { it.onLlm(v, adv.lastStats) }
                 adv.lastStats?.let { s -> logLine("llm", s.promptTokens, s.generatedTokens, s.ttftMs, "%.1f".format(s.prefillTokPerS), "%.1f".format(s.decodeTokPerS), s.usedWarmPrefix) }
             }
@@ -317,6 +332,18 @@ class GuardianService : Service() {
     }
 
     companion object {
+        /** Plain-language record of what the last Llama call actually did (shown in Readiness). */
+        fun describeLlamaRun(adv: LlamaAdvisor, valid: Boolean): String {
+            val st = adv.lastStats
+            val speed = st?.let { "${it.generatedTokens} tokens, first token ${it.ttftMs} ms, ${"%.1f".format(it.decodeTokPerS)} tokens/s" } ?: ""
+            return when {
+                adv.lastOutcome == "timeout" -> "too slow: no answer within ${adv.lastElapsedMs / 1000} s"
+                adv.lastOutcome.startsWith("error") -> "error while generating (${adv.lastOutcome.removePrefix("error: ")})"
+                valid -> "ran on this phone: $speed"
+                else -> "ran on this phone ($speed) but its answer failed the safety check"
+            }
+        }
+
         /** OEM/system mode: true only when installed as a privileged system app that was granted
          *  CAPTURE_AUDIO_OUTPUT (docs/oem_mode.md). Normal installs never get this permission. */
         fun oemMode(ctx: android.content.Context): Boolean =

@@ -30,6 +30,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     private lateinit var why: TextView
     private lateinit var placement: TextView
     private lateinit var perf: TextView
+    private lateinit var explainCard: LinearLayout
     private var lang = "hi"
     private var linkAddr: String? = null
     private var lastLlm: LlamaAdvisor.Stats? = null
@@ -46,42 +47,56 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         Ui.keepScreenOn(this)
         lang = getPreferences(Context.MODE_PRIVATE).getString("lang", "hi") ?: "hi"
         linkAddr = getPreferences(Context.MODE_PRIVATE).getString("link", null)
+        Ui.theme(this)
+        val hi = lang == "hi"
         val col = Ui.column(this)
-        banner = Ui.banner(this).also { Ui.setBanner(it, "none", lang); it.setOnClickListener { togglePerf() } }
+        col.addView(Ui.header(this, "KAVACH Guardian", if (hi) "कॉल सुनकर स्कैम पहचानता है · सब कुछ इसी फ़ोन पर" else "Listens to the call, spots scams · nothing leaves this phone"))
+        banner = Ui.banner(this).also { Ui.setBanner(it, "none", lang); it.setOnLongClickListener { togglePerf(); true } }
         col.addView(banner)
+        why = Ui.text(this, "", 15f, bold = true, color = Ui.TEXT).apply { visibility = View.GONE }
+        col.addView(why)
+        placement = Ui.pill(this)
+        col.addView(placement)
         status = Ui.text(this, GuardianBus.lastStatus, 14f, color = Color.DKGRAY)
         col.addView(status)
 
-        val row1 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        row1.addView(Ui.button(this, "▶ हिंदी / Hinglish") { startGuard("hi", null) })
-        row1.addView(Ui.button(this, "▶ English") { startGuard("en", null) })
-        row1.addView(Ui.button(this, "■ Stop") { stopGuard() })
-        col.addView(row1)
-        val row0 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        row0.addView(Ui.button(this, "⏸ Standby: start by itself on calls") { startStandby() })
+        // ---- main actions
+        col.addView(Ui.label(this, if (hi) "कॉल सुनना शुरू करें" else "Start listening to a call"))
+        val listen = Ui.card(this)
+        listen.addView(Ui.text(this, if (hi) "कॉल को स्पीकर पर रखें और यह फ़ोन पास रखें। कॉल की भाषा चुनें:" else "Put the call on speaker, keep this phone next to it, and pick the call's language:", 15f, color = Color.DKGRAY))
+        listen.addView(Ui.row(this, Ui.primary(this, "▶  हिंदी / Hinglish") { startGuard("hi", null) }, Ui.primary(this, "▶  English") { startGuard("en", null) }))
+        listen.addView(Ui.danger(this, if (hi) "■  सुनना बंद करें" else "■  Stop listening") { stopGuard() })
+        col.addView(listen)
+
+        // ---- Llama explanation (shown when there is one)
+        explainCard = Ui.card(this).apply { visibility = View.GONE }
+        explainCard.addView(Ui.text(this, if (hi) "कवच समझाता है" else "What KAVACH noticed", 13f, color = Color.GRAY))
+        explain = Ui.text(this, "", 19f, bold = true)
+        explainCard.addView(explain)
+        col.addView(explainCard)
+
+        // ---- transcript
+        col.addView(Ui.label(this, if (hi) "बातचीत · सिर्फ इसी फ़ोन पर, कभी सेव नहीं होती" else "Live transcript · stays on this phone, never saved"))
+        val tcard = Ui.card(this)
+        transcript = Ui.text(this, if (hi) "बातचीत यहाँ दिखेगी।" else "The conversation will appear here.", 17f, color = Color.DKGRAY)
+        tcard.addView(transcript)
+        col.addView(tcard)
+
+        // ---- more
+        col.addView(Ui.label(this, if (hi) "और विकल्प" else "More"))
+        val more = Ui.card(this)
+        more.addView(Ui.button(this, if (hi) "⏸  स्टैंडबाय: कॉल आने पर अपने-आप शुरू" else "⏸  Standby: start by itself on calls") { startStandby() })
         val prefs = getSharedPreferences("guardian", Context.MODE_PRIVATE)
-        row0.addView(Ui.button(this, if (prefs.getBoolean(GuardianService.PREF_AUTOSTART, true)) "Auto-start: ON" else "Auto-start: OFF") {
-            val on = !prefs.getBoolean(GuardianService.PREF_AUTOSTART, true)
-            prefs.edit().putBoolean(GuardianService.PREF_AUTOSTART, on).apply()
+        val auto = prefs.getBoolean(GuardianService.PREF_AUTOSTART, true)
+        more.addView(Ui.button(this, (if (hi) "अपने-आप शुरू: " else "Auto-start on unknown calls: ") + if (auto) "ON ✓" else "OFF") {
+            prefs.edit().putBoolean(GuardianService.PREF_AUTOSTART, !auto).apply()
             recreate()
         })
-        col.addView(row0)
-        val row2 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        row2.addView(Ui.button(this, "Demo replay") { pickDemo() })
-        row2.addView(Ui.button(this, "Link phone") { pickPhone() })
-        row2.addView(Ui.button(this, "Perf") { togglePerf() })
-        col.addView(row2)
-
-        why = Ui.text(this, "", 16f, color = Color.DKGRAY)
-        col.addView(why)
-        placement = Ui.text(this, "", 16f, bold = true)
-        col.addView(placement)
-        explain = Ui.text(this, "", 20f, bold = true)
-        col.addView(explain)
-        col.addView(Ui.text(this, if (lang == "hi") "बातचीत (सिर्फ इसी फोन पर):" else "Live transcript (stays on this phone):", 14f, color = Color.GRAY))
-        transcript = Ui.text(this, "", 17f)
-        col.addView(transcript)
-        perf = Ui.text(this, "", 12f, color = 0xFF37474F.toInt()).apply { visibility = View.GONE; typeface = android.graphics.Typeface.MONOSPACE }
+        more.addView(Ui.row(this, Ui.button(this, if (hi) "डेमो कॉल" else "Demo call") { pickDemo() },
+            Ui.button(this, if (hi) "फ़ोन जोड़ें" else "Link phone") { pickPhone() }))
+        more.addView(Ui.button(this, if (hi) "परफॉर्मेंस (तकनीकी)" else "Performance (technical)") { togglePerf() })
+        col.addView(more)
+        perf = Ui.text(this, "", 12f, color = Ui.MUTED).apply { visibility = View.GONE; typeface = android.graphics.Typeface.MONOSPACE }
         col.addView(perf)
         setContentView(Ui.scroll(this, col))
         requestPermissionsIfNeeded()
@@ -105,7 +120,8 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         lang = language
         getPreferences(Context.MODE_PRIVATE).edit().putString("lang", lang).apply()
         Ui.setBanner(banner, "none", lang)
-        explain.text = ""
+        explain.text = ""; explainCard.visibility = View.GONE
+        transcript.setTextColor(Ui.TEXT)
         val i = Intent(this, GuardianService::class.java).setAction(GuardianService.ACTION_START)
             .putExtra(GuardianService.EXTRA_LANG, lang).putExtra(GuardianService.EXTRA_DEMO, demo).putExtra(GuardianService.EXTRA_LINK_ADDR, linkAddr)
         startForegroundService(i)
@@ -125,8 +141,11 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
 
     private fun pickDemo() {
         val names = assets.list("demo")?.filter { it.endsWith(".json") }?.map { it.removeSuffix(".json") } ?: emptyList()
-        AlertDialog.Builder(this).setTitle("Replay a scripted call").setItems(names.toTypedArray()) { _, w ->
+        val pretty = names.map { n -> n.replace('_', ' ').replace(" hinglish", " · Hinglish").replace(" hi", " · हिंदी").replace(" en", " · English")
+            .replaceFirstChar { it.uppercase() } }
+        AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert).setTitle(if (lang == "hi") "डेमो कॉल चुनें" else "Play a demo call").setItems(pretty.toTypedArray()) { _, w ->
             startGuard(if (names[w].endsWith("_en")) "en" else "hi", names[w])
+            transcript.setTextColor(Ui.TEXT)
         }.show()
     }
 
@@ -139,7 +158,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
             val bonded = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter?.bondedDevices?.toList() ?: emptyList()
             for (d in bonded) { names.add("Bluetooth: " + (d.name ?: d.address)); addrs.add(d.address) }
         }
-        AlertDialog.Builder(this).setTitle("Where is KAVACH Shield running?").setItems(names.toTypedArray()) { _, w ->
+        AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert).setTitle("Where is KAVACH Shield running?").setItems(names.toTypedArray()) { _, w ->
             linkAddr = addrs[w]
             getPreferences(Context.MODE_PRIVATE).edit().putString("link", linkAddr).apply()
             status.text = "Will link to: ${names[w]} when guarding starts."
@@ -156,12 +175,14 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     override fun onState(s: GuardState) {
         Ui.setBanner(banner, s.level, lang)
         why.text = if (s.rule.isNotBlank() && s.level != "none") (if (lang == "hi") "कारण: " else "Why: ") + kavach.core.KillChain.ruleLabel(s.rule, lang) else ""
+        why.visibility = if (why.text.isNullOrEmpty()) View.GONE else View.VISIBLE
         if (perf.visibility == View.VISIBLE) status.text = "p(scam)=${"%.2f".format(s.pScam)} score=${s.score} stages=${s.stages} rule=${s.rule}"
     }
 
     override fun onAlert(a: Alert) {
         Ui.setBanner(banner, a.level, lang)
         explain.text = a.verdict.say
+        explainCard.visibility = if (a.verdict.say.isBlank()) View.GONE else View.VISIBLE
     }
 
     override fun onLlm(v: Verdict, stats: LlamaAdvisor.Stats?) {
@@ -169,6 +190,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         val ev = if (v.evidence.isNotEmpty()) "\n“" + v.evidence.joinToString("”, “") + "”" else ""
         explain.text = (if (v.say.isNotBlank()) v.say else explain.text.toString()) + ev +
             "\n[Llama 3.2 1B: ${v.type}, ${v.stage}, ${"%.0f".format(v.confidence * 100)}%]"
+        explainCard.visibility = View.VISIBLE
     }
 
     override fun onStatus(msg: String) { status.text = msg }
@@ -177,11 +199,10 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     override fun onPlacement(snrDb: Double) {
         val hi = lang == "hi"
         val (txt, col) = when (kavach.core.AudioCheck.verdict(snrDb)) {
-            "good" -> (if (hi) "आवाज़ साफ़ है ✓" else "Placement: good ✓") to Color.rgb(46, 125, 50)
-            "move_closer" -> (if (hi) "फ़ोन को स्पीकर के और पास रखें" else "Placement: move this phone closer to the speaker") to Color.rgb(239, 108, 0)
-            else -> (if (hi) "बहुत शोर है: फ़ोन स्पीकर के पास रखें, टीवी धीमा करें" else "Too noisy: put this phone next to the speaker, turn the TV down") to Color.rgb(198, 40, 40)
+            "good" -> (if (hi) "● आवाज़ साफ़ है" else "● Hearing the call clearly") to Ui.GOOD
+            "move_closer" -> (if (hi) "● फ़ोन को स्पीकर के और पास रखें" else "● Move this phone closer to the speaker") to Ui.WARN
+            else -> (if (hi) "● बहुत शोर: फ़ोन स्पीकर के पास रखें, टीवी धीमा करें" else "● Too noisy: move closer, turn the TV down") to Ui.BAD
         }
-        placement.text = "$txt  (${"%.0f".format(snrDb)} dB)"
-        placement.setTextColor(col)
+        Ui.setPill(placement, "$txt · ${"%.0f".format(snrDb)} dB", col)
     }
 }

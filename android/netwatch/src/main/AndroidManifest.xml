@@ -16,7 +16,7 @@
         android:allowBackup="false"
         android:icon="@android:drawable/ic_menu_search"
         android:label="KAVACH Network Watch"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:theme="@android:style/Theme.Material.NoActionBar">
 
         <activity
             android:name=".NetWatchActivity"

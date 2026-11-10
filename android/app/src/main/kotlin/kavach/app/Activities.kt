@@ -52,33 +52,63 @@ class MainActivity : Activity(), ShieldHub.Listener {
     private lateinit var status: TextView
     private lateinit var feed: TextView
     private lateinit var input: EditText
+    private lateinit var setupCard: LinearLayout
+    private var setupKey = ""
+
+    /** Setup steps: a button until done, then a green tick. Rebuilt only when something changed. */
+    private fun refreshSetup() {
+        val hi = ShieldHub.lang(this) == "hi"
+        val n = notificationAccess(); val u = ShieldService.hasUsageAccess(this)
+        val p = getSharedPreferences("kavach", Context.MODE_PRIVATE).getBoolean("protection_started", false)
+        val key = "$n$u$p"
+        if (key == setupKey) return
+        setupKey = key
+        setupCard.removeAllViews()
+        setupCard.addView(Ui.step(this, n, if (hi) "मैसेज जाँच चालू" else "Message checking on",
+            if (hi) "1 · मैसेज जाँच चालू करें" else "1 · Turn on message checking") { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) })
+        setupCard.addView(Ui.step(this, u, if (hi) "स्क्रीन-शेयर और ऐप निगरानी चालू" else "Screen-share & app watch on",
+            if (hi) "2 · स्क्रीन-शेयर गार्ड चालू करें" else "2 · Turn on screen-share guard") { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) })
+        setupCard.addView(Ui.step(this, p, if (hi) "सुरक्षा चालू है" else "Protection is on",
+            if (hi) "3 · सुरक्षा शुरू करें" else "3 · Start protection") { startProtection() })
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Ui.theme(this)
+        val hi = ShieldHub.lang(this) == "hi"
         val col = Ui.column(this)
+        col.addView(Ui.header(this, "KAVACH Shield", if (hi) "आपके फ़ोन की सुरक्षा · कुछ भी बाहर नहीं जाता" else "Protecting this phone · nothing leaves it"))
         banner = Ui.banner(this); col.addView(banner)
         status = Ui.text(this, "", 14f, color = Color.DKGRAY); col.addView(status)
 
-        col.addView(Ui.button(this, "1. Allow message checking (notification access)") {
-            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-        })
-        col.addView(Ui.button(this, "2. Allow screen-share guard (usage access)") {
-            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
-        })
-        col.addView(Ui.button(this, "3. Start protection") { startProtection() })
+        // ---- setup (each step turns into a green tick when done)
+        col.addView(Ui.label(this, if (hi) "सेटअप" else "Setup"))
+        setupCard = Ui.card(this); col.addView(setupCard)
 
-        input = EditText(this).apply { hint = "Paste a link or message to check"; inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE; textSize = 18f }
-        col.addView(input)
-        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        row.addView(Ui.button(this, "Check") { checkInput() })
-        row.addView(Ui.button(this, "Scan apps") { scanApps() })
-        row.addView(Ui.button(this, if (ShieldHub.lang(this) == "hi") "English" else "हिंदी") { toggleLang() })
-        col.addView(row)
-        col.addView(Ui.button(this, if (ShieldHub.lang(this) == "hi") "कवच फ़ोन (वैकल्पिक): अनजान कॉल अपने-आप स्पीकर पर" else "KAVACH Phone (optional): unknown calls on speaker by themselves") {
-            startActivity(Intent(this, DialerActivity::class.java)) })
-        col.addView(familyRow())
+        // ---- check a link or message
+        col.addView(Ui.label(this, if (hi) "लिंक या मैसेज जाँचें" else "Check a link or message"))
+        val check = Ui.card(this)
+        input = Ui.input(this, if (hi) "यहाँ लिंक या मैसेज चिपकाएँ" else "Paste a link or message here", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
+        check.addView(input)
+        check.addView(Ui.row(this, Ui.primary(this, if (hi) "जाँचें" else "Check") { checkInput() }, Ui.button(this, if (hi) "ऐप स्कैन करें" else "Scan apps") { scanApps() }))
+        col.addView(check)
+
         trustRow = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }; col.addView(trustRow)
-        feed = Ui.text(this, "", 16f); col.addView(feed)
+
+        // ---- recent alerts
+        col.addView(Ui.label(this, if (hi) "हाल की चेतावनियाँ" else "Recent alerts"))
+        val fcard = Ui.card(this)
+        feed = Ui.text(this, "", 15f); fcard.addView(feed)
+        col.addView(fcard)
+
+        // ---- more
+        col.addView(Ui.label(this, if (hi) "और विकल्प" else "More"))
+        val more = Ui.card(this)
+        more.addView(Ui.button(this, if (hi) "📞  कवच फ़ोन: अनजान कॉल अपने-आप स्पीकर पर" else "📞  KAVACH Phone: unknown calls on speaker") {
+            startActivity(Intent(this, DialerActivity::class.java)) })
+        more.addView(familyRow())
+        more.addView(Ui.button(this, if (hi) "Language: English" else "भाषा: हिंदी") { toggleLang() })
+        col.addView(more)
         setContentView(Ui.scroll(this, col))
         askRuntimePermissions()
         KavachRuntime.ensureLoaded(this) { ShieldHub.attach(it); onChanged() }
@@ -97,13 +127,14 @@ class MainActivity : Activity(), ShieldHub.Listener {
 
     private fun familyRow(): LinearLayout {
         val p = getSharedPreferences("kavach", Context.MODE_PRIVATE)
-        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        val num = EditText(this).apply { hint = "Family member's number (optional)"; inputType = InputType.TYPE_CLASS_PHONE; setText(p.getString("family_number", "")) }
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL }
+        val num = Ui.input(this, if (ShieldHub.lang(this) == "hi") "परिवार का नंबर (वैकल्पिक)" else "Family member's number (optional)", InputType.TYPE_CLASS_PHONE)
+            .apply { setText(p.getString("family_number", "")) }
         row.addView(num, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-        row.addView(Ui.button(this, "Save") {
+        row.addView(Ui.button(this, if (ShieldHub.lang(this) == "hi") "सेव" else "Save") {
             p.edit().putString("family_number", num.text.toString().trim()).apply()
             if (num.text.isNotBlank() && checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) requestPermissions(arrayOf(Manifest.permission.SEND_SMS), 3)
-        })
+        }.apply { layoutParams = LinearLayout.LayoutParams(Ui.dp(this@MainActivity, 96), LinearLayout.LayoutParams.WRAP_CONTENT).apply { leftMargin = Ui.dp(this@MainActivity, 10) } })
         return row
     }
 
@@ -119,7 +150,11 @@ class MainActivity : Activity(), ShieldHub.Listener {
         if (missing.isNotEmpty()) requestPermissions(missing.toTypedArray(), 2)
     }
 
-    private fun startProtection() { startForegroundService(Intent(this, ShieldService::class.java)) }
+    private fun startProtection() {
+        startForegroundService(Intent(this, ShieldService::class.java))
+        getSharedPreferences("kavach", Context.MODE_PRIVATE).edit().putBoolean("protection_started", true).apply()
+        refreshSetup()
+    }
 
     private fun toggleLang() {
         val p = getSharedPreferences("kavach", Context.MODE_PRIVATE)
@@ -158,11 +193,14 @@ class MainActivity : Activity(), ShieldHub.Listener {
         if (trustRow.childCount != ShieldHub.netAlertApps.size) refreshTrust()
         val lv = ShieldHub.last?.level ?: "none"
         Ui.setBanner(banner, if (ShieldHub.guardianLevel == "stop") "stop" else lv, lang)
-        status.text = "messages: ${if (notificationAccess()) "on" else "OFF"} · screen guard: ${if (ShieldService.hasUsageAccess(this)) "on" else "OFF"}" +
-            " · Guardian link: ${ShieldHub.linkState} · ${ShieldHub.callState}" +
-            (ShieldHub.last?.let { a -> if (a.level != "none") "\n" + (if (lang == "hi") "कारण: " else "Why: ") + kavach.core.KillChain.ruleLabel(a.rule, lang) + "  (channels: ${a.channels.joinToString()})" else "" } ?: "")
+        refreshSetup()
+        val why = ShieldHub.last?.let { a -> if (a.level != "none") (if (lang == "hi") "कारण: " else "Why: ") + kavach.core.KillChain.ruleLabel(a.rule, lang) else "" } ?: ""
+        status.text = listOf(why, (if (lang == "hi") "गार्डियन: " else "Guardian: ") + ShieldHub.linkState + " · " + ShieldHub.callState)
+            .filter { it.isNotBlank() }.joinToString("\n")
         val items = synchronized(ShieldHub.items) { ShieldHub.items.take(15) }
-        feed.text = items.joinToString("\n\n") { "[${it.channel}] ${it.level.uppercase()} — ${it.title}\n${it.detail}" }
+        val dot = mapOf("stop" to "🔴", "caution" to "🟠", "info" to "🔵")
+        feed.text = if (items.isEmpty()) (if (lang == "hi") "अभी तक कोई चेतावनी नहीं। 👍" else "No alerts yet. 👍")
+            else items.joinToString("\n\n") { "${dot[it.level] ?: "🟢"}  ${it.title}\n${it.detail}" }
     }
 }
 
@@ -171,12 +209,14 @@ class LinkCheckActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val shared = intent.getStringExtra(Intent.EXTRA_TEXT) ?: intent.dataString ?: ""
+        Ui.theme(this)
         val col = Ui.column(this)
+        col.addView(Ui.header(this, "KAVACH Link Check", "Checked on this phone only"))
         val banner = Ui.banner(this)
         col.addView(banner)
         val body = Ui.text(this, "…", 20f)
         col.addView(body)
-        col.addView(Ui.button(this, "OK") { finish() })
+        col.addView(Ui.primary(this, "OK") { finish() })
         setContentView(Ui.scroll(this, col))
         KavachRuntime.ensureLoaded(this) { core ->
             ShieldHub.attach(core)
@@ -204,15 +244,25 @@ class StopActivity : Activity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         val lang = ShieldHub.lang(this)
         val text = intent.getStringExtra(EXTRA_TEXT) ?: ""
-        val col = Ui.column(this, 24).apply { setBackgroundColor(Ui.LEVEL_COLORS["stop"]!!) }
-        col.addView(Ui.text(this, if (lang == "hi") "रुकिए!" else "STOP!", 48f, bold = true, color = Color.WHITE))
-        col.addView(Ui.text(this, text, 24f, color = Color.WHITE))
-        col.addView(Ui.button(this, if (lang == "hi") "📞 1930 पर कॉल करें (साइबर हेल्पलाइन)" else "📞 Call 1930 (cyber helpline)") {
+        window.decorView.setBackgroundColor(0xFF7F1D1D.toInt())
+        @Suppress("DEPRECATION") run { window.statusBarColor = 0xFF7F1D1D.toInt(); window.navigationBarColor = 0xFF991B1B.toInt() }
+        val col = Ui.column(this, 28).apply {
+            background = android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(0xFF7F1D1D.toInt(), 0xFFDC2626.toInt()))
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+        col.addView(Ui.text(this, "⛔", 64f, color = Color.WHITE))
+        col.addView(Ui.text(this, if (lang == "hi") "रुकिए!" else "STOP!", 52f, bold = true, color = Color.WHITE))
+        col.addView(Ui.text(this, text, 23f, color = Color.WHITE))
+        intent.getStringExtra(EXTRA_RULE)?.takeIf { it.isNotBlank() }?.let {
+            col.addView(Ui.text(this, (if (lang == "hi") "कारण: " else "Why: ") + it, 16f, bold = true, color = 0xFFFECACA.toInt()))
+        }
+        col.addView(android.view.View(this), android.widget.LinearLayout.LayoutParams(1, Ui.dp(this, 24)))
+        col.addView(Ui.solid(this, if (lang == "hi") "📞  1930 पर कॉल करें (साइबर हेल्पलाइन)" else "📞  Call 1930 (cyber helpline)", Color.WHITE, 0xFF991B1B.toInt()) {
             startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:1930")))
         })
-        col.addView(Ui.button(this, if (lang == "hi") "मैं समझ गया, भुगतान नहीं करूंगा" else "I understand, I will not pay") { finish() })
-        intent.getStringExtra(EXTRA_RULE)?.takeIf { it.isNotBlank() }?.let { col.addView(Ui.text(this, "($it)", 12f, color = Color.WHITE)) }
-        setContentView(col)
+        col.addView(Ui.solid(this, if (lang == "hi") "मैं समझ गया, भुगतान नहीं करूंगा" else "I understand, I will not pay", 0x33FFFFFF, Color.WHITE) { finish() })
+        setContentView(Ui.scroll(this, col).apply { setBackgroundColor(0xFF991B1B.toInt()) })
         speaker = Speaker(this)
         col.postDelayed({ speaker?.speak(text, lang) }, 600)
     }

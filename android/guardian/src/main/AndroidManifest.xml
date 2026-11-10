@@ -25,7 +25,7 @@
         android:allowBackup="false"
         android:icon="@android:drawable/ic_lock_idle_lock"
         android:label="KAVACH Guardian"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar"
+        android:theme="@android:style/Theme.Material.NoActionBar"
         android:extractNativeLibs="true">
 
         <activity

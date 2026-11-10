@@ -129,24 +129,25 @@ class InCallActivity : Activity(), ShieldHub.Listener {
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= 27) { setShowWhenLocked(true); setTurnScreenOn(true) }
         Ui.keepScreenOn(this)
+        Ui.theme(this)
         current = this
         val hi = ShieldHub.lang(this) == "hi"
         val col = Ui.column(this, 20)
         who = Ui.text(this, "", 30f, bold = true).apply { gravity = Gravity.CENTER }
         col.addView(who)
         level = Ui.banner(this); col.addView(level)
-        stopBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = android.view.View.GONE; setBackgroundColor(Color.rgb(198, 40, 40)); setPadding(30, 30, 30, 30) }
+        stopBox = Ui.card(this).apply { visibility = android.view.View.GONE
+            background = android.graphics.drawable.GradientDrawable().apply { cornerRadius = Ui.dp(this@InCallActivity, 20).toFloat(); setColor(Ui.BAD) } }
         stopBox.addView(Ui.text(this, if (hi) "रुकिए! यह कॉल स्कैम लग रहा है।" else "STOP! This call looks like a scam.", 26f, true, Color.WHITE))
-        stopBox.addView(Ui.button(this, if (hi) "कॉल काटें" else "END CALL NOW") { Dialer.end() }.apply { textSize = 30f })
+        stopBox.addView(Ui.solid(this, if (hi) "कॉल काटें" else "END CALL NOW", Color.WHITE, Ui.BAD) { Dialer.end() }.apply { textSize = 28f })
         col.addView(stopBox)
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        row.addView(Ui.button(this, if (hi) "उठाएँ" else "Answer") { Dialer.call?.answer(VideoProfile.STATE_AUDIO_ONLY) }.apply { textSize = 24f },
+        row.addView(Ui.solid(this, if (hi) "उठाएँ" else "Answer", Ui.GOOD, Color.WHITE) { Dialer.call?.answer(VideoProfile.STATE_AUDIO_ONLY) }.apply { textSize = 22f },
             LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         speakerBtn = Ui.button(this, "") { toggleSpeaker() }.apply { textSize = 24f }
         row.addView(speakerBtn, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         col.addView(row)
-        col.addView(Ui.button(this, if (hi) "कॉल काटें" else "End call") { Dialer.end() }.apply {
-            textSize = 30f; setBackgroundColor(Color.rgb(198, 40, 40)); setTextColor(Color.WHITE) })
+        col.addView(Ui.solid(this, if (hi) "कॉल काटें" else "End call", Ui.BAD, Color.WHITE) { Dialer.end() }.apply { textSize = 28f })
         col.addView(Ui.text(this, if (hi) "कवच कॉल की आवाज़ रिकॉर्ड नहीं करता।" else "KAVACH never records the call.", 14f, color = Color.DKGRAY))
         setContentView(Ui.scroll(this, col))
         render()
@@ -193,16 +194,17 @@ class DialerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val hi = ShieldHub.lang(this) == "hi"
+        Ui.theme(this)
         val col = Ui.column(this, 20)
-        col.addView(Ui.text(this, "KAVACH Phone", 28f, true))
+        col.addView(Ui.header(this, "KAVACH Phone", if (hi) "अनजान कॉल पर अपने-आप सुरक्षा" else "Safer calls from unknown numbers"))
         val num = EditText(this).apply { inputType = InputType.TYPE_CLASS_PHONE; textSize = 30f
             setText(intent?.data?.schemeSpecificPart ?: "") }
         col.addView(num)
-        col.addView(Ui.button(this, if (hi) "कॉल करें" else "Call") {
+        col.addView(Ui.primary(this, if (hi) "कॉल करें" else "Call") {
             val n = num.text.toString().trim()
-            if (n.isEmpty()) return@button
+            if (n.isEmpty()) return@primary
             if (checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(Manifest.permission.CALL_PHONE), 5); return@button
+                requestPermissions(arrayOf(Manifest.permission.CALL_PHONE), 5); return@primary
             }
             (getSystemService(Context.TELECOM_SERVICE) as TelecomManager).placeCall(Uri.fromParts("tel", n, null), Bundle())
         }.apply { textSize = 26f })
@@ -210,7 +212,7 @@ class DialerActivity : Activity() {
         col.addView(Ui.text(this, if (isDef) (if (hi) "कवच अभी आपका फ़ोन ऐप है।" else "KAVACH is your phone app.")
             else (if (hi) "कवच को फ़ोन ऐप बनाने से अनजान कॉल अपने-आप स्पीकर पर आएँगी और STOP पर एक बटन से कॉल कटेगी।"
                   else "Make KAVACH your phone app: unknown calls go on speaker by themselves and STOP gets a one-tap End call."), 16f))
-        if (!isDef) col.addView(Ui.button(this, if (hi) "कवच को फ़ोन ऐप बनाएँ" else "Make KAVACH my phone app") { Dialer.requestRole(this) })
+        if (!isDef) col.addView(Ui.primary(this, if (hi) "कवच को फ़ोन ऐप बनाएँ" else "Make KAVACH my phone app") { Dialer.requestRole(this) })
         val p = getSharedPreferences("kavach", Context.MODE_PRIVATE)
         col.addView(Ui.button(this, (if (hi) "अनजान कॉल पर अपने-आप स्पीकर: " else "Auto speaker for unknown calls: ") +
             if (Dialer.autoSpeaker(this)) "ON" else "OFF") {

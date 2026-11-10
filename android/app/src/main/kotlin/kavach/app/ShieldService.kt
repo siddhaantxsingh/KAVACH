@@ -83,6 +83,7 @@ class ShieldService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
+        running = true
         super.onCreate()
         Ui.ensureChannel(this, "shield", "KAVACH protection", android.app.NotificationManager.IMPORTANCE_LOW)
         val pi = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
@@ -134,6 +135,7 @@ class ShieldService : Service() {
     }
 
     override fun onDestroy() {
+        running = false
         handler.removeCallbacks(poll)
         try { unregisterReceiver(pkgReceiver) } catch (_: Throwable) { }
         ShieldHub.stopLink()
@@ -141,6 +143,8 @@ class ShieldService : Service() {
     }
 
     companion object {
+        /** true only while the protection service is actually alive (drives the "Protection on" state) */
+        @Volatile var running = false
         const val REMOTE_WINDOW_MS = 10 * 60 * 1000L
         const val FOREGROUND_SERVICE_START = 19 // UsageEvents.Event.FOREGROUND_SERVICE_START (API 29)
         const val FOREGROUND_SERVICE_STOP = 20

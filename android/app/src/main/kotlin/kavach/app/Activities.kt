@@ -59,7 +59,7 @@ class MainActivity : Activity(), ShieldHub.Listener {
     private fun refreshSetup() {
         val hi = ShieldHub.lang(this) == "hi"
         val n = notificationAccess(); val u = ShieldService.hasUsageAccess(this)
-        val p = getSharedPreferences("kavach", Context.MODE_PRIVATE).getBoolean("protection_started", false)
+        val p = ShieldService.running
         val key = "$n$u$p"
         if (key == setupKey) return
         setupKey = key
@@ -104,7 +104,7 @@ class MainActivity : Activity(), ShieldHub.Listener {
         // ---- more
         col.addView(Ui.label(this, if (hi) "और विकल्प" else "More"))
         val more = Ui.card(this)
-        more.addView(Ui.button(this, if (hi) "📞  कवच फ़ोन: अनजान कॉल अपने-आप स्पीकर पर" else "📞  KAVACH Phone: unknown calls on speaker") {
+        more.addView(Ui.button(this, if (hi) "कवच फ़ोन: अनजान कॉल अपने-आप स्पीकर पर" else "KAVACH Phone: unknown calls on speaker") {
             startActivity(Intent(this, DialerActivity::class.java)) })
         more.addView(familyRow())
         more.addView(Ui.button(this, if (hi) "Language: English" else "भाषा: हिंदी") { toggleLang() })
@@ -169,7 +169,22 @@ class MainActivity : Activity(), ShieldHub.Listener {
         val urls = kavach.core.UrlChecker.extractUrls(t)
         if (urls.size == 1 && urls[0].length >= t.length - 2) ShieldHub.onLinkChecked(this, urls[0]) else ShieldHub.onMessage(this, "manual", t)
         val v = core.shield.check(t)
-        status.text = "message: ${v.level} (p=${"%.2f".format(v.pScam)})" + v.urls.joinToString("") { "\nlink ${it.host}: ${it.level} ${it.reasonText(ShieldHub.lang(this))}" }
+        val hiL = ShieldHub.lang(this) == "hi"
+        val msgLine = when (v.level) {
+            "dangerous" -> if (hiL) "संदेश: खतरनाक — स्कैम जैसा" else "Message: dangerous — looks like a scam"
+            "suspicious" -> if (hiL) "संदेश: संदिग्ध" else "Message: suspicious"
+            else -> if (hiL) "संदेश: कोई साफ़ चेतावनी संकेत नहीं मिला। यह गारंटी नहीं है।" else "Message: no obvious warning signs found. This is not a guarantee."
+        }
+        status.text = msgLine + v.urls.joinToString("") { u ->
+            val lvl = when (u.level) {
+                "dangerous" -> if (hiL) "खतरनाक" else "dangerous"
+                "suspicious" -> if (hiL) "संदिग्ध" else "suspicious"
+                "safe" -> if (hiL) "आधिकारिक डोमेन से मेल खाता है" else "matches the organisation's official domain"
+                else -> if (hiL) "कोई साफ़ चेतावनी संकेत नहीं; गारंटी नहीं" else "no obvious warning signs; not a guarantee"
+            }
+            "\n\n" + (if (hiL) "लिंक " else "Link ") + u.host + ": " + lvl + u.reasonText(ShieldHub.lang(this)).joinToString("") { r -> "\n• $r" }
+        }
+        status.setTextColor(Ui.TEXT)
     }
 
     private fun scanApps() {
@@ -192,15 +207,28 @@ class MainActivity : Activity(), ShieldHub.Listener {
         val lang = ShieldHub.lang(this)
         if (trustRow.childCount != ShieldHub.netAlertApps.size) refreshTrust()
         val lv = ShieldHub.last?.level ?: "none"
-        Ui.setBanner(banner, if (ShieldHub.guardianLevel == "stop") "stop" else lv, lang)
         refreshSetup()
+        val hiL = lang == "hi"
+        val setupDone = notificationAccess() && ShieldService.hasUsageAccess(this)
+        when {
+            ShieldHub.guardianLevel == "stop" || lv == "stop" -> Ui.setState(banner, "stop", if (hiL) "रुकिए — स्कैम जैसा पैटर्न" else "Stop — scam pattern detected",
+                if (hiL) "पैसे, ओटीपी या पिन मत दीजिए। नीचे कारण देखें।" else "Don't pay or share any OTP or PIN. See why below.")
+            lv == "caution" -> Ui.setState(banner, "caution", if (hiL) "सावधान — संदिग्ध पैटर्न" else "Caution — suspicious pattern",
+                if (hiL) "पैसे भेजने से पहले रुकिए। नीचे कारण देखें।" else "Pause before you send money. See why below.")
+            !setupDone -> Ui.setState(banner, "caution", if (hiL) "सेटअप बाकी है" else "Setup needed",
+                if (hiL) "सुरक्षा चालू करने के लिए नीचे के कदम पूरे करें।" else "Finish the steps below to turn on protection.")
+            !ShieldService.running -> Ui.setState(banner, "ready", if (hiL) "सुरक्षा बंद है" else "Protection is off",
+                if (hiL) "नीचे 'सुरक्षा शुरू करें' दबाएँ।" else "Tap Start protection below.")
+            else -> Ui.setState(banner, "listen", if (hiL) "सुरक्षा चालू — अभी कोई चेतावनी नहीं" else "Protection on — no warnings so far",
+                if (hiL) "जाँच इसी फ़ोन पर होती है। यह गारंटी नहीं है।" else "Checks run on this phone only. This is not a guarantee.")
+        }
         val why = ShieldHub.last?.let { a -> if (a.level != "none") (if (lang == "hi") "कारण: " else "Why: ") + kavach.core.KillChain.ruleLabel(a.rule, lang) else "" } ?: ""
         status.text = listOf(why, (if (lang == "hi") "गार्डियन: " else "Guardian: ") + ShieldHub.linkState + " · " + ShieldHub.callState)
             .filter { it.isNotBlank() }.joinToString("\n")
         val items = synchronized(ShieldHub.items) { ShieldHub.items.take(15) }
-        val dot = mapOf("stop" to "🔴", "caution" to "🟠", "info" to "🔵")
-        feed.text = if (items.isEmpty()) (if (lang == "hi") "अभी तक कोई चेतावनी नहीं। 👍" else "No alerts yet. 👍")
-            else items.joinToString("\n\n") { "${dot[it.level] ?: "🟢"}  ${it.title}\n${it.detail}" }
+        val tag = if (lang == "hi") mapOf("stop" to "ज़रूरी", "caution" to "सावधान", "info" to "जानकारी") else mapOf("stop" to "Urgent", "caution" to "Caution", "info" to "Info")
+        feed.text = if (items.isEmpty()) (if (lang == "hi") "अभी तक कोई चेतावनी नहीं।" else "No alerts yet.")
+            else items.joinToString("\n\n") { "${tag[it.level] ?: (if (lang == "hi") "नोट" else "Note")} · ${it.title}\n${it.detail}" }
     }
 }
 
@@ -227,6 +255,8 @@ class LinkCheckActivity : Activity() {
             val worst = when { msg.level == "dangerous" || verdicts.any { it.level == "dangerous" } -> "stop"
                 msg.level == "suspicious" || verdicts.any { it.level == "suspicious" } -> "caution"; else -> "none" }
             Ui.setBanner(banner, worst, lang)
+            if (worst == "none") Ui.setState(banner, "ready", if (lang == "hi") "कोई साफ़ चेतावनी संकेत नहीं" else "No obvious warning signs",
+                if (lang == "hi") "यह गारंटी नहीं है। कोई ओटीपी या पिन न दें।" else "This is not a guarantee. Never share an OTP or PIN.")
             body.text = (verdicts.joinToString("\n\n") { v -> "${v.host}\n" + v.reasonText(lang).joinToString("\n") { "• $it" } } +
                 "\n\n" + (if (lang == "hi") "संदेश जोखिम: " else "Message risk: ") + "${"%.0f".format(msg.pScam * 100)}%").trim()
             verdicts.forEach { ShieldHub.onLinkChecked(this, it.url) }
@@ -244,24 +274,21 @@ class StopActivity : Activity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         val lang = ShieldHub.lang(this)
         val text = intent.getStringExtra(EXTRA_TEXT) ?: ""
-        window.decorView.setBackgroundColor(0xFF7F1D1D.toInt())
-        @Suppress("DEPRECATION") run { window.statusBarColor = 0xFF7F1D1D.toInt(); window.navigationBarColor = 0xFF991B1B.toInt() }
-        val col = Ui.column(this, 28).apply {
-            background = android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(0xFF7F1D1D.toInt(), 0xFFDC2626.toInt()))
-            gravity = android.view.Gravity.CENTER_VERTICAL
-        }
-        col.addView(Ui.text(this, "⛔", 64f, color = Color.WHITE))
-        col.addView(Ui.text(this, if (lang == "hi") "रुकिए!" else "STOP!", 52f, bold = true, color = Color.WHITE))
+        Ui.theme(this)
+        window.decorView.setBackgroundColor(0xFF991B1B.toInt())
+        @Suppress("DEPRECATION") run { window.statusBarColor = 0xFF991B1B.toInt(); window.navigationBarColor = 0xFF991B1B.toInt() }
+        val col = Ui.column(this, 28).apply { setBackgroundColor(0xFF991B1B.toInt()); gravity = android.view.Gravity.CENTER_VERTICAL }
+        col.addView(Ui.text(this, if (lang == "hi") "रुकिए!" else "Stop!", 48f, bold = true, color = Color.WHITE))
+        col.addView(Ui.text(this, if (lang == "hi") "यह स्कैम जैसा पैटर्न है" else "This looks like a scam", 22f, bold = true, color = Color.WHITE))
         col.addView(Ui.text(this, text, 23f, color = Color.WHITE))
         intent.getStringExtra(EXTRA_RULE)?.takeIf { it.isNotBlank() }?.let {
             col.addView(Ui.text(this, (if (lang == "hi") "कारण: " else "Why: ") + it, 16f, bold = true, color = 0xFFFECACA.toInt()))
         }
         col.addView(android.view.View(this), android.widget.LinearLayout.LayoutParams(1, Ui.dp(this, 24)))
-        col.addView(Ui.solid(this, if (lang == "hi") "📞  1930 पर कॉल करें (साइबर हेल्पलाइन)" else "📞  Call 1930 (cyber helpline)", Color.WHITE, 0xFF991B1B.toInt()) {
+        col.addView(Ui.solid(this, if (lang == "hi") "1930 पर कॉल करें (साइबर हेल्पलाइन)" else "Call 1930 (cyber helpline)", Color.WHITE, 0xFF991B1B.toInt()) {
             startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:1930")))
         })
-        col.addView(Ui.solid(this, if (lang == "hi") "मैं समझ गया, भुगतान नहीं करूंगा" else "I understand, I will not pay", 0x33FFFFFF, Color.WHITE) { finish() })
+        col.addView(Ui.solid(this, if (lang == "hi") "मैं समझ गया, भुगतान नहीं करूंगा" else "I understand, I won't pay", 0xFF7F1D1D.toInt(), Color.WHITE) { finish() })
         setContentView(Ui.scroll(this, col).apply { setBackgroundColor(0xFF991B1B.toInt()) })
         speaker = Speaker(this)
         col.postDelayed({ speaker?.speak(text, lang) }, 600)

@@ -23,7 +23,7 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@android:drawable/ic_lock_idle_lock"
+        android:icon="@mipmap/ic_launcher"
         android:label="KAVACH Guardian"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:extractNativeLibs="true">

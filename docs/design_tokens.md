@@ -13,7 +13,17 @@ Target: at least 4.5:1 for normal text (WCAG 2.x AA). Risk is never shown by col
 | dark | white on cobalt (primary button) | `#FFFFFF` on `#3157D5` | 6.08:1 | pass |
 | dark | gold on background (labels, highlights) | `#D6B36A` on `#0B1020` | 9.48:1 | pass |
 | dark | gold on card | `#D6B36A` on `#151D31` | 8.40:1 | pass |
-| dark | text on listening panel | `#F4F1E8` on `#22336B` | 10.60:1 | pass |
+| dark | text on listening panel | `#F4F1E8` on `#14204A` | 13.93:1 | pass |
+| dark | subtitle on listening panel | `#C5CEE6` on `#14204A` | 9.99:1 | pass |
+| dark | link/selected text on soft cobalt | `#9DB4FF` on `#1A2752` | 7.15:1 | pass |
+| dark | selected tab icon on bar | `#9DB4FF` on `#151D31` | 8.31:1 | pass |
+| dark | gold icon on soft gold tile | `#D6B36A` on `#2A2619` | 7.57:1 | pass |
+| dark | success on soft green | `#8FD3A6` on `#15291F` | 8.79:1 | pass |
+| dark | caution on soft amber | `#F2B441` on `#2B2313` | 8.41:1 | pass |
+| dark | danger on soft red | `#FCA5A5` on `#341619` | 8.68:1 | pass |
+| dark | secondary text on raised surface | `#ADB6C8` on `#1C2640` | 7.36:1 | pass |
+| dark | placeholder text on input | `#8C96AB` on `#0B1020` | 6.37:1 | pass |
+| dark | white on answer green | `#FFFFFF` on `#1F7A45` | 5.35:1 | pass |
 | dark | ink on caution amber | `#1F1300` on `#F2B441` | 9.88:1 | pass |
 | dark | white on stop red | `#FFFFFF` on `#B91C1C` | 6.47:1 | pass |
 | dark | success text on card | `#8FD3A6` on `#151D31` | 9.61:1 | pass |
@@ -32,6 +42,15 @@ Target: at least 4.5:1 for normal text (WCAG 2.x AA). Risk is never shown by col
 | light | red text on white | `#B91C1C` on `#FFFFFF` | 6.47:1 | pass |
 | light | success text on white | `#1F6B3A` on `#FFFFFF` | 6.52:1 | pass |
 | light | caution text on white | `#8A5A00` on `#FFFFFF` | 5.93:1 | pass |
+| light | link/selected text on soft cobalt | `#2A4BB8` on `#E6ECFB` | 6.35:1 | pass |
+| light | dark gold on soft gold tile | `#76551D` on `#F6EEDB` | 5.89:1 | pass |
+| light | success on soft green | `#1F6B3A` on `#E3F3E8` | 5.66:1 | pass |
+| light | caution on soft amber | `#8A5A00` on `#FBF0D6` | 5.23:1 | pass |
+| light | danger on soft red | `#B91C1C` on `#FBE6E6` | 5.41:1 | pass |
+| light | ink on raised surface | `#15213B` on `#F3EFE5` | 13.93:1 | pass |
+| light | secondary text on raised surface | `#4B5670` on `#F3EFE5` | 6.39:1 | pass |
+| light | placeholder text on input | `#5A6378` on `#F3EFE5` | 5.24:1 | pass |
+| light | secondary text on listening panel | `#4B5670` on `#E6ECFB` | 6.20:1 | pass |
 | stop screen | white on stop screen | `#FFFFFF` on `#991B1B` | 8.31:1 | pass |
 | stop screen | white on dark red button | `#FFFFFF` on `#7F1D1D` | 10.02:1 | pass |
 | stop screen | red on white button | `#991B1B` on `#FFFFFF` | 8.31:1 | pass |

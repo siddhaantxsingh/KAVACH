@@ -1,139 +1,284 @@
 {
   "version": 1,
   "doc": "Indian scam playbook. Each entry is retrieved on-device and given to Llama 3.2 1B as grounding, and is also the source of the offline fallback explanation when the LLM is unavailable. Sources: I4C / MHA advisories, cybercrime.gov.in, RBI 'BE(A)WARE' booklet, Sanchar Saathi (Chakshu), bank fraud-awareness pages. Phrased in the team's own words.",
-  "helpline": {"number": "1930", "portal": "cybercrime.gov.in", "chakshu": "sancharsaathi.gov.in (Chakshu) to report fraud calls and SMS"},
+  "helpline": {
+    "number": "1930",
+    "portal": "cybercrime.gov.in",
+    "chakshu": "sancharsaathi.gov.in (Chakshu) to report fraud calls and SMS"
+  },
   "scam_types": [
     {
       "id": "digital_arrest",
       "name_en": "Digital arrest / fake police",
       "name_hi": "डिजिटल अरेस्ट / नकली पुलिस",
-      "key_cues": ["authority_police", "identity_misuse", "threat", "isolation", "payment_request"],
+      "key_cues": [
+        "authority_police",
+        "identity_misuse",
+        "threat",
+        "isolation",
+        "payment_request"
+      ],
       "story_en": "Caller poses as police, CBI, NCB, customs, ED or a judge. Says your Aadhaar, SIM or a parcel in your name is linked to drugs, money laundering or trafficking. Keeps you on a video call, forbids you from telling family, then asks you to move money to a 'safe' or 'RBI verification' account to prove innocence.",
       "truth_en": "There is no 'digital arrest' in Indian law. Police and courts never interrogate on video calls, never ask you to stay on a call, and never ask you to transfer money to clear your name.",
       "truth_hi": "भारतीय कानून में 'डिजिटल अरेस्ट' जैसा कुछ नहीं होता। पुलिस या कोर्ट कभी वीडियो कॉल पर पूछताछ नहीं करते, कॉल पर बने रहने को नहीं कहते, और नाम साफ़ करने के लिए पैसे ट्रांसफर करने को कभी नहीं कहते।",
       "action_en": "Hang up now. Do not transfer any money. Tell a family member. Call 1930 or report at cybercrime.gov.in.",
-      "action_hi": "अभी फोन काट दीजिए। कोई पैसा ट्रांसफर मत कीजिए। परिवार को बताइए। 1930 पर कॉल कीजिए या cybercrime.gov.in पर शिकायत कीजिए।"
+      "action_hi": "अभी फोन काट दीजिए। कोई पैसा ट्रांसफर मत कीजिए। परिवार को बताइए। 1930 पर कॉल कीजिए या cybercrime.gov.in पर शिकायत कीजिए।",
+      "keywords": [
+        "arrest",
+        "warrant",
+        "cbi",
+        "giraftar",
+        "giraftari",
+        "गिरफ्तार",
+        "गिरफ्तारी",
+        "वारंट"
+      ]
     },
     {
       "id": "courier_parcel",
       "name_en": "Courier / parcel with illegal items",
       "name_hi": "कूरियर / पार्सल में अवैध सामान",
-      "key_cues": ["identity_misuse", "authority_police", "threat", "payment_request"],
+      "key_cues": [
+        "identity_misuse",
+        "authority_police",
+        "threat",
+        "payment_request"
+      ],
       "story_en": "A recorded or live 'courier company' call says a parcel booked in your name was seized with drugs, fake passports or cash, then 'transfers' you to fake police or customs officers. Often the opening of a digital-arrest scam.",
       "truth_en": "Courier companies do not connect you to police. Customs and police contact people through written notices and official channels, not by transferring a phone call.",
       "truth_hi": "कूरियर कंपनियां आपको पुलिस से नहीं जोड़तीं। कस्टम और पुलिस लिखित नोटिस और आधिकारिक माध्यम से संपर्क करते हैं, फोन ट्रांसफर करके नहीं।",
       "action_en": "Hang up. Do not press any key or share Aadhaar details. Check any parcel only through the courier's official app or website. Report at 1930.",
-      "action_hi": "फोन काटिए। कोई बटन मत दबाइए और आधार की जानकारी मत दीजिए। पार्सल की जानकारी सिर्फ कूरियर की आधिकारिक ऐप या वेबसाइट पर देखिए। 1930 पर शिकायत कीजिए।"
+      "action_hi": "फोन काटिए। कोई बटन मत दबाइए और आधार की जानकारी मत दीजिए। पार्सल की जानकारी सिर्फ कूरियर की आधिकारिक ऐप या वेबसाइट पर देखिए। 1930 पर शिकायत कीजिए।",
+      "keywords": [
+        "parcel",
+        "courier",
+        "fedex",
+        "customs",
+        "पार्सल",
+        "कूरियर"
+      ]
     },
     {
       "id": "kyc_bank",
       "name_en": "Fake KYC / bank account block",
       "name_hi": "नकली केवाईसी / बैंक खाता बंद",
-      "key_cues": ["authority_bank", "threat", "urgency", "link_click", "credential_request", "remote_access"],
+      "key_cues": [
+        "authority_bank",
+        "threat",
+        "urgency",
+        "link_click",
+        "credential_request",
+        "remote_access"
+      ],
       "story_en": "Caller or SMS says your account, card or wallet will be blocked today unless you 'update KYC'. Sends a link or asks you to install an app, then asks for OTP, card number or PIN.",
       "truth_en": "Banks never ask for OTP, PIN, CVV or passwords on a call, and never ask you to install remote-support apps. KYC is updated at the branch or inside the bank's official app.",
       "truth_hi": "बैंक कभी भी कॉल पर ओटीपी, पिन, सीवीवी या पासवर्ड नहीं मांगते, और कोई रिमोट ऐप इंस्टॉल करने को नहीं कहते। केवाईसी शाखा में या बैंक की आधिकारिक ऐप में होता है।",
       "action_en": "Do not share any OTP or PIN. Do not open the link. Call the number printed on the back of your card or visit your branch.",
-      "action_hi": "कोई ओटीपी या पिन मत बताइए। लिंक मत खोलिए। अपने कार्ड के पीछे लिखे नंबर पर कॉल कीजिए या शाखा जाइए।"
+      "action_hi": "कोई ओटीपी या पिन मत बताइए। लिंक मत खोलिए। अपने कार्ड के पीछे लिखे नंबर पर कॉल कीजिए या शाखा जाइए।",
+      "keywords": [
+        "kyc",
+        "केवाईसी"
+      ]
     },
     {
       "id": "upi_collect_refund",
       "name_en": "UPI collect request / fake refund",
       "name_hi": "यूपीआई कलेक्ट रिक्वेस्ट / नकली रिफंड",
-      "key_cues": ["reward_greed", "payment_request", "credential_request"],
+      "key_cues": [
+        "reward_greed",
+        "payment_request",
+        "credential_request"
+      ],
       "story_en": "Someone says they sent money by mistake, or that you will get a refund or cashback, and asks you to 'accept' a request or enter your UPI PIN to receive it. Shopkeepers are also sent fake payment screenshots.",
       "truth_en": "You never need to enter your UPI PIN or scan a QR code to receive money. Entering the PIN always sends money out of your account.",
       "truth_hi": "पैसे पाने के लिए कभी भी यूपीआई पिन डालने या क्यूआर कोड स्कैन करने की ज़रूरत नहीं होती। पिन डालने पर हमेशा आपके खाते से पैसा जाता है।",
       "action_en": "Decline the request. Check your own bank app for any money actually received. Never enter the PIN to receive money.",
-      "action_hi": "रिक्वेस्ट को रिजेक्ट कीजिए। पैसा सच में आया है या नहीं, अपनी बैंक ऐप में देखिए। पैसे पाने के लिए कभी पिन मत डालिए।"
+      "action_hi": "रिक्वेस्ट को रिजेक्ट कीजिए। पैसा सच में आया है या नहीं, अपनी बैंक ऐप में देखिए। पैसे पाने के लिए कभी पिन मत डालिए।",
+      "keywords": [
+        "refund",
+        "cashback",
+        "रिफंड"
+      ]
     },
     {
       "id": "investment_trading",
       "name_en": "Investment / trading group scam",
       "name_hi": "निवेश / ट्रेडिंग ग्रुप स्कैम",
-      "key_cues": ["reward_greed", "link_click", "remote_access", "payment_request"],
+      "key_cues": [
+        "reward_greed",
+        "link_click",
+        "remote_access",
+        "payment_request"
+      ],
       "story_en": "A WhatsApp or Telegram group promises guaranteed stock, IPO or crypto returns, shows fake profits in an app, then demands 'tax' or 'withdrawal fees' before you can take money out.",
       "truth_en": "No genuine investment guarantees high returns. SEBI-registered brokers do not ask you to pay into personal accounts or apps shared on WhatsApp.",
       "truth_hi": "कोई भी असली निवेश पक्का ऊंचा मुनाफा नहीं देता। सेबी-पंजीकृत ब्रोकर व्हाट्सएप पर भेजी ऐप या निजी खातों में पैसे नहीं मंगवाते।",
       "action_en": "Stop paying. Do not pay any 'withdrawal tax'. Verify the broker on the SEBI website and report at 1930.",
-      "action_hi": "पैसे देना बंद कीजिए। कोई 'निकासी टैक्स' मत भरिए। सेबी की वेबसाइट पर ब्रोकर की जांच कीजिए और 1930 पर शिकायत कीजिए।"
+      "action_hi": "पैसे देना बंद कीजिए। कोई 'निकासी टैक्स' मत भरिए। सेबी की वेबसाइट पर ब्रोकर की जांच कीजिए और 1930 पर शिकायत कीजिए।",
+      "keywords": [
+        "investment",
+        "trading",
+        "shares",
+        "निवेश",
+        "ट्रेडिंग"
+      ]
     },
     {
       "id": "job_task",
       "name_en": "Part-time job / task scam",
       "name_hi": "पार्ट-टाइम जॉब / टास्क स्कैम",
-      "key_cues": ["reward_greed", "payment_request", "link_click"],
+      "key_cues": [
+        "reward_greed",
+        "payment_request",
+        "link_click"
+      ],
       "story_en": "Offers easy money for liking videos or rating hotels. Pays small amounts first, then asks you to 'prepay' for bigger tasks and never returns the money.",
       "truth_en": "Genuine jobs never ask you to pay to earn. Small early payouts are bait.",
       "truth_hi": "असली नौकरी में कमाने के लिए पहले पैसे नहीं देने पड़ते। शुरू में मिली छोटी रकम एक चारा है।",
       "action_en": "Do not prepay for any task. Leave the group and report at 1930.",
-      "action_hi": "किसी टास्क के लिए पहले पैसे मत दीजिए। ग्रुप छोड़िए और 1930 पर शिकायत कीजिए।"
+      "action_hi": "किसी टास्क के लिए पहले पैसे मत दीजिए। ग्रुप छोड़िए और 1930 पर शिकायत कीजिए।",
+      "keywords": [
+        "job",
+        "task",
+        "नौकरी"
+      ]
     },
     {
       "id": "family_emergency",
       "name_en": "Family emergency / 'your son is in trouble'",
       "name_hi": "परिवार पर संकट / 'आपका बेटा मुसीबत में है'",
-      "key_cues": ["family_emergency", "authority_police", "urgency", "isolation", "payment_request"],
+      "key_cues": [
+        "family_emergency",
+        "authority_police",
+        "urgency",
+        "isolation",
+        "payment_request"
+      ],
       "story_en": "Caller says your child or relative has been arrested or had an accident and needs money immediately, sometimes with a cloned or crying voice, and says not to call anyone else.",
       "truth_en": "Police do not take money over the phone to release someone. A real emergency can be checked in one minute by calling the family member directly.",
       "truth_hi": "पुलिस किसी को छोड़ने के लिए फोन पर पैसे नहीं लेती। असली संकट की पुष्टि एक मिनट में परिवार के सदस्य को सीधे फोन करके हो सकती है।",
       "action_en": "Hang up and call your family member on their own number. Do not send money until you have spoken to them.",
-      "action_hi": "फोन काटिए और परिवार के सदस्य को उनके अपने नंबर पर कॉल कीजिए। उनसे बात होने तक पैसे मत भेजिए।"
+      "action_hi": "फोन काटिए और परिवार के सदस्य को उनके अपने नंबर पर कॉल कीजिए। उनसे बात होने तक पैसे मत भेजिए।",
+      "keywords": [
+        "son",
+        "daughter",
+        "accident",
+        "beta",
+        "beti",
+        "बेटा",
+        "बेटी"
+      ]
     },
     {
       "id": "electricity_bill",
       "name_en": "Electricity disconnection scam",
       "name_hi": "बिजली कनेक्शन कटने का स्कैम",
-      "key_cues": ["authority_bank", "threat", "urgency", "remote_access", "payment_request"],
+      "key_cues": [
+        "authority_bank",
+        "threat",
+        "urgency",
+        "remote_access",
+        "payment_request"
+      ],
       "story_en": "SMS or call says your power will be cut tonight because the bill is not updated, and asks you to call an 'officer' who makes you install an app or pay a small amount through a link.",
       "truth_en": "Electricity boards send notices through official bills and apps. They do not ask you to install remote apps or pay through personal numbers.",
       "truth_hi": "बिजली विभाग आधिकारिक बिल और ऐप से सूचना देते हैं। वे कोई रिमोट ऐप इंस्टॉल करने या निजी नंबर पर भुगतान करने को नहीं कहते।",
       "action_en": "Do not call the number in the SMS. Check your bill on the official electricity board app or website.",
-      "action_hi": "एसएमएस में दिए नंबर पर कॉल मत कीजिए। अपना बिल बिजली विभाग की आधिकारिक ऐप या वेबसाइट पर देखिए।"
+      "action_hi": "एसएमएस में दिए नंबर पर कॉल मत कीजिए। अपना बिल बिजली विभाग की आधिकारिक ऐप या वेबसाइट पर देखिए।",
+      "keywords": [
+        "electricity",
+        "bijli",
+        "meter",
+        "बिजली",
+        "मीटर"
+      ]
     },
     {
       "id": "sim_telecom",
       "name_en": "TRAI / SIM disconnection scam",
       "name_hi": "ट्राई / सिम बंद होने का स्कैम",
-      "key_cues": ["authority_police", "authority_bank", "threat", "identity_misuse", "isolation"],
+      "key_cues": [
+        "authority_police",
+        "authority_bank",
+        "threat",
+        "identity_misuse",
+        "isolation"
+      ],
       "story_en": "Automated or live call claims to be from TRAI or the telecom department and says your number will be blocked in two hours because it was used for illegal activity, then hands you to fake police.",
       "truth_en": "TRAI does not disconnect individual numbers or call customers about it. Your telecom operator handles your SIM.",
       "truth_hi": "ट्राई किसी एक नंबर को बंद नहीं करता और ग्राहकों को इसके लिए कॉल नहीं करता। आपकी सिम आपकी टेलीकॉम कंपनी संभालती है।",
       "action_en": "Hang up. Report the number on Sanchar Saathi (Chakshu) and at 1930.",
-      "action_hi": "फोन काटिए। संचार साथी (चक्षु) पर और 1930 पर नंबर की शिकायत कीजिए।"
+      "action_hi": "फोन काटिए। संचार साथी (चक्षु) पर और 1930 पर नंबर की शिकायत कीजिए।",
+      "keywords": [
+        "sim",
+        "trai",
+        "सिम",
+        "ट्राई"
+      ]
     },
     {
       "id": "lottery_prize",
       "name_en": "Lottery / prize / KBC scam",
       "name_hi": "लॉटरी / इनाम / केबीसी स्कैम",
-      "key_cues": ["reward_greed", "payment_request", "urgency"],
+      "key_cues": [
+        "reward_greed",
+        "payment_request",
+        "urgency"
+      ],
       "story_en": "Says you have won a lottery, car or KBC prize and must pay tax, GST or processing fees first.",
       "truth_en": "You cannot win a lottery you never entered. Genuine prizes never require fees paid in advance.",
       "truth_hi": "जिस लॉटरी में आपने हिस्सा ही नहीं लिया, वह आप नहीं जीत सकते। असली इनाम के लिए पहले कोई फीस नहीं देनी पड़ती।",
       "action_en": "Do not pay anything. Block the number and report it.",
-      "action_hi": "कुछ भी भुगतान मत कीजिए। नंबर ब्लॉक कीजिए और शिकायत कीजिए।"
+      "action_hi": "कुछ भी भुगतान मत कीजिए। नंबर ब्लॉक कीजिए और शिकायत कीजिए।",
+      "keywords": [
+        "lottery",
+        "prize",
+        "kbc",
+        "lucky",
+        "लॉटरी",
+        "इनाम"
+      ]
     },
     {
       "id": "remote_support",
       "name_en": "Fake customer care / remote-access takeover",
       "name_hi": "नकली कस्टमर केयर / रिमोट ऐप से कब्ज़ा",
-      "key_cues": ["authority_bank", "remote_access", "credential_request", "payment_request"],
+      "key_cues": [
+        "authority_bank",
+        "remote_access",
+        "credential_request",
+        "payment_request"
+      ],
       "story_en": "Victim searches for a helpline and calls a fake number, or receives a call about a failed refund. The 'agent' asks to install AnyDesk, TeamViewer QuickSupport or a 'support' APK and then watches the screen while the victim opens a banking app.",
       "truth_en": "Genuine customer care never needs to see or control your screen. Anyone watching your screen can read your OTPs and PINs.",
       "truth_hi": "असली कस्टमर केयर को कभी आपकी स्क्रीन देखने या चलाने की ज़रूरत नहीं होती। जो आपकी स्क्रीन देख रहा है वह आपका ओटीपी और पिन पढ़ सकता है।",
       "action_en": "Stop screen sharing, uninstall the app, and do not open any banking app until it is removed. Change your banking passwords.",
-      "action_hi": "स्क्रीन शेयर बंद कीजिए, ऐप हटाइए, और उसके हटने तक कोई बैंकिंग ऐप मत खोलिए। अपने बैंकिंग पासवर्ड बदलिए।"
+      "action_hi": "स्क्रीन शेयर बंद कीजिए, ऐप हटाइए, और उसके हटने तक कोई बैंकिंग ऐप मत खोलिए। अपने बैंकिंग पासवर्ड बदलिए।",
+      "keywords": [
+        "anydesk",
+        "teamviewer"
+      ]
     },
     {
       "id": "loan_app",
       "name_en": "Instant loan app / harassment",
       "name_hi": "इंस्टेंट लोन ऐप / धमकी",
-      "key_cues": ["reward_greed", "remote_access", "threat", "payment_request"],
+      "key_cues": [
+        "reward_greed",
+        "remote_access",
+        "threat",
+        "payment_request"
+      ],
       "story_en": "An unregistered loan app asks for contacts and photo permissions, disburses a small loan, then demands huge repayments and threatens to send morphed photos to contacts.",
       "truth_en": "Legitimate lenders are RBI-regulated, do not need access to your contacts or gallery, and do not threaten borrowers.",
       "truth_hi": "असली कर्ज़ देने वाले आरबीआई से नियंत्रित होते हैं, आपके कॉन्टैक्ट या गैलरी की अनुमति नहीं मांगते, और धमकी नहीं देते।",
       "action_en": "Do not pay under threat. Uninstall the app, keep screenshots, and report at 1930 and on the RBI Sachet portal.",
-      "action_hi": "धमकी में आकर भुगतान मत कीजिए। ऐप हटाइए, स्क्रीनशॉट रखिए, और 1930 तथा आरबीआई सचेत पोर्टल पर शिकायत कीजिए।"
+      "action_hi": "धमकी में आकर भुगतान मत कीजिए। ऐप हटाइए, स्क्रीनशॉट रखिए, और 1930 तथा आरबीआई सचेत पोर्टल पर शिकायत कीजिए।",
+      "keywords": [
+        "loan",
+        "emi",
+        "लोन"
+      ]
     }
   ]
 }

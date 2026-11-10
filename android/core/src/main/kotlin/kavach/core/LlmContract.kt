@@ -34,11 +34,15 @@ object LlmContract {
             "- Quote evidence only as exact words from the transcript.\n" +
             "- 'say' is spoken to a frightened, possibly elderly person: short, calm, clear, in the requested language, " +
             "and must include the next step. Helpline: 1930.\n" +
+            "- 'say' is YOUR advice to the user in your own words. Never repeat what the caller said.\n" +
             "Answer with ONE JSON object and nothing else, keys in this order:\n" +
             "{\"scam\": true|false, \"type\": one of [" + typeIds.joinToString(", ") + ", \"other\", \"none\"], " +
             "\"stage\": one of [" + STAGES.joinToString(", ") + "], \"confidence\": 0.0-1.0, " +
             "\"evidence\": [up to 3 short exact quotes], \"say\": \"max 35 words\", " +
-            "\"action\": one of [" + ACTIONS.joinToString(", ") + "]}"
+            "\"action\": one of [" + ACTIONS.joinToString(", ") + "]}\n" +
+            "Example: {\"scam\": true, \"type\": \"digital_arrest\", \"stage\": \"payment\", \"confidence\": 0.9, " +
+            "\"evidence\": [\"arrest warrant has been issued\"], \"say\": \"This is a scam. Real police never ask for money on a call. " +
+            "Do not send anything. Hang up and call 1930.\", \"action\": \"hang_up\"}"
 
     fun userPrompt(transcript: String, active: Map<String, Double>, retrieved: List<PlaybookEntry>, lang: String): String {
         val cues = active.entries.sortedByDescending { it.value }.joinToString(", ") { "${it.key}=${String.format(java.util.Locale.ROOT, "%.1f", it.value)}" }
@@ -137,12 +141,21 @@ object LlmContract {
         val ev = evidence.take(3)
         if (scam && ev.isEmpty() && rawEv.isNotEmpty()) conf = minOf(conf, 0.6)
         var say = (d["say"] ?: "").toString().trim()
+        if (sayCopiesTranscript(say, transcript)) return null to listOf("'say' repeats the caller's words; write short advice TO THE USER instead")
         val words = say.split(Regex("\\s+")).filter { it.isNotEmpty() }
         if (words.size > MAX_SAY_WORDS) say = words.take(MAX_SAY_WORDS).joinToString(" ")
         var action = (d["action"] ?: "none").toString().trim()
         if (action !in ACTIONS) { errors.add("unknown action '$action'"); action = if (scam) "hang_up" else "none" }
         if (!scam && typ == "other") typ = "none"
         return Verdict(scam, typ, stage, Math.round(conf * 1000) / 1000.0, ev, say, action, "llm") to errors
+    }
+
+    /** The advice mostly repeats the call itself (>= 60% of its words, at least 4, come from the call). */
+    fun sayCopiesTranscript(say: String, transcript: String): Boolean {
+        val words = Normalize.normalize(say).split(' ').filter { it.isNotEmpty() }
+        if (words.size < 4) return false
+        val heard = Normalize.normalize(transcript).split(' ').toSet()
+        return words.count { it in heard }.toDouble() / words.size >= 0.6
     }
 
     fun fallbackVerdict(level: String, active: Map<String, Double>, retrieved: List<PlaybookEntry>, labels: Map<String, Pair<String, String>>,

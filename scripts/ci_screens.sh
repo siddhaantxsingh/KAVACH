@@ -10,9 +10,14 @@ adb root; sleep 3; adb wait-for-device
 for p in POST_NOTIFICATIONS READ_PHONE_STATE READ_CALL_LOG READ_CONTACTS BLUETOOTH_CONNECT; do adb shell pm grant $S android.permission.$p; done
 for p in POST_NOTIFICATIONS RECORD_AUDIO BLUETOOTH_CONNECT; do adb shell pm grant $G android.permission.$p; done
 adb shell settings put system font_scale 1.0
-shot() { sleep "${2:-4}"; adb exec-out screencap -p > "shots/$1.png"; }
-open_s() { adb shell am start -n $S/kavach.app.MainActivity --ez quiet true "$@"; }
-open_g() { adb shell am start -n $G/kavach.guardian.GuardianActivity --ez quiet true "$@"; }
+# the emulator's own launcher sometimes shows a "not responding" pop-up: hide such dialogs
+adb shell settings put global hide_error_dialogs 1
+adb shell settings put secure anr_show_background 0
+adb shell input keyevent KEYCODE_WAKEUP; adb shell wm dismiss-keyguard
+sleep 20
+shot() { sleep "${2:-4}"; adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null; sleep 1; adb exec-out screencap -p > "shots/$1.png"; }
+open_s() { adb shell am start --activity-clear-task -n $S/kavach.app.MainActivity --ez quiet true "$@"; }
+open_g() { adb shell am start --activity-clear-task -n $G/kavach.guardian.GuardianActivity --ez quiet true "$@"; }
 SCAM="Dear customer your SBI account will be blocked today. Update KYC now at http://sbi-kyc-update.xyz/login and share the OTP"
 
 for mode in dark light; do
@@ -28,13 +33,13 @@ for mode in dark light; do
   adb shell appops set $S GET_USAGE_STATS allow
   adb shell am start-foreground-service -n $S/kavach.app.ShieldService
   open_s --ei tab 0; shot shield_home_on_$mode 5
-  open_s --ei tab 1 --es text "$SCAM" --ez run true; shot shield_check_$mode 6
+  open_s --ei tab 1 --es text "'$SCAM'" --ez run true; shot shield_check_$mode 6
   open_s --ei tab 2; shot shield_activity_$mode
   open_s --ei tab 3; shot shield_settings_$mode
   adb shell input swipe 500 1800 500 600 300; shot shield_settings2_$mode 2
   open_s --ei tab 0; shot shield_home_after_$mode
   adb shell am start -n $S/kavach.app.DialerActivity; shot shield_phone_$mode
-  adb shell am start -n $S/kavach.app.StopActivity --es text "Real police never ask for money on a call. Do not send anything. Hang up and call 1930." --es rule "Unknown caller asking for money"
+  adb shell am start -n $S/kavach.app.StopActivity --es text "'Real police never ask for money on a call. Do not send anything. Hang up and call 1930.'" --es rule "'Unknown caller asking for money'"
   shot shield_stop_$mode
   adb shell input keyevent KEYCODE_BACK
   # ---- Guardian

@@ -40,11 +40,18 @@ object GuardianBus {
         fun onLlm(v: Verdict, stats: LlamaAdvisor.Stats?) {}
         fun onStatus(msg: String) {}
         fun onPlacement(snrDb: Double) {}
+        /** mode: idle | standby | listening | demo | models_missing */
+        fun onMode(mode: String) {}
     }
     private val main = Handler(Looper.getMainLooper())
     private val listeners = LinkedHashSet<Listener>()
     @Volatile var running = false
     @Volatile var lastStatus = "idle"
+    @Volatile var mode = "idle"
+    /** Llama: missing | loading | ready | failed (only "ready" + a finished generation means it actually ran) */
+    @Volatile var llamaState = "missing"
+    @Volatile var llamaLastRun: String = ""
+    fun mode(m: String) { mode = m; post { it.onMode(m) } }
     fun add(l: Listener) = main.post { listeners.add(l) }
     fun remove(l: Listener) = main.post { listeners.remove(l) }
     fun post(block: (Listener) -> Unit) { main.post { listeners.toList().forEach(block) } }
@@ -108,8 +115,10 @@ class GuardianService : Service() {
         speaker = Speaker(this)
         models = ModelFiles.dir(this)
         advisor = LlamaAdvisor(ModelFiles.llamaPte(this).path, ModelFiles.llamaTokenizer(this).path).also { adv ->
+            GuardianBus.llamaState = adv.state.name.lowercase()
             GuardianBus.status(if (adv.state == LlamaAdvisor.State.MISSING) "Llama model not installed: rule + classifier mode" else "loading Llama…")
             adv.loadAsync { st ->
+                GuardianBus.llamaState = st.name.lowercase()
                 GuardianBus.status("Llama: $st")
                 if (st == LlamaAdvisor.State.READY) guardian?.let { adv.warm(it.buildLlmPrompt("", emptyMap(), emptyList()).first) }
             }
@@ -123,7 +132,7 @@ class GuardianService : Service() {
             advisor?.let { adv -> if (adv.state == LlamaAdvisor.State.READY) adv.warm(g.buildLlmPrompt("", emptyMap(), emptyList()).first) }
             engine.scheduleWithFixedDelay({ tickNow(); checkAutoStop() }, 3, 3, TimeUnit.SECONDS)
             engine.scheduleWithFixedDelay({ logPerf() }, 5, 5, TimeUnit.SECONDS)
-            if (standbyMode && !sessionActive) GuardianBus.status("standby: waiting for a call on the protected phone")
+            if (standbyMode && !sessionActive) { GuardianBus.status("standby: waiting for a call on the protected phone"); GuardianBus.mode("standby") }
         }
     }
 
@@ -144,15 +153,16 @@ class GuardianService : Service() {
                 logLine("session", reason)
                 if (demoScript != null) {
                     demo = DemoPlayer(this, demoScript, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) }).also { it.start() }
-                    GuardianBus.status("demo replay: $demoScript")
+                    GuardianBus.status("demo replay: $demoScript"); GuardianBus.mode("demo")
                 } else {
                     val a = AsrEngine(models ?: ModelFiles.dir(this), lang, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) },
                         onPlacement = { snr -> GuardianBus.post { it.onPlacement(snr) } }, callAudio = oemMode(this))
                     val missing = a.missingFiles()
                     if (missing.isNotEmpty()) {
                         GuardianBus.status("ASR model missing: ${missing.first()} — run scripts/push_models.sh")
+                        sessionActive = false; GuardianBus.mode("models_missing")
                     } else {
-                        asr = a; a.start()
+                        asr = a; a.start(); GuardianBus.mode("listening")
                         GuardianBus.status((if (reason == "call_started") "call detected — " else "") + "listening (${if (lang == "hi") "Hindi/Hinglish" else "English"})" +
                             if (oemMode(this)) " · system mode: reading the call audio directly" else "")
                     }
@@ -168,6 +178,7 @@ class GuardianService : Service() {
         sessionActive = false
         logLine("session_end", reason)
         GuardianBus.status(if (standby) "call ended — back on standby" else "stopped listening")
+        GuardianBus.mode(if (standby) "standby" else "idle")
         if (!standby) stopSelf()
     }
 
@@ -228,6 +239,7 @@ class GuardianService : Service() {
                     speaker?.speak(say, lang)
                     link?.send(linkedMapOf("type" to "level", "level" to "stop", "rule" to "llm-early-warning", "scam_type" to v.type, "say" to say))
                 }
+                adv.lastStats?.let { st -> GuardianBus.llamaLastRun = "ran on this phone: ${st.generatedTokens} tokens, first token ${st.ttftMs} ms, ${"%.1f".format(st.decodeTokPerS)} tokens/s" }
                 GuardianBus.post { it.onLlm(v, adv.lastStats) }
                 adv.lastStats?.let { s -> logLine("llm", s.promptTokens, s.generatedTokens, s.ttftMs, "%.1f".format(s.prefillTokPerS), "%.1f".format(s.decodeTokPerS), s.usedWarmPrefix) }
             }
@@ -287,7 +299,7 @@ class GuardianService : Service() {
         llmQueue.shutdownNow()
         advisor?.close(); speaker?.shutdown()
         try { log?.close() } catch (_: Throwable) { }
-        GuardianBus.status("stopped")
+        GuardianBus.status("stopped"); GuardianBus.mode("idle")
         super.onDestroy()
     }
 

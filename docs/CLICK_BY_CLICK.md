@@ -81,7 +81,7 @@ phone 10–30 cm from the speaker. Tap **Stop listening** before the next file.
 3. Take screenshots of the results, then plug back in and paste in Git Bash:
 
    ```bash
-   ADB="$(find ~/Downloads -name adb.exe 2>/dev/null | head -1)"; "$ADB" pull /sdcard/Android/data/io.kavach.guardian/files/bench/ ~/Downloads/kavach_bench/
+   ADB="$(find ~/Downloads -name adb.exe 2>/dev/null | head -1)"; MSYS_NO_PATHCONV=1 "$ADB" pull /sdcard/Android/data/io.kavach.guardian/files/bench/ "$(cygpath -w ~/Downloads/kavach_bench)"
    ```
 
    The JSON files are in your Downloads folder, in `kavach_bench`. Send them to the team (or to Claude).

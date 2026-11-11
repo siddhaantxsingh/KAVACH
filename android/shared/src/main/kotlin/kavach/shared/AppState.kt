@@ -28,6 +28,19 @@ object AppState {
         return flat.split(':').any { ComponentName.unflattenFromString(it) == me }
     }
 
+    /** Android has the call-listening service actually running (bound), not only switched on.
+     *  When the app is stopped by the system (an update, a revoked permission, a crash), Android
+     *  marks the service as crashed and does not reconnect it although the switch still shows "on";
+     *  then every recording during a call is silenced. Switching it off and on again fixes it. */
+    fun callAccessWorking(ctx: Context): Boolean = try {
+        val am = ctx.getSystemService(Context.ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
+        am.getEnabledAccessibilityServiceList(android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+            .any { it.resolveInfo?.serviceInfo?.let { s -> s.packageName == ctx.packageName && s.name == ACCESS_SERVICE } == true }
+    } catch (_: Throwable) { false }
+
+    /** switched on in Settings, but Android is not running it: needs off and on again */
+    fun callAccessStuck(ctx: Context): Boolean = callAccessEnabled(ctx) && !callAccessWorking(ctx)
+
     fun openCallAccessSettings(ctx: Context) {
         ctx.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }

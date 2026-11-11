@@ -53,6 +53,8 @@ object GuardianBus {
     @Volatile var llamaLastRun: String = ""
     /** "" | "copied_example" | "wrong_language": why Llama's own wording was not shown */
     @Volatile var llamaSayNote: String = ""
+    /** Android is giving our recording silence during this call (call listening not running) */
+    @Volatile var micBlocked = false
     /** language the caller is speaking now (Auto), "hi" | "en" */
     @Volatile var callLang: String = "hi"
     fun mode(m: String) { mode = m; kavach.shared.AppState.callMode = m; post { it.onMode(m) } }
@@ -151,7 +153,7 @@ class GuardianService : Service() {
             g.onAlert = { a -> onAlert(a) }
             guardian = g
             advisor?.let { adv -> if (adv.state == LlamaAdvisor.State.READY) adv.warm(g.buildLlmPrompt("", emptyMap(), emptyList()).first) }
-            engine.scheduleWithFixedDelay({ tickNow(); checkAutoStop() }, 3, 3, TimeUnit.SECONDS)
+            engine.scheduleWithFixedDelay({ tickNow(); checkAutoStop(); checkMicBlocked() }, 3, 3, TimeUnit.SECONDS)
             engine.scheduleWithFixedDelay({ logPerf() }, 5, 5, TimeUnit.SECONDS)
             if (standbyMode && !sessionActive) { GuardianBus.status("standby: waiting for a call on the protected phone"); GuardianBus.mode("standby") }
         }
@@ -164,6 +166,7 @@ class GuardianService : Service() {
                 if (sessionActive) return@execute
                 val g = guardian ?: return@execute
                 g.reset()
+                GuardianBus.micBlocked = false
                 if (setting == "auto") { lang = "hi"; recentLangs.clear(); langPick?.reset() }
                 g.cfg.lang = lang
                 kavach.shared.AppState.callLevel = "none"
@@ -213,6 +216,35 @@ class GuardianService : Service() {
         GuardianBus.status(if (standby) "call ended — back on standby" else "stopped listening")
         GuardianBus.mode(if (standby) "standby" else "idle")
         if (!standby) stopSelf()
+    }
+
+    /** During a phone call Android silences every recording except the call's own and that of a
+     *  running accessibility service. If ours is silenced, say so on screen and in a notification
+     *  (the user is in the phone app) with the fix, instead of failing quietly. */
+    private fun checkMicBlocked() {
+        val a = asr ?: return
+        if (!sessionActive || a.audioSession == 0) return
+        val silenced = try {
+            (getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager).activeRecordingConfigurations
+                .any { it.clientAudioSessionId == a.audioSession && it.isClientSilenced }
+        } catch (_: Throwable) { false }
+        if (silenced == GuardianBus.micBlocked) return
+        GuardianBus.micBlocked = silenced
+        GuardianBus.mode(GuardianBus.mode)
+        if (!silenced) return
+        logLine("mic_blocked", inPhoneCall(), kavach.shared.AppState.callAccessWorking(this))
+        GuardianBus.status("Android is giving KAVACH silence during this call: call listening is not running")
+        val hi = lang == "hi"
+        Ui.ensureChannel(this, "mic_blocked", "KAVACH call listening", android.app.NotificationManager.IMPORTANCE_HIGH)
+        val pi = PendingIntent.getActivity(this, 11, Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS), PendingIntent.FLAG_IMMUTABLE)
+        val n = android.app.Notification.Builder(this, "mic_blocked").setSmallIcon(android.R.drawable.stat_notify_error)
+            .setContentTitle(if (hi) "कवच यह कॉल नहीं सुन पा रहा" else "KAVACH can't hear this call")
+            .setContentText(if (hi) "Android ने कॉल सुनना रोका है। ऐक्सेसिबिलिटी में 'KAVACH call listening' बंद करके फिर चालू करें।"
+                else "Android stopped call listening. In Accessibility, turn 'KAVACH call listening' off and on again.")
+            .setStyle(android.app.Notification.BigTextStyle().bigText(if (hi) "Android ने कॉल सुनना रोका है। ऐक्सेसिबिलिटी में 'KAVACH call listening' बंद करके फिर चालू करें।"
+                else "Android stopped call listening (the switch may still show on). Tap, find 'KAVACH call listening', turn it off and on again."))
+            .setContentIntent(pi).setAutoCancel(true).build()
+        (getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager).notify(78, n)
     }
 
     private fun checkAutoStop() {

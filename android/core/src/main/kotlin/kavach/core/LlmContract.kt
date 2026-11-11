@@ -18,6 +18,15 @@ object LlmContract {
     val STAGES = listOf("none", "contact", "hook", "isolation", "action", "payment")
     val ACTIONS = listOf("none", "continue_with_care", "verify_independently", "do_not_share", "do_not_pay", "hang_up")
     const val MAX_SAY_WORDS = 35
+    private const val SENT_END = ".!?\u0964"
+
+    /** Drop an unfinished last sentence (twin of llm.whole_sentences). */
+    fun wholeSentences(say: String): String {
+        val s = say.trimEnd()
+        if (s.isEmpty() || s.last() in SENT_END) return s
+        val cut = SENT_END.maxOf { s.lastIndexOf(it) }
+        return if (cut > 0) s.substring(0, cut + 1) else s
+    }
     private const val BOT = "<|begin_of_text|>"
     private const val SH = "<|start_header_id|>"
     private const val EH = "<|end_header_id|>"
@@ -144,6 +153,7 @@ object LlmContract {
         if (sayCopiesTranscript(say, transcript)) return null to listOf("'say' repeats the caller's words; write short advice TO THE USER instead")
         val words = say.split(Regex("\\s+")).filter { it.isNotEmpty() }
         if (words.size > MAX_SAY_WORDS) say = words.take(MAX_SAY_WORDS).joinToString(" ")
+        say = wholeSentences(say)
         var action = (d["action"] ?: "none").toString().trim()
         if (action !in ACTIONS) { errors.add("unknown action '$action'"); action = if (scam) "hang_up" else "none" }
         if (!scam && typ == "other") typ = "none"

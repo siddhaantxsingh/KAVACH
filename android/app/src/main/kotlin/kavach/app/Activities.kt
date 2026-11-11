@@ -503,8 +503,11 @@ class StopActivity : Activity() {
         setContentView(Ui.scroll(this, col).apply { setBackgroundColor(red) })
         speaker = Speaker(this)
         // during a phone call the warning is not spoken (it would go into the call); the phone vibrates instead
-        if (!AppState.inPhoneCall(this)) col.postDelayed({ speaker?.speak(text, lang) }, 600)
+        if (savedInstanceState == null && !AppState.inPhoneCall(this)) col.postDelayed({ speaker?.speak(text, lang) }, 600)
     }
+
+    /** A newer STOP for the same call: show its text instead of keeping the first one. */
+    override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); setIntent(intent); recreate() }
 
     override fun onDestroy() { speaker?.shutdown(); super.onDestroy() }
 

@@ -260,7 +260,9 @@ class GuardianService : Service() {
         if (!copied && !wrongLang) { GuardianBus.llamaSayNote = ""; return v }
         GuardianBus.llamaSayNote = if (copied) "copied_example" else "wrong_language"
         GuardianBus.status("Llama: its wording was replaced by the playbook (" + GuardianBus.llamaSayNote + ")")
-        return v.copy(say = a.verdict.say)
+        // A copied answer carries the example's own "scam, 0.9, payment" too, so it must not be able
+        // to raise a yellow warning to red: its confidence is set to 0.
+        return v.copy(say = a.verdict.say, confidence = if (copied) 0.0 else v.confidence)
     }
 
     /** What is said ALOUD. The microphone is muted while KAVACH speaks (so it never transcribes

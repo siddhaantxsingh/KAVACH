@@ -2,8 +2,8 @@
   "name": "sms_model",
   "format": "kavach-hashed-linear-v1",
   "dim": 262144,
-  "bias": -3.617123076481,
-  "threshold": 0.45,
+  "bias": -3.6295310641921894,
+  "threshold": 0.4,
   "char_n": [
     3,
     4,

@@ -177,3 +177,21 @@ Honest limits: (1) the Hindi speech model is the bottleneck: on a telephone-band
 is mostly unusable, and no word list can repair that; (2) training and test audio use the same TTS
 voice, so real human voices will score lower; (3) a stronger Hindi model (e.g. a Hindi fine-tuned
 Whisper-small run sentence by sentence) is the real fix and is not integrated yet.
+
+
+## One app, one phone (11 Nov)
+
+- Shield and the call listener are one app (`io.kavach.guardian`, label KAVACH); the Shield module
+  is a library inside it. Network Watch stays a separate optional app by the owner's choice, so the
+  main app keeps no INTERNET permission.
+- One-phone call listening: `CallListenAccessService` (accessibility). Android documents that
+  during a voice call only an accessibility service may capture audio besides the call.
+  **Not yet verified on a real call** — the owner must test one speaker-phone call on the Xiaomi.
+- No spoken warning during a real call (vibration + full-screen STOP card instead).
+- One shared Llama instance (the former Shield copy would have doubled memory).
+- New: on-phone benchmark screen (`docs/benchmarks.md`), Network Watch redesign with Apps tab and a
+  home Wi-Fi check (risky open services), demo video script (`demo/demo_video_script.md`).
+- Emulator screenshots (release `ui-screens`): every screen in dark, light and Hindi; no crash in
+  the error log.
+- Risk: Play-store policy limits accessibility services; acceptable for a side-loaded prototype,
+  documented in the report §8.

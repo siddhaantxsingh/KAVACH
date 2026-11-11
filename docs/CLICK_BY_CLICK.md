@@ -1,175 +1,73 @@
-# KAVACH: every click, from zero to a recorded demo
+# KAVACH: every click (Windows + Git Bash + one Android phone)
 
-Written for **Setup A**: a Windows laptop, 1 Android phone, 2 iPhones. On a Mac, use the Terminal
-app wherever this says "Git Bash". Android menus differ slightly between brands; where Samsung or
-Xiaomi/Redmi differ, it says so. Budget: Part 1 about 1 hour, Part 2 about 1 hour, Part 3 one evening.
+Words used below: **KAVACH** = the one KAVACH app (shield icon, gold). **Network Watch** = the
+optional second app. Paths are for a Xiaomi/Redmi/POCO phone; other phones use similar names.
 
-Words used below: **Shield** = the "KAVACH Shield" app, **Guardian** = the "KAVACH Guardian" app,
-**victim iPhone** = the iPhone that receives the scam call, **scammer iPhone** = the one that calls.
+## 1. Install or update (laptop, about 3 minutes)
 
----
+1. Plug the phone in with the USB cable. If the phone asks **Allow USB debugging?** → **Allow**.
+2. Open **Git Bash** and paste this one line, then press Enter:
 
-## Part 1: set up the laptop (once)
-
-### 1.1 Install Git (gives you "Git Bash")
-1. Open https://git-scm.com/download/win → the download starts → open the `.exe`.
-2. Click **Next** on every screen (the defaults are fine) → **Install** → **Finish**.
-
-### 1.2 Install Python
-1. Open https://www.python.org/downloads/ → click the yellow **Download Python 3.x** button → open it.
-2. On the first screen **tick "Add python.exe to PATH"** (bottom) → **Install Now** → **Close**.
-
-### 1.3 Install adb (Android platform-tools)
-1. Open https://developer.android.com/tools/releases/platform-tools → **Download SDK Platform-Tools for Windows** → tick the agreement → **Download**.
-2. Open the downloaded `.zip` → **Extract all** → **Extract**. Windows usually puts it in a folder like
-   `Downloads\platform-tools-latest-windows\platform-tools` (the folder that contains `adb.exe`).
-
-### 1.4 Get the project
-1. Press the **Windows key**, type `Git Bash`, press **Enter**. A black window opens. (All commands below go here: paste with **Shift+Insert** or right-click → **Paste**, then press **Enter**.)
-2. Paste these, one line at a time:
-   ```
-   cd ~
-   git clone https://github.com/siddhaantxsingh/KAVACH
-   cd KAVACH
-   ls ~/Downloads/platform-tools*/platform-tools/adb.exe
-   echo 'export PATH="$PATH:'"$(dirname "$(ls ~/Downloads/platform-tools*/platform-tools/adb.exe | head -1)")"'"' >> ~/.bashrc && source ~/.bashrc
-   pip install -U huggingface_hub
-   ```
-   (If `git clone` asks you to sign in, click **Sign in with your browser** and allow it.)
-3. Check adb works: type `adb version` → it prints a version number.
-
-### 1.5 Download the apps
-1. In your browser open https://github.com/siddhaantxsingh/KAVACH/releases → under **apks-latest** click
-   `kavach-shield-debug.apk` and `kavach-guardian-debug.apk` (and `kavach-netwatch-debug.apk` if you want Network Watch).
-2. In Git Bash:
-   ```
-   mkdir -p dist && mv ~/Downloads/kavach-*.apk dist/
+   ```bash
+   ADB="$(find ~/Downloads -name adb.exe 2>/dev/null | head -1)"; cd ~/Downloads && curl -L -o kavach-debug.apk https://github.com/siddhaantxsingh/KAVACH/releases/download/apks-latest/kavach-debug.apk && curl -L -o kavach-netwatch-debug.apk https://github.com/siddhaantxsingh/KAVACH/releases/download/apks-latest/kavach-netwatch-debug.apk && "$ADB" install -r kavach-debug.apk && "$ADB" install -r kavach-netwatch-debug.apk; "$ADB" uninstall io.kavach.shield
    ```
 
-### 1.6 Hugging Face account (needed for the speech models and Llama)
-1. Open https://huggingface.co/join → sign up → confirm the email.
-2. Open https://huggingface.co/settings/tokens → **Create new token** → type: **Read** → name `kavach` → **Create token** → **Copy**.
-3. Open https://huggingface.co/executorch-community/Llama-3.2-1B-Instruct-SpinQuant_INT4_EO8-ET →
-   fill in Meta's form (name, country, affiliation "MIT Manipal") → **Agree and access repository**.
-   It may take a few minutes to hours to be approved; you get an email.
-4. In Git Bash: `hf auth login` (older installs: `huggingface-cli login`) → paste the token
-   (**nothing appears while you paste, that's normal**) → **Enter** → when asked "Add token as git credential?" type `n` → **Enter**.
+3. Wait for **Success** twice. The last part removes the old separate "KAVACH Shield" app if it is
+   there (it prints *Success* or *Unknown package*; both are fine). Removing it deletes only its own
+   warning list and counters. Your speech models and Llama stay on the phone.
+4. If it says `INSTALL_FAILED_USER_RESTRICTED`: on the phone, Settings → Additional settings →
+   Developer options → **Install via USB** → on, then paste the line again.
 
----
+## 2. Set up KAVACH on the phone (about 2 minutes)
 
-## Part 2: set up the Android phone
+Open **KAVACH** (Home tab, "Finish setup 0 of 4"):
 
-### 2.1 Turn on USB debugging
-1. **Settings → About phone** → tap **Build number** 7 times (Xiaomi: tap **MIUI/HyperOS version**; Samsung: **Software information → Build number**) → enter your PIN → "You are now a developer".
-2. Go back → **Settings → System → Developer options** (Samsung: at the bottom of Settings; Xiaomi: **Additional settings → Developer options**) → turn on **USB debugging** → **OK**.
-   Xiaomi only: also turn on **Install via USB** and **USB debugging (Security settings)** (needs a Mi account sign-in).
-3. Connect the phone to the laptop with a USB cable. On the phone: **Allow USB debugging?** → tick **Always allow from this computer** → **Allow**.
-4. Git Bash: `adb devices` → you see one line ending in `device`. (If it says `unauthorized`, unlock the phone and press **Allow**.)
+1. **Message checking → Turn on** → in the list tap **KAVACH** → turn on → **Allow** → back.
+2. **Screen-share guard → Turn on** → tap **KAVACH** → **Permit usage access** on → back.
+3. **Call listening → Turn on** → **Open Settings** → **Downloaded apps** (Xiaomi: **Installed
+   services**) → **KAVACH call listening** → turn on → **Allow** → back.
+   - If the switch is grey or says *Restricted setting*: long-press the KAVACH icon → **App info** →
+     ⋮ (top right) → **Allow restricted settings** → enter your PIN → repeat step 3.
+4. **Turn on protection → Turn on** → microphone: **While using the app** (or **Allow**).
+5. Allow the other pop-ups (notifications, phone, call logs, contacts).
+6. Xiaomi only, so Android does not stop KAVACH in the background: long-press the KAVACH icon →
+   **App info** → **Battery saver** → **No restrictions**, and **Autostart** → on.
 
-### 2.2 Install the apps
-If an older KAVACH is on the phone, first remove it: `adb uninstall io.kavach.shield ; adb uninstall io.kavach.guardian`
-```
-adb install dist/kavach-shield-debug.apk
-adb install dist/kavach-guardian-debug.apk
-```
-Each prints `Success`. (Xiaomi may show a pop-up on the phone: tap **Install**.)
-Install by adb, not by tapping the file on the phone: apps installed from a file manager get
-"restricted settings" on Android 13+ and cannot get notification access.
+Home now says **Protection is on**.
 
-### 2.3 Copy the speech models (about 300 MB download, 5–15 min)
-1. **Open KAVACH Guardian once** on the phone and close it (this creates its folder).
-2. Git Bash: `scripts/push_models.sh --asr` → wait until the prompt comes back with no red `error`.
+## 3. Choose the call language
 
-### 2.4 Copy Llama (only after the approval email from step 1.6.3)
-Git Bash: `scripts/push_models.sh --official-spinquant` (about 1.1 GB). If it says "403" or "gated",
-your access is not approved yet. Skip this and come back later: everything else works without Llama.
+Tap **Calls** (bottom bar) → under *Language of the call* tap **हिंदी / Hinglish** or **English**.
 
-### 2.5 Hindi voice for the spoken warnings
-1. **Settings → System → Languages & input → Text-to-speech output** (Samsung: **General management → Text-to-speech**; Xiaomi: **Additional settings → Languages & input → Text-to-speech output**).
-2. **Preferred engine** → **Speech Services by Google**.
-3. Tap the ⚙ next to it → **Install voice data** → **Hindi (India)** → tap the download icon. Also make sure **English (India)** is downloaded.
+## 4. Test with a real call (one phone)
 
-### 2.6 Stop the phone from killing KAVACH
-For **KAVACH Shield** and then **KAVACH Guardian**: long-press the app icon → **App info** →
-**Battery** (Samsung: **Battery**; Xiaomi: **Battery saver**) → **Unrestricted** (Xiaomi: **No restrictions**).
-Xiaomi only: **App info → Autostart → On**.
+1. A teammate calls your Android from their phone.
+2. Answer, tap **Speaker**. Put the Android on the table.
+3. The teammate plays a scam audio file into their phone near its microphone (or reads a script
+   from `demo/roleplay_scripts.md`).
+4. On your Android, open KAVACH → **Calls**: the transcript appears and it turns yellow or red,
+   the phone vibrates, and a full-screen **Stop!** card appears on red.
+   - The number must not be saved in your contacts, or tap **Start listening now** yourself.
 
-### 2.7 Set up Shield
-1. Open **KAVACH Shield**. Pop-ups appear one by one: tap **Allow** on every one
-   (notifications, phone calls, call logs, contacts, nearby devices).
-2. Tap **1. Allow message checking (notification access)** → in the list tap **KAVACH Shield** →
-   turn on **Allow notification access** → **Allow** → press **Back** until you are in Shield again.
-   (If Android says **Restricted setting**: App info → ⋮ top right → **Allow restricted settings** → try again.)
-3. Tap **2. Allow screen-share guard (usage access)** → tap **KAVACH Shield** → turn on
-   **Permit usage access** → **Back** to Shield.
-4. Optional: type a family member's number in **Family member's number (optional)** → **Save** → **Allow** (SMS).
-5. Tap **3. Start protection**. A notification "KAVACH is protecting this phone" stays in the bar.
-6. Quick check: paste `https://sbi-kyc-update.xyz/login` into **Paste a link or message to check** → **Check** → it must say dangerous.
+## 5. Test without a second phone (laptop speaker)
 
-### 2.8 Set up Guardian
-1. Open **KAVACH Guardian** → microphone pop-up → **While using the app** (or **Allow**); notifications → **Allow**.
-2. Tap **Link phone** → choose **This phone (KAVACH Shield is installed here)**.
-3. Tap **Demo replay** → choose **digital_arrest_hinglish**. Within about a minute the transcript fills
-   in, the banner goes orange then **red STOP**, and you hear the warning. Tap **■ Stop**.
-   This proves the apps, the link and the voice work (no speech models are needed for this).
+KAVACH → **Calls** → choose the language → **Start listening now** → play the `.wav` on the laptop,
+phone 10–30 cm from the speaker. Tap **Stop listening** before the next file.
 
----
+## 6. Measure performance (for the report)
 
-## Part 3: the real tests
+1. Unplug the USB cable (battery numbers are wrong while charging).
+2. KAVACH → **Calls** → **Setup & tools** → **Measure performance** → **Start measuring**. Takes 3–4 minutes.
+3. Take screenshots of the results, then plug back in and paste in Git Bash:
 
-Keep the Android's **Wi-Fi and mobile data off** for Parts 3.1–3.4 (shows nothing goes online).
+   ```bash
+   ADB="$(find ~/Downloads -name adb.exe 2>/dev/null | head -1)"; "$ADB" pull /sdcard/Android/data/io.kavach.guardian/files/bench/ ~/Downloads/kavach_bench/
+   ```
 
-### 3.1 Scam call through the iPhones
-1. Put the victim iPhone flat on the table, volume at maximum. Put the Android next to it (10–30 cm), microphone side towards the iPhone speaker. No TV or fan nearby.
-2. Scammer iPhone → **Phone** → call the victim iPhone. On the victim iPhone tap **Accept** → tap **Speaker**.
-3. On the Android, in **Guardian**, tap **▶ हिंदी / Hinglish** (or **▶ English** if you will speak English).
-4. Look at the **Placement** line after about 5 seconds: it should be green **good**. Orange or red: move the phones closer, or switch off the fan or TV.
-5. The scammer speaks a script from `demo/roleplay_scripts.md` (for example **digital-arrest-hinglish**). Expected: words appear, orange CAUTION, then red **STOP** and a spoken warning.
-6. End the call → in Guardian tap **■ Stop**.
+   The JSON files are in your Downloads folder, in `kavach_bench`. Send them to the team (or to Claude).
 
-### 3.2 Genuine call (must stay calm)
-Same as 3.1, but act out the **Bank fraud alert** call from the "Genuine calls" list at the end of `demo/roleplay_scripts.md`. Expected: no STOP (green or at most orange).
+## 7. Network Watch (optional)
 
-### 3.3 One-phone mode (no Guardian)
-1. Close Guardian (swipe it away).
-2. Call the **Android** from a number that is **not saved** in its contacts. Answer and keep the call going.
-3. During the call, on the Android, paste `https://sbi-kyc-update.xyz/login` into Shield → **Check**
-   (or tap that link in an SMS sent to the Android). Expected: full-screen **STOP**, "Unknown caller + a dangerous link".
-
-### 3.4 If something goes wrong
-Take a screenshot (power + volume down), note what you did, and send both to me.
-For crashes, also run `adb logcat -d > log.txt` in Git Bash right afterwards and send `log.txt`.
-
-### 3.5 Optional: Network Watch app (Wi-Fi ON for this one)
-1. `adb install dist/kavach-netwatch-debug.apk`
-2. Open **KAVACH Network Watch** → **Allow** notifications → **Start Network Watch** → **OK** on Android's VPN pop-up.
-3. In Chrome open `hdfcbnak.com`. Expected: a notification "contacted a dangerous website".
-4. Back in the app → **Stop**.
-
-### 3.6 Laptop part of the Network Watch demo
-Git Bash:
-```
-pip install scapy scipy numpy scikit-learn
-python bench/netwatch_pcap_demo.py
-```
-Expected: 5 alerts (port scan, two malicious domains, heartbeat, upload).
-
-### 3.7 Optional: phone speed numbers for the report
-Only if Llama is on the phone. In Guardian tap **Perf** during a call: it shows speech speed and
-Llama timing on screen. Take a screenshot and send it to me; I add the numbers to the report.
-(The full benchmark, `bench/llama_bench.sh`, needs the Android NDK; tell me if you want to do it.)
-
----
-
-## Part 4: finish and submit
-
-1. **Team details.** Send me the three names, their roles and the faculty mentor; I put them in the README and report and rebuild the PDF.
-2. **Rehearse** `demo/jury_demo_runbook.md` twice, with a timer (90 seconds for the live part).
-3. **Record the 3-minute video:**
-   - Android: swipe down twice → **Screen recorder** (Samsung) / **Screen recorder** app (Xiaomi) / **Screen record** tile → **Start**.
-   - A second person films the table from above with any phone.
-   - Show: 3.1 (scam → STOP), 3.2 (genuine stays calm), 3.3 (one-phone STOP), then 10 seconds on the report's results tables.
-   - Join both videos side by side in any editor (CapCut on the phone works) → export 1080p.
-4. **Submit on the challenge portal:** the GitHub link, `docs/KAVACH_Phase1_Technical_Report.pdf`, the APK link
-   (https://github.com/siddhaantxsingh/KAVACH/releases) and the video. Read the portal once for anything else it asks for.
-5. If the GitHub repo is private, either make it public (**Settings → General → Danger Zone → Change visibility**) or add the judges' accounts if the portal asks for that.
+1. Open **Network Watch** → **Turn on** → Android asks about a VPN connection → **OK**.
+2. **Wi-Fi** tab → **Check my Wi-Fi** (about 15 s) on your home Wi-Fi.
+3. Warnings also appear in KAVACH → **Activity**.

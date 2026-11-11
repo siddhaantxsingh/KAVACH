@@ -6,28 +6,33 @@ date: "November 2026"
 
 # 1. Summary
 
-KAVACH listens to a suspicious call on speaker-phone (with consent), understands it on the
-phone, and stops the victim before money moves. It joins what it hears with the SMS, link,
-app, screen-share, payment and network activity that follow, because real Indian scams move
-across channels. **Nothing leaves the device:** neither main app requests the Android
-`INTERNET` permission.
+KAVACH is **one app on one Android phone**. It listens to a suspicious call the user has put
+on speaker (with consent), understands it on the phone, and stops the victim before money moves.
+It joins what it hears with the SMS, link, app, screen-share, payment and network activity that
+follow, because real Indian scams move across channels. **Nothing leaves the device:** the app
+does not request the Android `INTERNET` permission.
 
-KAVACH runs **three on-device pipelines** that feed one kill chain: the **Guardian** (the call
+KAVACH runs **three on-device pipelines** that feed one kill chain: **call listening** (the
 conversation), **Shield** (messages, links, apps, screen sharing, payments, and *that* a call
-with an unknown number is going on), and **Network Watch** (what installed apps send over
-the network). Each one works alone; together they cover the whole scam.
+with an unknown number is going on), and **Network Watch** (what installed apps send over the
+network, the website names they look up, and risky devices on the home Wi-Fi). Each one works
+alone; together they cover the whole scam.
 
 **What exists at the Phase 1 freeze** (all in this repository):
 
-* **Two main Android apps + one optional app** (Kotlin, no AndroidX, compile-checked against
-  the Android 34 API, ExecuTorch 1.5 and sherpa-onnx 1.13.8 APIs):
-  *KAVACH Guardian* (streaming Hindi/Hinglish or English ASR, Call Guardian, Llama 3.2 1B
-  advisor, spoken warnings, live placement check, Standby auto-start, OEM/system mode),
-  *KAVACH Shield* (Message Shield, Link Check, call awareness, Network Watch app-traffic
-  detector, App Inspector, Screen-share Guard, opt-in KAVACH Phone dialer, kill-chain hub,
-  STOP card), and the optional *KAVACH Network Watch* DNS app (§3.6).
+* **One Android app + one optional app** (Kotlin, no AndroidX, built on every push by GitHub
+  Actions and checked on an Android 14 emulator with screenshots of every screen):
+  *KAVACH* (streaming Hindi/Hinglish or English ASR, Call Guardian, Llama 3.2 1B advisor, live
+  placement check, **one-phone call listening** through Android's accessibility capture rule
+  (§3.5), "Protect my calls" auto-start, Message Shield, Link Check, call awareness, app-traffic
+  detector, App Inspector, Screen-share Guard, opt-in KAVACH Phone dialer, kill-chain hub, STOP
+  card, on-phone performance benchmark), and the optional *KAVACH Network Watch* app (DNS watch
+  and a home Wi-Fi check, §3.6). It is separate only because it needs the internet permission.
+* **Measured on the team's phone (Xiaomi, Android 14):** a live English scam call played through
+  a speaker reached STOP, and Llama 3.2 1B (SpinQuant INT4, ExecuTorch) explained it on the phone:
+  first token 7.2 s with the warm system prefix, 10.1 tokens/s decode (§7.5).
 * **A Python reference implementation** of every on-device algorithm, with the Kotlin port
-  proven identical by **336 parity checks**, including tick-by-tick replays of whole calls.
+  proven identical by **over 330 parity checks**, including tick-by-tick replays of whole calls.
 * **The Llama pipeline** (LoRA data, fine-tuning, Hugging Face→Meta conversion,
   ExecuTorch 4-bit export ladder, evaluation), **verified end to end** on a tiny
   Llama-3.2-shaped model: conversion is exact (max logit difference 3.6e-7), and the exported
@@ -165,18 +170,28 @@ speech models (ExecuTorch Qualcomm/MediaTek backends) is Phase 2.
   warning and for 1.2 s afterwards. Otherwise its own warning ("police", "arrest", "1930")
   could raise its level.
 
-## 3.5 Calls on the user's phone: one-phone mode, both modes together, KAVACH Phone
+## 3.5 Calls on one phone: call listening, call awareness, KAVACH Phone
 
+* **Call listening on the same phone.** During a phone call Android gives the microphone to the
+  call and every other app records silence; the one documented exception is an accessibility
+  service (Android "Sharing audio input": *the call always receives audio; the app can capture
+  audio if it is an accessibility service*). KAVACH ships `CallListenAccessService`, which
+  requests no screen content and performs no actions; while it is enabled, the KAVACH app may keep
+  hearing a call the user has put on speaker. With **Protect my calls** on, the microphone
+  foreground service is started while a KAVACH screen is visible (Android's rule for later
+  background use) and listening begins when an unknown-number call starts. During a real call the
+  warning is not spoken (it would go into the call and mute KAVACH's own listening): the phone
+  vibrates and the full-screen STOP card appears. Status: verified on an emulator for the UI and
+  state flow; the live-call capture must be confirmed on the team's phone (§7.5).
 * **Call awareness** (`CallMonitor`, phone-state broadcast): Shield knows a call is on, whether
   the number is in the contacts, and how long it has lasted. It never hears the call.
 * **One-phone mode:** during an unknown-number call, a dangerous link, a risky APK, screen
   sharing, a suspicious upload or a malicious domain is STOP even with no Guardian.
-* **Both modes together:** when Shield sees an unknown call start it sends `call_started` over
-  the link; a Guardian in **Standby** starts listening by itself and stops 30 s after
-  `call_ended`. (The microphone foreground service is started while the Guardian screen is
-  visible, as Android requires; listening is then switched on and off.) A suspicious
-  conversation plus a risky action in the same call is STOP. With an iPhone as the call
-  phone, Shield cannot see the call, so the Guardian is started by hand.
+* **Inside the one app**, the Shield part and the call listener exchange the same JSON messages
+  they would send between two phones, in memory (`InProcessLink`); a suspicious conversation plus
+  a risky action in the same call is STOP. A Bluetooth link to a second phone remains available
+  for a family member's phone. Llama is loaded once and shared by calls, messages and network
+  explanations (two copies would not fit in a phone's memory).
 * **KAVACH Phone** (opt-in dialer role, `InCallService`): big-button call screen with the live
   KAVACH level; for an unknown number it says "KAVACH is turning on the speaker so the Guardian
   can listen" and routes the call to the speaker; on STOP a one-tap **End call**.
@@ -371,6 +386,48 @@ cause false alarms, so the aliases were discarded.
 | shipped 8da4w `.pte` vs HF | 100 % next-token agreement |
 | Real alert prompts | 1,361-character constant prefix + 1.7–2.0 k-character suffix (`bench/prompts/`) |
 
+## 7.5 On the team's phone and through the real Hindi speech model
+
+**Live tests on a Xiaomi phone (Android 14), synthetic voices played through a laptop speaker
+10–20 cm from the phone:**
+
+| Test | Result |
+|---|---|
+| English digital-arrest scam call | STOP; Llama explanation on the phone, 106 tokens, first token 7.2 s (warm prefix), 10.1 tok/s |
+| Llama self-test (cold) | 108 tokens, first token 15.6 s, 11.6 tok/s |
+| English genuine bank call, delivery call | not red |
+| English KYC and digital-arrest calls (first run) | yellow; cause found: the spoken yellow warning muted the microphone for 19–33 s and the decisive sentences were lost. Fixed (short spoken warnings; spelled-out letters "o t p" joined); both reach STOP when replayed through the same English model on the build machine |
+| Hindi calls | inconsistent at first (a genuine call went red; a scam call stayed silent); investigated below |
+
+Caveats found and kept visible: Llama's advice was at first identical to the worked example in its
+instructions; such wording is now replaced by the playbook text and labelled "advice from
+KAVACH's playbook", and a copied answer cannot raise a warning (Phase 2: LoRA fine-tuning).
+
+**Hindi through the speech model.** 100 unseen synthetic Hindi calls (50 scam, 50 genuine) spoken
+by Piper TTS, passed through a channel and decoded by the same streaming Hindi model the phone uses:
+
+| Condition | Build | Scam → red | Scam → yellow or red | Genuine → red |
+|---|---|---|---|---|
+| near speaker, quiet room | before | 24 % | 58 % | 0 % |
+| near speaker, quiet room | after | 44 % | 88 % | 0 % |
+| telephone band, SNR 10–30 dB | before | 0 % | 12 % | 0 % |
+| telephone band, SNR 10–30 dB | after | 0 % | 44 % | 0 % |
+
+Changes: 208 mixed-script word-list variants (the model writes "bank", "otp", "card" in Latin
+letters inside Hindi), the classifier retrained with 410 Hindi calls as the model hears them,
+"tell no one" treated as safety advice when the sentence is about an OTP or PIN, and the
+`isolation+authority` rule made vetoable by a confidently benign classifier. Text-only sets are
+equal or better with 0 false STOPs. The team's two Hindi test files, replayed 12 times each in
+varied near-speaker conditions: scam red 12/12; genuine calm 10/12, yellow 2/12, red 0/12.
+**Reading:** English is far stronger than Hindi, and the reason is the small streaming Hindi
+speech model (69 MB vs 188 MB for English): with telephone-band noise its text is mostly
+unusable. Training and test audio share one TTS voice, so human voices will score lower.
+
+**On-phone benchmark** (§4, `docs/benchmarks.md`): the app measures model sizes, detector time,
+speech real-time factor at 1/2/4 threads, Llama load/first-token/tokens-per-second and memory,
+and one minute of listening (CPU, battery current, temperature). Numbers from the team's phone
+are added when measured.
+
 ## 7.6 Network Watch
 
 | Part | Test | Result |
@@ -381,6 +438,7 @@ cause false alarms, so the aliases were discarded.
 | Flow model, NSL-KDD | same features idea, KDDTest+ used once | F1 0.854; R2L 22 %, U2R 42 % (these need packet contents); new attack types 65 % vs seen 82 % |
 | Flow model on phone-like traffic | replayed capture | flags **60/60 normal HTTPS sessions**: UNSW-NB15 has **zero normal TLS flows**. Kept as research, raises no alerts |
 | Pcap replay demo | Scapy capture: browsing + scan + DGA + look-alike + heartbeat + 2.4 MB upload | rules find **all 5**; no alert on normal browsing |
+| Home Wi-Fi check (Network Watch app) | TCP connect to 10 abused services (ADB 5555, Telnet, SMB, RDP, TR-069, FTP, RTSP, SSH, HTTP) on the /24 | Android 14 emulator network: 254 addresses in 12 s; found the emulator's open ADB port (urgent) with the fix in plain language |
 
 ## 7.7 PS3 scope coverage
 
@@ -391,7 +449,7 @@ cause false alarms, so the aliases were discarded.
 | Malicious links | Link Check (allow-list, look-alike rules, URL model) | built; 98.5 % of Indian look-alikes, 0 % of genuine Indian domains |
 | Malicious / fake apps | App Inspector (permissions, sideloading, lure names) | v0 preview |
 | Screen-sharing / remote-access fraud | Screen-share Guard + kill-chain | v0 preview; STOP on a payment app during remote access |
-| Network threats / intrusion | Network Watch: app traffic, DNS watch, flow model | traffic and DNS rules built and evaluated; flow model research only |
+| Network threats / intrusion | Network Watch: app traffic, DNS watch, home Wi-Fi check, flow model | traffic and DNS rules built and evaluated; Wi-Fi check built; flow model research only |
 | Cross-channel correlation | kill-chain hub (calls, messages, links, apps, network) | built, parity-tested |
 | On-device, privacy-preserving | no INTERNET in the main apps; audio never stored | by construction |
 | Explainable alerts in Indian languages | Hindi / English reasons, spoken warnings, Llama explanation | built; Llama quality to be measured on phones |
@@ -421,8 +479,11 @@ SpinQuant on a OnePlus 12.
   (link, APK, screen share) even when the talk is clean.
 * **Platform policy**: notification access, usage access and `QUERY_ALL_PACKAGES` suit a
   side-loaded prototype; `docs/threat_model.md` describes a Play-policy-compliant design.
-* **The Guardian needs the call on speaker** unless the phone maker enables system mode. One-phone
-  mode, KAVACH Phone and Standby auto-start reduce that dependence but do not remove it.
+* **The call must be on speaker** unless the phone maker enables system mode. KAVACH Phone puts
+  unknown callers on speaker by itself. One-phone listening relies on the accessibility capture
+  rule; Play policy limits accessibility use, so a store version would need the phone maker's
+  system mode or a declared accessibility use case (`docs/threat_model.md`).
+* **Hindi speech recognition** is the weakest link (§7.5); a larger Hindi model is the Phase 2 fix.
 
 # 9. Phase 2 plan
 
@@ -446,7 +507,7 @@ python data/synth/generate_calls.py && python data/synth/generate_sms.py && pyth
 python models/classifiers/train_text.py && python models/classifiers/train_url.py
 python bench/eval_calls.py --split test                # + dev / handwritten / heldout
 python -m pytest -q tests && python tests/make_parity_vectors.py
-cd android && ./gradlew :core:test                      # Kotlin parity (336 checks)
+cd android && ./gradlew :core:test                      # Kotlin parity (over 330 checks)
 python models/netwatch/train_domain.py && python models/netwatch/train_ids.py
 python bench/netwatch_sim.py && python bench/netwatch_pcap_demo.py
 python bench/e2e_noise.py --asr zipformer-en-2023-06-21 --configs base hotwords

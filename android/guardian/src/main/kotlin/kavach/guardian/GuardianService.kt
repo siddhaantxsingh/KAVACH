@@ -51,6 +51,8 @@ object GuardianBus {
     /** Llama: missing | loading | ready | failed (only "ready" + a finished generation means it actually ran) */
     @Volatile var llamaState = "missing"
     @Volatile var llamaLastRun: String = ""
+    /** "" | "copied_example" | "wrong_language": why Llama's own wording was not shown */
+    @Volatile var llamaSayNote: String = ""
     fun mode(m: String) { mode = m; post { it.onMode(m) } }
     fun add(l: Listener) = main.post { listeners.add(l) }
     fun remove(l: Listener) = main.post { listeners.remove(l) }
@@ -247,6 +249,20 @@ class GuardianService : Service() {
 
     private var pendingAlert: Alert? = null
 
+    /** The 1B model sometimes copies the example answer from its instructions word for word, or
+     *  answers in English during a Hindi call. Its verdict (scam type, evidence) is kept, but such a
+     *  'say' is replaced by KAVACH's playbook explanation for this call, and the screen says so. */
+    private fun repairSay(v: Verdict, a: Alert): Verdict {
+        val ex = kavach.core.Normalize.tokens(EXAMPLE_SAY).toSet()
+        val got = kavach.core.Normalize.tokens(v.say)
+        val copied = got.isNotEmpty() && got.count { it in ex }.toDouble() / got.size >= 0.8
+        val wrongLang = lang == "hi" && v.say.none { it in '\u0900'..'\u097F' }
+        if (!copied && !wrongLang) { GuardianBus.llamaSayNote = ""; return v }
+        GuardianBus.llamaSayNote = if (copied) "copied_example" else "wrong_language"
+        GuardianBus.status("Llama: its wording was replaced by the playbook (" + GuardianBus.llamaSayNote + ")")
+        return v.copy(say = a.verdict.say)
+    }
+
     /** What is said ALOUD. The microphone is muted while KAVACH speaks (so it never transcribes
      *  itself), so a long spoken warning would make it miss the caller's next sentences, which are
      *  often the decisive ones ("tell me the OTP"). Caution: one short line (~5 s). Stop: the headline
@@ -268,8 +284,9 @@ class GuardianService : Service() {
         val active = g.kc.assess(callTime()).active
         GuardianBus.status("Llama is explaining…")
         llmQueue.execute {
-            val v = g.askLlm(adv, a.window, active, a.retrieved)
-            GuardianBus.llamaLastRun = describeLlamaRun(adv, v != null)
+            val raw = g.askLlm(adv, a.window, active, a.retrieved)
+            GuardianBus.llamaLastRun = describeLlamaRun(adv, raw != null)
+            val v = raw?.let { repairSay(it, a) }
             GuardianBus.status("Llama: " + GuardianBus.llamaLastRun)
             if (v == null) return@execute
             engine.execute {
@@ -344,6 +361,8 @@ class GuardianService : Service() {
     }
 
     companion object {
+        /** The worked example in Llama's instructions (LlmContract.systemPrompt). */
+        const val EXAMPLE_SAY = "This is a scam. Real police never ask for money on a call. Do not send anything. Hang up and call 1930."
         /** Plain-language record of what the last Llama call actually did (shown in Readiness). */
         fun describeLlamaRun(adv: LlamaAdvisor, valid: Boolean): String {
             val st = adv.lastStats

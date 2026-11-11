@@ -389,7 +389,10 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         lastLlm = stats
         val ev = if (v.evidence.isNotEmpty()) "\n\n" + t("सुनी गई बातें: ", "Heard: ") + "“" + v.evidence.joinToString("”, “") + "”" else ""
         explainText = (if (v.say.isNotBlank()) v.say else explainText) + ev
-        explainBy = t("Llama 3.2 1B ने इसी फ़ोन पर समझाया", "Explained by Llama 3.2 1B on this phone")
+        explainBy = when (GuardianBus.llamaSayNote) {
+            "" -> t("Llama 3.2 1B ने इसी फ़ोन पर समझाया", "Explained by Llama 3.2 1B on this phone")
+            else -> t("Llama 3.2 1B ने इसी फ़ोन पर जाँचा · सलाह कवच की प्लेबुक से", "Checked by Llama 3.2 1B on this phone · advice from KAVACH's playbook")
+        }
         renderExplain(); refreshReadiness()
     }
 

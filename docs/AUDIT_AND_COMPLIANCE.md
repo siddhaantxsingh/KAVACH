@@ -134,3 +134,18 @@ Fixes: the spoken yellow warning is one short line (~6 s) and the spoken red war
 action (~11 s); the full explanation stays on screen. Spelled-out letters from the speech recogniser
 ("o t p", "s b i k y c") are now joined into words ("otp", "sbi kyc") in Python and Kotlin.
 Evaluation sets (dev, test, hand-written, held-out): no change in detection or false alarms.
+
+Hindi digital-arrest call (no warning on the phone): the Hindi streaming model wrote the call as
+mixed Hindi and broken English ("arestaurant" for arrest warrant, "मनिलौंd rink" for money laundering,
+"inspactor", "आधार card", "parcel book", "trucks" for drugs). The word list matched none of it; only
+the classifier reached caution. 56 hand-written Hinglish speech-model forms were added to five
+categories (police, identity misuse, threat, isolation, payment). Checks: none fires on ~30,000
+lines of benign synthetic calls and SMS; dev/test/hand-written/held-out results unchanged; the
+phone's transcript of this call now reaches STOP on the build machine. Caveat: the forms were
+chosen after seeing this one transcript, so this call is no longer an independent test; the next
+Hindi check must use new recordings.
+
+Llama on the same call copied its example answer word for word and answered in English during a
+Hindi call. Its verdict (scam type, evidence) is still used, but such wording is now replaced by the
+playbook explanation for the call, and the screen says "Checked by Llama 3.2 1B on this phone ·
+advice from KAVACH's playbook" instead of "Explained by Llama". Proper fix: LoRA fine-tuning (Phase 2).

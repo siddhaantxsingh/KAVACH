@@ -595,7 +595,11 @@ On the phone (12 Nov, 04:24), the fine-tuned 4-bit `.pte` (820 MB, vs 1,083 MB f
 file) loaded and ran the self-test call: verdict "digital_arrest", confidence 0.91, its own advice
 ("Hang up. Do not transfer any money. Tell a family member. Call 1930 or report at
 cybercrime.gov.in.") instead of the prompt's example; 92 tokens, first token 18.3 s (cold, no warm
-prefix), 11.5 tokens/s decode.
+prefix), 11.5 tokens/s decode. During a replayed Hindi digital-arrest call (05:10) it wrote its own Hindi advice
+("यह डिजिटल अरेस्ट स्कैम है। पैसे देना बंद कीजिए। कोई 'पैसे ट्रांसफर' मत कीजिए। … 1930 पर"), with
+verbatim evidence "साइबर क्राइम", "इंस्पेक्टर"; the screen labels it "Explained by Llama 3.2 1B on this
+phone". The Hindi is understandable but not always polished, and one earlier run on the same file
+was still replaced by the playbook text (the app now logs Llama's wording whenever that happens).
 
 # 9. Phase 2 plan
 

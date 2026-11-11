@@ -12,7 +12,7 @@ cd "$(dirname "$0")/.."
 CACHE=${KAVACH_MODEL_CACHE:-$HOME/.cache/kavach-models}
 mkdir -p "$CACHE"
 G=io.kavach.guardian
-S=io.kavach.shield
+S=io.kavach.shield  # former separate Shield app (now part of the one KAVACH app); unused
 dst() { echo "/sdcard/Android/data/$1/files/models"; }
 # Git Bash on Windows rewrites arguments that start with "/" into Windows paths; keep phone paths as they are
 export MSYS2_ARG_CONV_EXCL="/sdcard;/data"

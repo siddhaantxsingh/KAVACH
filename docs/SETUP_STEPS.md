@@ -1,82 +1,86 @@
-# KAVACH: exact setup steps
+# KAVACH: exact setup steps (one phone)
 
-Two setups. Pick the one that matches your phones. Everything stays on the phones: neither main
-app has the INTERNET permission, and audio is never stored.
+KAVACH is **one app on one Android phone**. It checks messages, links, apps and screen sharing,
+and it listens to a phone call you put on speaker, on the same phone. The optional
+**Network Watch** app adds website and home Wi-Fi checks.
 
-| | Setup A: 1 Android + 2 iPhones (our team) | Setup B: 2 Androids (full "both modes") |
-|---|---|---|
-| Call happens on | an iPhone (the "victim" phone), on speaker | Android 1 (the user's phone) |
-| KAVACH Shield (messages, links, apps, payments, calls) | the Android | Android 1 |
-| KAVACH Guardian (listens to the call) | the same Android, next to the iPhone | Android 2, next to Android 1 |
-| Guardian starts by itself on an unknown call | no (Shield cannot see an iPhone's call): press **Start guarding** | **yes** (Standby mode) |
-| Scammer phone | the second iPhone | any phone |
+The main app has **no INTERNET permission** (check it yourself: App info → Permissions), and
+audio is never stored. Network Watch is a separate app precisely because it needs the internet
+permission to pass the phone's website lookups through.
 
-## 0. Once, on a computer (both setups)
+## 0. Once, on a computer
 
-1. **Get the APKs (no Android Studio needed):** GitHub builds them on every push. Open the repo's
-   **Releases → apks-latest** and download `kavach-shield-debug.apk`, `kavach-guardian-debug.apk`
-   and (optional) `kavach-netwatch-debug.apk` into a `dist/` folder.
-   (Or build yourself with Android Studio / JDK 17: `scripts/build_apks.sh`.) All builds use the
-   same demo signing key (`android/kavach-shared-debug.keystore`), so the apps always work together.
-2. Install `adb` (Android platform-tools) for pushing the speech models.
-3. Turn on Developer options → USB debugging on each Android and connect it.
+1. Install `adb` (Android platform-tools) and turn on **Developer options → USB debugging** on the phone.
+2. Plug the phone in and install the apps (GitHub builds them on every push, release `apks-latest`):
 
-## Setup A: 1 Android + 2 iPhones
+   ```bash
+   curl -L -o kavach-debug.apk https://github.com/siddhaantxsingh/KAVACH/releases/download/apks-latest/kavach-debug.apk
+   curl -L -o kavach-netwatch-debug.apk https://github.com/siddhaantxsingh/KAVACH/releases/download/apks-latest/kavach-netwatch-debug.apk
+   adb install -r kavach-debug.apk
+   adb install -r kavach-netwatch-debug.apk          # optional
+   adb uninstall io.kavach.shield                     # only if the old separate Shield app is installed
+   ```
 
-On the Android:
+   Removing the old Shield app deletes its saved warning list and counters (nothing else). The
+   models and settings of the old Guardian app are kept: the one KAVACH app keeps its package id
+   `io.kavach.guardian`.
+3. Speech models and Llama (skip if they are already on the phone):
+   `scripts/push_models.sh --asr` and `scripts/push_models.sh --official-spinquant`.
 
-1. `adb install dist/kavach-shield-debug.apk` and `adb install dist/kavach-guardian-debug.apk`.
-2. `scripts/push_models.sh --asr` (speech models into the Guardian). Optional:
-   `scripts/push_models.sh --official-spinquant` (Llama 3.2 1B explanations).
-3. Open **KAVACH Shield**:
-   1. *Allow message checking* → turn on notification access for KAVACH Shield.
-   2. *Allow screen-share guard* → turn on usage access (also powers Network Watch).
-   3. Allow the permission pop-ups (notifications, phone state, call log, contacts, Bluetooth).
-   4. *Start protection*.
-4. Open **KAVACH Guardian**: allow the microphone → **Link phone → This phone**.
-5. Optional: install `dist/kavach-netwatch-debug.apk`, open it, **Start Network Watch**, accept
-   Android's VPN prompt (it only checks website names, locally).
+## 1. On the phone (about 2 minutes)
 
-For each test call:
+Open **KAVACH**. The Home tab shows **Finish setup, 0 of 4**:
 
-1. Put the iPhone **on speaker** and lay the Android next to it (10–30 cm, no TV nearby).
-2. In the Guardian press **Start guarding** and choose the call language.
-3. Watch the **Placement** line: it should say *good*. If it says *move closer* or *too noisy*,
-   move the phones together or turn the TV down.
-4. Make the scam call from the second iPhone (scripts: `demo/roleplay_scripts.md`).
+1. **Message checking → Turn on**: allow notification access for KAVACH.
+2. **Screen-share guard → Turn on**: allow usage access for KAVACH.
+3. **Call listening → Turn on**: Settings → Accessibility → *Downloaded apps* (Xiaomi: *Installed
+   services*) → **KAVACH call listening** → on. This is the only way Android lets an app keep
+   hearing the microphone during a phone call; KAVACH uses it for nothing else (no screen
+   reading, no taps). If Android says the setting is restricted: App info → ⋮ → *Allow restricted
+   settings*, then try again.
+4. **Turn on protection**: allow the microphone. Home now says **Protection is on**, and the
+   Calls tab says **Ready for calls**.
 
-## Setup B: 2 Androids (both modes together)
+In **Calls**, choose the **language of the call** (हिंदी / Hinglish or English).
 
-Android 1 = the user's phone (Shield). Android 2 = the Guardian.
+Optional, removes the "press speaker" step: **Settings → KAVACH Phone → Make KAVACH your phone app**.
+Calls from unknown numbers then go on speaker by themselves, and a Stop warning gets a one-tap
+**End call**.
 
-1. Android 1: `adb install dist/kavach-shield-debug.apk` and do step 3 of Setup A.
-   Optional: `dist/kavach-netwatch-debug.apk` as in Setup A step 5.
-2. Android 2: `adb install dist/kavach-guardian-debug.apk`, `ANDROID_SERIAL=<android2> scripts/push_models.sh --asr`.
-3. Pair the two phones in Android Bluetooth settings.
-4. Android 2, Guardian: **Link phone** → pick Android 1 → **⏸ Standby: start by itself on calls**.
-   Keep *Auto-start: ON*.
-5. Optional (removes the "press speaker" step): Android 1, Shield → **KAVACH Phone** →
-   *Make KAVACH my phone app*. Unknown callers then go on speaker by themselves after a spoken
-   notice, and STOP shows a one-tap **End call**.
+## 2. A real test call (the phone is the victim's phone)
 
-For each test call: just answer the call on Android 1 (on speaker, or let KAVACH Phone do it)
-with Android 2 next to it. The Guardian starts listening when the call starts and stops about
-30 s after it ends. Both screens say *which* channel triggered a warning
-(e.g. "Unknown caller + a dangerous link").
+1. A teammate calls this phone from another phone (an iPhone is fine) and plays a scam script:
+   live (scripts in `demo/roleplay_scripts.md`) or by playing `test_call_*.wav` into their phone.
+2. Answer and **put the call on speaker** (automatic with KAVACH Phone).
+3. KAVACH starts listening by itself when the number is not in your contacts. The Calls tab shows
+   the live transcript. On a scam it turns **yellow** (Caution) or **red** (Stop), the phone
+   vibrates and the full-screen Stop card appears. During a real call KAVACH does **not** speak
+   its warning (it would go into the call); after the call it can.
+4. Calls from saved contacts are not listened to unless you tap **Start listening now**.
 
-## One-phone mode (no Guardian at all)
+## 3. Without a second phone (laptop test)
 
-Shield alone already knows *that* a call with an unknown number is going on (never its audio).
-During such a call it raises STOP when the user taps a dangerous link, installs a risky app,
-starts screen sharing, or an app starts uploading data, and CAUTION when a payment app is opened
-in a call longer than 3 minutes.
+Calls → **Start listening now**, then play a `test_call_*.wav` from a laptop speaker 10–30 cm
+away. Here the warning is also spoken.
+
+## 4. Network Watch (optional app)
+
+Open **Network Watch → Turn on** and accept Android's VPN prompt (local only; only website names
+are checked). The **Wi-Fi** tab → **Check my Wi-Fi** looks for devices on your own network with
+risky open services (remote debugging on a TV box, Telnet on a camera, open file shares). Findings
+also appear in KAVACH's Activity tab, explained by Llama when call protection is on.
+
+## 5. Performance numbers for the report
+
+Calls → **Setup & tools → Measure performance** (3–4 minutes, unplug USB/charger first). It
+measures every model on this phone's Arm CPU and saves a JSON file; the screen shows the `adb pull`
+command.
 
 ## Before the final test (checklist)
 
-- [ ] All APKs built on the same computer, installed, permissions granted
-- [ ] `scripts/push_models.sh --asr` done (Guardian shows "listening", not "models missing")
-- [ ] Demo replay works without models (Guardian → *Demo replay*)
-- [ ] One real role-play call reaches STOP; one genuine bank-style call does not
-- [ ] Placement line says *good* at your demo spot
-- [ ] Optional: Llama loaded (the Guardian shows "Llama 3.2 1B explains")
-- [ ] Optional: Network Watch on; `python bench/netwatch_pcap_demo.py` ready on the laptop
+- [ ] Home says **Protection is on**; Calls says **Ready for calls**
+- [ ] Calls → Setup & tools → Readiness: microphone, call listening, both speech models, Llama all ticked
+- [ ] One real speaker-phone call with a scam script reaches yellow or red
+- [ ] One genuine-style call stays calm
+- [ ] Placement chip says *Hearing the call clearly* at your demo spot
+- [ ] Optional: Network Watch on; Wi-Fi check run once

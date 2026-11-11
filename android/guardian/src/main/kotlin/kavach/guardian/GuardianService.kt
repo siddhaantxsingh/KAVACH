@@ -357,6 +357,9 @@ class GuardianService : Service() {
         val wrongLang = lang == "hi" && v.say.none { it in '\u0900'..'\u097F' }
         if (!copied && !wrongLang) { GuardianBus.llamaSayNote = ""; return v }
         GuardianBus.llamaSayNote = if (copied) "copied_example" else "wrong_language"
+        // keep Llama's own wording in the session log, so a replaced answer can be checked later
+        logLine("llm_say_replaced", GuardianBus.llamaSayNote, lang, v.type, v.say.take(200))
+        Log.i(TAG, "Llama say replaced (${GuardianBus.llamaSayNote}, call lang $lang): ${v.say.take(200)}")
         GuardianBus.status("Llama: its wording was replaced by the playbook (" + GuardianBus.llamaSayNote + ")")
         // A copied answer carries the example's own "scam, 0.9, payment" too, so it must not be able
         // to raise a yellow warning to red: its confidence is set to 0.

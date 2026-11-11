@@ -29,7 +29,7 @@ alone; together they cover the whole scam.
 
 * **One Android app + one optional app** (Kotlin, no AndroidX, built on every push by GitHub
   Actions and checked on an Android 14 emulator with screenshots of every screen):
-  *KAVACH* (streaming Hindi/Hinglish or English ASR, Call Guardian, Llama 3.2 1B advisor, live
+  *KAVACH* (sentence-by-sentence Hindi/Hinglish and English ASR with Auto language, Call Guardian, Llama 3.2 1B advisor, live
   placement check, **one-phone call listening** through Android's accessibility capture rule
   (§3.5), "Protect my calls" auto-start, Message Shield, Link Check, call awareness, app-traffic
   detector, App Inspector, Screen-share Guard, opt-in KAVACH Phone dialer, kill-chain hub, STOP
@@ -189,7 +189,7 @@ speech models (ExecuTorch Qualcomm/MediaTek backends) is Phase 2.
   background use) and listening begins when an unknown-number call starts. During a real call the
   warning is not spoken (it would go into the call and mute KAVACH's own listening): the phone
   vibrates and the full-screen STOP card appears. Status: verified on an emulator for the UI and
-  state flow; the live-call capture must be confirmed on the team's phone (§7.5).
+  state flow; live-call capture on one phone is verified on real calls (§7.5).
 * **Call awareness** (`CallMonitor`, phone-state broadcast): Shield knows a call is on, whether
   the number is in the contacts, and how long it has lasted. It never hears the call.
 * **One-phone mode:** during an unknown-number call, a dangerous link, a risky APK, screen
@@ -533,16 +533,17 @@ battery, a setting to revisit with a 4-thread battery measurement.
 | Network threats / intrusion | Network Watch: app traffic, DNS watch, home Wi-Fi check, flow model | traffic and DNS rules built and evaluated; Wi-Fi check built; flow model research only |
 | Cross-channel correlation | kill-chain hub (calls, messages, links, apps, network) | built, parity-tested |
 | On-device, privacy-preserving | no INTERNET in the main apps; audio never stored | by construction |
-| Explainable alerts in Indian languages | Hindi / English reasons, spoken warnings, Llama explanation | built; Llama quality to be measured on phones |
+| Explainable alerts in Indian languages | Hindi / English reasons, spoken warnings, Llama explanation | verified on the phone; Llama quality measured before/after LoRA (§7.9) |
 | Arm optimisation | ExecuTorch + XNNPACK / KleidiAI, int8 ASR, big.LITTLE placement, < 1 ms fast path | export verified; on-phone numbers in Phase 2 week 1 |
 
-## 7.8 Still to measure on phones (Phase 2 week 1–2, scripts ready)
+## 7.8 Still to measure (scripts ready)
 
-Llama TTFT, decode tok/s and RAM per quantisation rung, with KleidiAI on and off, on big and
-LITTLE cores, on a flagship and a budget phone. Also: Hindi ASR WER on our own speaker-phone
-recordings, battery drain per hour of guarding, the 30-minute thermal soak, the Llama
-verdict quality and escalation effect on the locked held-out calls, and the
-human-recorded test set. Reference point: ExecuTorch reports about 50 tok/s decode for Llama 3.2 1B
+Measured on the team's phone (§7.5): speech speed at 1/2/4 threads, Llama load, first token,
+decode speed and memory, battery and temperature for an hour-equivalent of listening, and Llama
+quality before/after LoRA (§7.9). Still open: Llama per quantisation rung with KleidiAI on and off,
+on big and LITTLE cores and on a budget phone; Hindi WER on our own speaker-phone recordings; the
+30-minute thermal soak; Llama verdict quality on the locked held-out calls; and the
+human-recorded test set (10–20 consented calls planned for 21 Nov). Reference point: ExecuTorch reports about 50 tok/s decode for Llama 3.2 1B
 SpinQuant on a OnePlus 12.
 
 # 8. Limitations and threat model (summary)

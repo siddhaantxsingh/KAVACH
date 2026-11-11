@@ -503,7 +503,10 @@ SpinQuant on a OnePlus 12.
 
 # 9. Phase 2 plan
 
-1. Fine-tune the LoRA and export the quantisation ladder. Measure quality (`eval_llama.py`),
+1. Fine-tune the LoRA and export the quantisation ladder. A ready Colab notebook
+   (`notebooks/kavach_llama_lora_colab.ipynb`, free T4, ≈2 h) runs data → base score → LoRA →
+   trained score → ExecuTorch 1.4 `.pte`; `eval_llama.py` now also reports how often the advice
+   copies the prompt's worked example and whether it is in the call's language. Measure quality,
    on-device speed and the **Llama escalation effect** on all call sets.
 2. Record 100+ scam and 100+ genuine role-play calls (consented), measure Hindi WER, adapt
    ASR, and build the untouched human-recorded test set.

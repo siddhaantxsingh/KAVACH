@@ -96,7 +96,7 @@ it runs the rule + classifier path, which is the fail-safe design.
 - [ ] Record the demo video (`demo/demo_video_script.md`)
 - [ ] Fill in team names below
 
-**Team:** Siddhant Singh (team lead; system architecture, Android app, on-device AI and phone testing) · Bogavalli Sai Akhilash (scam playbook, data and detection evaluation) · Shivansh Bose (Network Watch, security review and documentation) · Faculty mentor: Dr. Rahul Ratnakumar
+**Team:** Siddhant Singh (team lead; call listening: on-device speech recognition, Call Guardian and the Android app) · Bogavalli Sai Akhilash (detection and Llama: scam playbook, data, classifiers, LoRA fine-tuning and evaluation) · Shivansh Bose (Shield and Network Watch: messages, links, apps, payments, network and Wi-Fi checks, privacy and security review) · Faculty mentor: Dr. Rahul Ratnakumar
 
 ## Licences
 

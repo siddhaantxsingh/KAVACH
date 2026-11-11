@@ -4,6 +4,11 @@ subtitle: "Bharat AI-SoC Challenge 2026–27 · Problem Statement 3 (Cybersecuri
 date: "November 2026"
 ---
 
+**Team:** Siddhant Singh (team lead; system architecture, Android app, on-device AI and phone
+testing) · Bogavalli Sai Akhilash (scam playbook, data and detection evaluation) · Shivansh Bose
+(Network Watch, security review and documentation) · **Faculty mentor:** Dr. Rahul Ratnakumar.
+All three members worked across every part of the project; the roles name each person's main area.
+
 # 1. Summary
 
 KAVACH is **one app on one Android phone**. It listens to a suspicious call the user has put

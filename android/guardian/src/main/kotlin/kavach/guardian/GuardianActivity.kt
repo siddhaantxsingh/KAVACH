@@ -273,7 +273,8 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         val mic = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         val hiBig = AsrEngine.hasIndicConformer(dir)
         val hiAsr = hiBig || has("asr-hi/model.int8.onnx", "asr-hi/tokens.txt")
-        val enAsr = has("asr-en/encoder.onnx", "asr-en/decoder.onnx", "asr-en/joiner.onnx", "asr-en/tokens.txt")
+        val enBig = AsrEngine.hasEnglishBig(dir)
+        val enAsr = enBig || has("asr-en/encoder.onnx", "asr-en/decoder.onnx", "asr-en/joiner.onnx", "asr-en/tokens.txt")
         val vad = has("silero_vad.onnx")
         val llamaFile = ModelFiles.llamaPte(this).isFile && ModelFiles.llamaTokenizer(this).isFile
         Ui.addRow(ready, Ui.status(this, t("माइक्रोफ़ोन", "Microphone"), mic, if (mic) t("अनुमति है", "Allowed") else t("अनुमति चाहिए", "Permission needed")))
@@ -282,7 +283,8 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
             if (access) t("चालू — स्पीकर पर रखी कॉल सुन सकता है", "On — can hear a call on speaker") else t("बंद — सिर्फ़ डेमो और पास के स्पीकर", "Off — demo and nearby speakers only")))
         Ui.addRow(ready, Ui.status(this, t("हिंदी / Hinglish बोली मॉडल", "Hindi / Hinglish speech model"), hiAsr && vad, if (!(hiAsr && vad)) t("नहीं है", "Missing")
             else if (hiBig) t("AI4Bharat IndicConformer — इस फ़ोन पर", "AI4Bharat IndicConformer — on this phone") else t("छोटा मॉडल — बेहतर मॉडल के लिए push_models.sh --asr-hi-big", "Small model — run push_models.sh --asr-hi-big for the better one")))
-        Ui.addRow(ready, Ui.status(this, t("English बोली मॉडल", "English speech model"), enAsr && vad, if (enAsr && vad) t("इस फ़ोन पर है", "On this phone") else t("नहीं है", "Missing")))
+        Ui.addRow(ready, Ui.status(this, t("English बोली मॉडल", "English speech model"), enAsr && vad, if (!(enAsr && vad)) t("नहीं है", "Missing")
+            else if (enBig) t("NVIDIA Parakeet 110M — इस फ़ोन पर", "NVIDIA Parakeet 110M — on this phone") else t("छोटा मॉडल — बेहतर मॉडल के लिए push_models.sh --asr-en-big", "Small model — run push_models.sh --asr-en-big for the better one")))
         val ls = GuardianBus.llamaState
         val (lok, ltext) = when {
             !llamaFile -> false to t("नहीं है — सिर्फ नियम + क्लासिफ़ायर", "Missing — rules + classifier only")

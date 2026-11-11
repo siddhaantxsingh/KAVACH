@@ -130,7 +130,7 @@ class BenchmarkActivity : Activity() {
         val files = section(t("2 · मॉडल फ़ाइलें", "2 · Model files"))
         val fm = linkedMapOf<String, Any?>()
         val sb = StringBuilder()
-        for ((name, rel) in listOf("Hindi speech (int8)" to "asr-hi/model.int8.onnx", "Hindi+ IndicConformer" to AsrEngine.IC_MODEL, "English speech encoder" to "asr-en/encoder.onnx",
+        for ((name, rel) in listOf("Hindi speech (int8)" to "asr-hi/model.int8.onnx", "Hindi+ IndicConformer" to AsrEngine.IC_MODEL, "English+ Parakeet 110M" to AsrEngine.EN_BIG_MODEL, "English speech encoder" to "asr-en/encoder.onnx",
                 "English speech decoder" to "asr-en/decoder.onnx", "English speech joiner" to "asr-en/joiner.onnx",
                 "Voice detector (Silero)" to "silero_vad.onnx", "Llama 3.2 1B (.pte)" to "llama/kavach_llama3_2_1b.pte")) {
             val f = File(models, rel)
@@ -218,6 +218,22 @@ class BenchmarkActivity : Activity() {
             val rtf = ms / 1000.0 / seconds
             asrRes["hi_indicconformer_t$threads"] = linkedMapOf("rtf" to rtf, "load_ms" to loadMs, "pss_delta_mb" to (pssMb() - pss0))
             asrText.append(String.format(Locale.US, "%-7s %d thr  RTF %.3f  (%.1fx real time)  load %d ms\n", "Hindi+", threads, rtf, 1 / rtf, loadMs))
+            show(asr, asrText.toString())
+        }
+        // English, NVIDIA Parakeet TDT-CTC 110M (whole sentences)
+        if (AsrEngine.hasEnglishBig(models)) for (threads in listOf(2, 4)) {
+            val pss0 = pssMb()
+            val tl = SystemClock.elapsedRealtime()
+            val rec = AsrEngine.buildOffline(models, "en", threads)
+            val loadMs = SystemClock.elapsedRealtime() - tl
+            val t0 = SystemClock.elapsedRealtime()
+            val st = rec.createStream(); st.acceptWaveform(audio, 16000); rec.decode(st)
+            val ms = SystemClock.elapsedRealtime() - t0
+            if (threads == 2) asrRes["en_parakeet_sample_text"] = rec.getResult(st).text.take(120)
+            st.release(); rec.release()
+            val rtf = ms / 1000.0 / seconds
+            asrRes["en_parakeet110m_t$threads"] = linkedMapOf("rtf" to rtf, "load_ms" to loadMs, "pss_delta_mb" to (pssMb() - pss0))
+            asrText.append(String.format(Locale.US, "%-7s %d thr  RTF %.3f  (%.1fx real time)  load %d ms\n", "Engl.+", threads, rtf, 1 / rtf, loadMs))
             show(asr, asrText.toString())
         }
         results["asr"] = asrRes

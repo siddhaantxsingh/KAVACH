@@ -17,6 +17,8 @@
 
 Scam playbook texts are written by the team from public advisories (I4C/MHA, RBI, cybercrime.gov.in, Sanchar Saathi, bank awareness pages).
 
+* **NVIDIA Parakeet TDT-CTC 110M** (`nvidia/parakeet-tdt_ctc-110m`), CC-BY-4.0; int8 ONNX export from the sherpa-onnx
+  `asr-models` release (k2-fsa). Optional better English speech model, downloaded by `scripts/push_models.sh --asr-en-big`.
 * **AI4Bharat IndicConformer Hindi** (`ai4bharat/indicconformer_stt_hi_hybrid_ctc_rnnt_large`), MIT licence; CTC ONNX export by
   trysem/sulabhkatiyar (CC-BY-4.0); sherpa-onnx metadata and int8 quantisation by ngiftsun
   (`ngiftsun/indicconformer-hi-int8-sherpa`). Downloaded to the phone by `scripts/push_models.sh`; not stored in this repository.

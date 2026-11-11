@@ -4,6 +4,8 @@ name: fetch-hi-asr
 #  - mobilebytesensei/betterflow-hindi-streaming-ctc (streaming, Apache-2.0)            -> encoder.int8.onnx, tokens.txt
 #  - ngiftsun/indicconformer-hi-int8-sherpa: AI4Bharat IndicConformer Hindi 120M CTC,
 #    int8 for sherpa-onnx (model MIT by AI4Bharat; ONNX export CC-BY-4.0, trysem)         -> ic-hi-*
+#  - NVIDIA Parakeet TDT-CTC 110M English (CC-BY-4.0), int8 export from the sherpa-onnx
+#    asr-models release                                                                    -> parakeet-110m-en-*
 on:
   workflow_dispatch:
   push:
@@ -26,6 +28,10 @@ jobs:
           mkdir -p up
           cp hi/encoder.int8.onnx hi/tokens.txt up/
           for f in ic/*; do [ -f "$f" ] && cp "$f" "up/ic-hi-$(basename "$f")"; done
+          curl -fsSL -o en.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8.tar.bz2
+          tar xjf en.tar.bz2
+          cp sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8/model.int8.onnx up/parakeet-110m-en-model.int8.onnx
+          cp sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000-int8/tokens.txt up/parakeet-110m-en-tokens.txt
           ls -la up
       - env:
           GH_TOKEN: ${{ github.token }}

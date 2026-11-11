@@ -26,6 +26,9 @@ Phone plugged in. In Git Bash, inside your KAVACH folder (the one you cloned fro
 git pull && export PATH="$PATH:$(dirname "$(find ~/Downloads -name adb.exe 2>/dev/null | head -1)")" && bash scripts/push_models.sh --asr-hi-big
 ```
 
+For the better English model (NVIDIA Parakeet 110M, 126 MB), the same line with `--asr-en-big` at the end.
+Readiness then says *NVIDIA Parakeet 110M — on this phone*.
+
 It downloads AI4Bharat's IndicConformer Hindi model (198 MB) from our GitHub release and copies it to
 the phone. KAVACH → Calls → Setup & tools → Readiness then says *AI4Bharat IndicConformer — on this phone*.
 

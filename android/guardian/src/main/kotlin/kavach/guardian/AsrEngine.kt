@@ -33,7 +33,8 @@ import java.io.File
  *   a whole (far more accurate than the streaming model, docs/technical_report.md section 7.5; a
  *   partial result is refreshed every 2 s while someone is speaking). Otherwise the streaming
  *   Zipformer2-CTC model (models/asr-hi).
- * English: streaming Zipformer transducer.
+ * English: NVIDIA Parakeet TDT-CTC 110M (NeMo CTC, int8) sentence by sentence when its files are on
+ *   the phone (models/asr-en-big); otherwise the streaming Zipformer transducer (models/asr-en).
  * Audio is processed in 100 ms chunks and never stored. VAD skips decoding during long
  * silence (the stream still receives the audio, so nothing is lost when speech resumes).
  */
@@ -65,11 +66,13 @@ class AsrEngine(
 
     fun missingFiles(): List<String> = requiredFiles().filter { !it.exists() }.map { it.path }
 
-    /** Hindi with the IndicConformer files present: sentence-by-sentence recognition */
-    val sentenceMode: Boolean get() = lang == "hi" && hasIndicConformer(modelsDir)
+    /** The bigger whole-sentence model for this language is on the phone: sentence-by-sentence recognition */
+    val sentenceMode: Boolean get() = if (lang == "hi") hasIndicConformer(modelsDir) else hasEnglishBig(modelsDir)
 
-    private fun requiredFiles(): List<File> = if (sentenceMode)
+    private fun requiredFiles(): List<File> = if (sentenceMode && lang == "hi")
         listOf(File(modelsDir, IC_MODEL), File(modelsDir, IC_TOKENS), File(modelsDir, "silero_vad.onnx"))
+    else if (sentenceMode)
+        listOf(File(modelsDir, EN_BIG_MODEL), File(modelsDir, EN_BIG_TOKENS), File(modelsDir, "silero_vad.onnx"))
     else if (lang == "hi")
         listOf(File(modelsDir, "asr-hi/model.int8.onnx"), File(modelsDir, "asr-hi/tokens.txt"), File(modelsDir, "silero_vad.onnx"))
     else
@@ -161,7 +164,7 @@ class AsrEngine(
         t0 = SystemClock.elapsedRealtime()
         thread = Thread({
             Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
-            val rec = buildOfflineHindi(modelsDir, 2)
+            val rec = buildOffline(modelsDir, lang, 2)
             val vad = Vad(assetManager = null, config = VadModelConfig(
                 sileroVadModelConfig = SileroVadModelConfig(model = File(modelsDir, "silero_vad.onnx").path, threshold = 0.5f,
                     minSilenceDuration = 0.5f, minSpeechDuration = 0.25f, windowSize = VAD_WINDOW, maxSpeechDuration = 12.0f),
@@ -271,12 +274,23 @@ class AsrEngine(
 
         fun hasIndicConformer(modelsDir: File) = File(modelsDir, IC_MODEL).isFile && File(modelsDir, IC_TOKENS).isFile
 
-        /** AI4Bharat IndicConformer Hindi (NeMo CTC) for whole sentences (also used by the benchmark). */
-        fun buildOfflineHindi(modelsDir: File, threads: Int): OfflineRecognizer = OfflineRecognizer(assetManager = null, config = OfflineRecognizerConfig(
-            featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80),
-            modelConfig = OfflineModelConfig(nemo = OfflineNemoEncDecCtcModelConfig(model = File(modelsDir, IC_MODEL).path),
-                tokens = File(modelsDir, IC_TOKENS).path, numThreads = threads, provider = "cpu"),
-            decodingMethod = "greedy_search"))
+        const val EN_BIG_MODEL = "asr-en-big/model.onnx"
+        const val EN_BIG_TOKENS = "asr-en-big/tokens.txt"
+
+        fun hasEnglishBig(modelsDir: File) = File(modelsDir, EN_BIG_MODEL).isFile && File(modelsDir, EN_BIG_TOKENS).isFile
+
+        /** Whole-sentence NeMo CTC model (also used by the benchmark): AI4Bharat IndicConformer for
+         *  Hindi, NVIDIA Parakeet TDT-CTC 110M for English. */
+        fun buildOffline(modelsDir: File, lang: String, threads: Int): OfflineRecognizer {
+            val (m, tk) = if (lang == "hi") IC_MODEL to IC_TOKENS else EN_BIG_MODEL to EN_BIG_TOKENS
+            return OfflineRecognizer(assetManager = null, config = OfflineRecognizerConfig(
+                featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80),
+                modelConfig = OfflineModelConfig(nemo = OfflineNemoEncDecCtcModelConfig(model = File(modelsDir, m).path),
+                    tokens = File(modelsDir, tk).path, numThreads = threads, provider = "cpu"),
+                decodingMethod = "greedy_search"))
+        }
+
+        fun buildOfflineHindi(modelsDir: File, threads: Int): OfflineRecognizer = buildOffline(modelsDir, "hi", threads)
 
         /** The streaming recogniser for one language (also used by the performance benchmark). */
         fun buildRecognizer(modelsDir: File, lang: String, threads: Int): OnlineRecognizer {

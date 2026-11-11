@@ -37,6 +37,42 @@ def engines(models: Path, threads: int):
     return tts, rec
 
 
+class IcAsr:
+    """AI4Bharat IndicConformer Hindi (offline CTC) behind Silero VAD: one result per spoken sentence,
+    exactly as the phone runs it (AsrEngine, Hindi with the IndicConformer files present)."""
+
+    def __init__(self, models: Path, threads: int):
+        import sherpa_onnx
+        self.so = sherpa_onnx
+        self.rec = sherpa_onnx.OfflineRecognizer.from_nemo_ctc(
+            model=str(models / "ic/model.int8-matmul.onnx"), tokens=str(models / "ic/tokens.txt"), num_threads=threads)
+        self.vad_model = str(models / "silero_vad.onnx")
+
+    def decode(self, y: np.ndarray) -> list[tuple[float, str]]:
+        c = self.so.VadModelConfig()
+        c.silero_vad.model = self.vad_model
+        c.silero_vad.min_silence_duration = 0.5
+        c.silero_vad.min_speech_duration = 0.25
+        c.silero_vad.max_speech_duration = 12
+        c.sample_rate = SR
+        vad = self.so.VoiceActivityDetector(c, buffer_size_in_seconds=180)
+        y = np.concatenate([y, np.zeros(2 * SR, dtype=np.float32)])
+        out = []
+        for i in range(0, len(y) - 512, 512):
+            vad.accept_waveform(y[i:i + 512])
+            while not vad.empty():
+                seg = vad.front
+                x = np.asarray(seg.samples, dtype=np.float32)
+                end = (seg.start + len(x)) / SR
+                vad.pop()
+                st = self.rec.create_stream()
+                st.accept_waveform(SR, x)
+                self.rec.decode_stream(st)
+                if st.result.text.strip():
+                    out.append((end, st.result.text.strip()))
+        return out
+
+
 def near(x: np.ndarray, snr_db: float, rng: np.random.Generator) -> np.ndarray:
     """Full-band audio from a nearby loudspeaker in a quiet room: mild reverb + room noise."""
     from scipy.signal import lfilter
@@ -60,11 +96,15 @@ def main() -> None:
     ap.add_argument("--channel", default="phone", choices=["phone", "near"],
                     help="phone: 8 kHz telephone band + room, SNR 10-30 dB (a real call on speaker). "
                          "near: full band + mild room, SNR 18-35 dB (audio played close to the phone in a quiet room)")
+    ap.add_argument("--asr", default="stream", choices=["stream", "ic"],
+                    help="stream: the streaming Hindi model; ic: AI4Bharat IndicConformer Hindi (VAD + sentence-by-sentence)")
     a = ap.parse_args()
     si, sk = (int(x) for x in a.shard.split("/"))
     tts, rec = engines(Path(a.models), 1 if sk > 1 else 2)
+    if a.asr == "ic":
+        rec = IcAsr(Path(a.models), 1 if sk > 1 else 2)
     rng = np.random.default_rng(23 + si + (100 if a.split == "test" else 0) + (1000 if a.channel == "near" else 0))
-    tag = "" if a.channel == "phone" else "_near"
+    tag = ("" if a.channel == "phone" else "_near") + ("" if a.asr == "stream" else "_ic")
     calls = [json.loads(l) for l in open(ROOT / f"data/synth/out/calls_{a.split}.jsonl", encoding="utf-8")]
     calls = [c for c in calls if c["lang"] == "hi" and c["segments"]]
     half = a.n // 2  # balanced: half scam, half benign
@@ -92,7 +132,7 @@ def main() -> None:
             y = speakerphone(audio, float(rng.uniform(10, 30)), rng) * float(rng.uniform(0.35, 1.0))
         else:
             y = near(audio, float(rng.uniform(18, 35)), rng) * float(rng.uniform(0.4, 1.0))
-        finals, _ = stream_asr(rec, y.astype(np.float32))
+        finals = rec.decode(y.astype(np.float32)) if a.asr == "ic" else stream_asr(rec, y.astype(np.float32))[0]
         segs = []
         for t, text in finals:
             stage = None

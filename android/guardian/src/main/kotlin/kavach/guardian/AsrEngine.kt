@@ -10,6 +10,10 @@ import android.util.Log
 import com.k2fsa.sherpa.onnx.EndpointConfig
 import com.k2fsa.sherpa.onnx.EndpointRule
 import com.k2fsa.sherpa.onnx.FeatureConfig
+import com.k2fsa.sherpa.onnx.OfflineModelConfig
+import com.k2fsa.sherpa.onnx.OfflineNemoEncDecCtcModelConfig
+import com.k2fsa.sherpa.onnx.OfflineRecognizer
+import com.k2fsa.sherpa.onnx.OfflineRecognizerConfig
 import com.k2fsa.sherpa.onnx.OnlineModelConfig
 import com.k2fsa.sherpa.onnx.OnlineRecognizer
 import com.k2fsa.sherpa.onnx.OnlineRecognizerConfig
@@ -24,8 +28,11 @@ import java.io.File
 /**
  * Speaker-phone audio -> streaming ASR (sherpa-onnx, Arm CPU, int8) with Silero VAD gating.
  *
- * Hindi/Hinglish (default): streaming Zipformer2-CTC with a Devanagari character vocabulary
- *   (it writes English loan words in Devanagari, which the cue lexicon covers).
+ * Hindi/Hinglish: AI4Bharat IndicConformer Hindi (120M, CTC, int8) when its files are on the phone
+ *   (models/asr-hi-ic): Silero VAD cuts the audio into sentences and each sentence is recognised as
+ *   a whole (far more accurate than the streaming model, docs/technical_report.md section 7.5; a
+ *   partial result is refreshed every 2 s while someone is speaking). Otherwise the streaming
+ *   Zipformer2-CTC model (models/asr-hi).
  * English: streaming Zipformer transducer.
  * Audio is processed in 100 ms chunks and never stored. VAD skips decoding during long
  * silence (the stream still receives the audio, so nothing is lost when speech resumes).
@@ -58,7 +65,12 @@ class AsrEngine(
 
     fun missingFiles(): List<String> = requiredFiles().filter { !it.exists() }.map { it.path }
 
-    private fun requiredFiles(): List<File> = if (lang == "hi")
+    /** Hindi with the IndicConformer files present: sentence-by-sentence recognition */
+    val sentenceMode: Boolean get() = lang == "hi" && hasIndicConformer(modelsDir)
+
+    private fun requiredFiles(): List<File> = if (sentenceMode)
+        listOf(File(modelsDir, IC_MODEL), File(modelsDir, IC_TOKENS), File(modelsDir, "silero_vad.onnx"))
+    else if (lang == "hi")
         listOf(File(modelsDir, "asr-hi/model.int8.onnx"), File(modelsDir, "asr-hi/tokens.txt"), File(modelsDir, "silero_vad.onnx"))
     else
         listOf(File(modelsDir, "asr-en/encoder.onnx"), File(modelsDir, "asr-en/decoder.onnx"), File(modelsDir, "asr-en/joiner.onnx"),
@@ -74,6 +86,7 @@ class AsrEngine(
     @SuppressLint("MissingPermission") // RECORD_AUDIO is checked by GuardianService before start()
     fun start() {
         if (running) return
+        if (sentenceMode) { startSentenceMode(); return }
         running = true
         t0 = SystemClock.elapsedRealtime()
         thread = Thread({
@@ -141,6 +154,93 @@ class AsrEngine(
         }, "kavach-asr").also { it.start() }
     }
 
+    /** Hindi with IndicConformer: VAD sentences -> offline CTC recognition, one final result each. */
+    @SuppressLint("MissingPermission")
+    private fun startSentenceMode() {
+        running = true
+        t0 = SystemClock.elapsedRealtime()
+        thread = Thread({
+            Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
+            val rec = buildOfflineHindi(modelsDir, 2)
+            val vad = Vad(assetManager = null, config = VadModelConfig(
+                sileroVadModelConfig = SileroVadModelConfig(model = File(modelsDir, "silero_vad.onnx").path, threshold = 0.5f,
+                    minSilenceDuration = 0.5f, minSpeechDuration = 0.25f, windowSize = VAD_WINDOW, maxSpeechDuration = 12.0f),
+                sampleRate = SAMPLE_RATE, numThreads = 1, provider = "cpu"))
+            val minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+            val audio = openAudio(maxOf(minBuf, SAMPLE_RATE / 5 * 2))
+            val chunk = ShortArray(SAMPLE_RATE / 10)
+            val vadBuf = FloatArray(VAD_WINDOW)
+            var vadFill = 0
+            var audioSeconds = 0.0
+            var computeMs = 0L
+            var chunks = 0; var speechChunks = 0
+            // the sentence being spoken right now, for the 2-second partial refresh (at most 12 s)
+            val current = FloatArray(SAMPLE_RATE * 12)
+            var curLen = 0
+            var lastPartialAt = 0.0
+            fun decode(samples: FloatArray, n: Int): String {
+                val st = rec.createStream()
+                st.acceptWaveform(if (n == samples.size) samples else samples.copyOf(n), SAMPLE_RATE)
+                rec.decode(st)
+                val text = rec.getResult(st).text.trim()
+                st.release()
+                return text
+            }
+            try {
+                audio.startRecording()
+                while (running) {
+                    val n = audio.read(chunk, 0, chunk.size)
+                    if (n <= 0) continue
+                    val muted = isMuted?.invoke() == true
+                    val samples = if (muted) FloatArray(n) else FloatArray(n) { chunk[it] / 32768f }
+                    if (!muted) placement.add(samples)
+                    audioSeconds += n.toDouble() / SAMPLE_RATE
+                    val c0 = SystemClock.elapsedRealtime()
+                    var speaking = false
+                    for (x in samples) {
+                        vadBuf[vadFill++] = x
+                        if (vadFill == VAD_WINDOW) {
+                            vad.acceptWaveform(vadBuf.copyOf())
+                            vadFill = 0
+                            if (vad.isSpeechDetected()) speaking = true
+                            while (!vad.empty()) {
+                                val seg = vad.front()
+                                vad.pop()
+                                val text = decode(seg.samples, seg.samples.size)
+                                if (text.isNotEmpty()) onFinal(text, (SystemClock.elapsedRealtime() - t0) / 1000.0)
+                                curLen = 0
+                            }
+                        }
+                    }
+                    chunks++
+                    if (speaking) {
+                        speechChunks++
+                        val k = minOf(samples.size, current.size - curLen)
+                        System.arraycopy(samples, 0, current, curLen, k); curLen += k
+                        if (audioSeconds - lastPartialAt >= 2.0 && curLen >= SAMPLE_RATE) {
+                            lastPartialAt = audioSeconds
+                            decode(current, curLen).takeIf { it.isNotEmpty() }?.let { onPartial(it) }
+                        }
+                    }
+                    computeMs += SystemClock.elapsedRealtime() - c0
+                    if (chunks % 10 == 0 && placement.ready()) onPlacement?.invoke(placement.snrDb())
+                    if (chunks % 50 == 0) { rtf = computeMs / 1000.0 / audioSeconds; speechRatio = speechChunks.toDouble() / chunks }
+                }
+                // flush the last sentence
+                vad.flush()
+                while (!vad.empty()) {
+                    val seg = vad.front(); vad.pop()
+                    decode(seg.samples, seg.samples.size).takeIf { it.isNotEmpty() }?.let { onFinal(it, (SystemClock.elapsedRealtime() - t0) / 1000.0) }
+                }
+            } catch (t: Throwable) {
+                Log.e(TAG, "ASR (sentence mode) failed", t)
+            } finally {
+                try { audio.stop() } catch (_: Throwable) { }
+                audio.release(); rec.release(); vad.release()
+            }
+        }, "kavach-asr").also { it.start() }
+    }
+
     /** Call audio first in OEM/system mode (falls back if this phone's audio HAL refuses it);
      *  otherwise VOICE_RECOGNITION, which disables AGC/noise suppression that smear speaker-phone audio. */
     @android.annotation.SuppressLint("MissingPermission")
@@ -165,6 +265,18 @@ class AsrEngine(
         private const val TAG = "AsrEngine"
         const val SAMPLE_RATE = 16000
         const val VAD_WINDOW = 512
+
+        const val IC_MODEL = "asr-hi-ic/model.onnx"
+        const val IC_TOKENS = "asr-hi-ic/tokens.txt"
+
+        fun hasIndicConformer(modelsDir: File) = File(modelsDir, IC_MODEL).isFile && File(modelsDir, IC_TOKENS).isFile
+
+        /** AI4Bharat IndicConformer Hindi (NeMo CTC) for whole sentences (also used by the benchmark). */
+        fun buildOfflineHindi(modelsDir: File, threads: Int): OfflineRecognizer = OfflineRecognizer(assetManager = null, config = OfflineRecognizerConfig(
+            featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80),
+            modelConfig = OfflineModelConfig(nemo = OfflineNemoEncDecCtcModelConfig(model = File(modelsDir, IC_MODEL).path),
+                tokens = File(modelsDir, IC_TOKENS).path, numThreads = threads, provider = "cpu"),
+            decodingMethod = "greedy_search"))
 
         /** The streaming recogniser for one language (also used by the performance benchmark). */
         fun buildRecognizer(modelsDir: File, lang: String, threads: Int): OnlineRecognizer {

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Download the on-device models and push them to the phones with adb.
 #
-#   scripts/push_models.sh --asr                      # Hindi/Hinglish + English streaming ASR + VAD -> Guardian
+#   scripts/push_models.sh --asr                      # English + Hindi speech models + VAD -> the KAVACH app
+#   scripts/push_models.sh --asr-hi-big               # only the AI4Bharat IndicConformer Hindi model (198 MB, from GitHub)
 #   scripts/push_models.sh --asr-small                # same, but the small 20M English model (low-end phones)
-#   scripts/push_models.sh --llama <file.pte> <tokenizer.model> [--to guardian|shield|both]
+#   scripts/push_models.sh --llama <file.pte> <tokenizer.model>
 #   scripts/push_models.sh --official-spinquant       # Meta's pre-quantised Llama 3.2 1B Instruct (no KAVACH LoRA),
 #                                                     # handy before your own fine-tune is ready
 # Select a phone with ANDROID_SERIAL=<serial>. Models go to /sdcard/Android/data/<pkg>/files/models/.
@@ -64,26 +65,43 @@ asr() {
   adb push "$CACHE/hi/model.int8.onnx" "$D/asr-hi/model.int8.onnx"
   adb push "$CACHE/hi/tokens.txt" "$D/asr-hi/tokens.txt"
   adb push "$CACHE/silero_vad.onnx" "$D/silero_vad.onnx"
+  asr_hi_big
+}
+
+# Hindi, better model: AI4Bharat IndicConformer Hindi (120M, CTC; MIT, ONNX export CC-BY-4.0), int8 for
+# sherpa-onnx, run sentence by sentence behind the VAD. Mirrored on this repo's GitHub release
+# "dev-models" (no Hugging Face account needed). When present, the app uses it instead of the
+# streaming Hindi model (docs/technical_report.md section 7.5).
+asr_hi_big() {
+  local R=https://github.com/siddhaantxsingh/KAVACH/releases/download/dev-models
+  mkdir -p "$CACHE/ic"
+  [[ -f "$CACHE/ic/model.int8-matmul.onnx" ]] || curl -fL -o "$CACHE/ic/model.int8-matmul.onnx" "$R/ic-hi-model.int8-matmul.onnx"
+  [[ -f "$CACHE/ic/tokens.txt" ]] || curl -fL -o "$CACHE/ic/tokens.txt" "$R/ic-hi-tokens.txt"
+  [[ -f "$CACHE/silero_vad.onnx" ]] || curl -fL -o "$CACHE/silero_vad.onnx" https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+  local D; D=$(dst $G)
+  adb shell mkdir -p "$D/asr-hi-ic"
+  adb push "$CACHE/ic/model.int8-matmul.onnx" "$D/asr-hi-ic/model.onnx"
+  adb push "$CACHE/ic/tokens.txt" "$D/asr-hi-ic/tokens.txt"
+  adb push "$CACHE/silero_vad.onnx" "$D/silero_vad.onnx"
 }
 
 llama() {
-  local pte=$1 tok=$2 to=${3:-both}
-  for pkg in $([[ $to == both ]] && echo "$G $S" || ([[ $to == guardian ]] && echo $G || echo $S)); do
-    local D; D=$(dst "$pkg")/llama
-    adb shell mkdir -p "$D"
-    adb push "$pte" "$D/kavach_llama3_2_1b.pte"
-    adb push "$tok" "$D/tokenizer.model"
-  done
+  local pte=$1 tok=$2
+  local D; D=$(dst $G)/llama
+  adb shell mkdir -p "$D"
+  adb push "$pte" "$D/kavach_llama3_2_1b.pte"
+  adb push "$tok" "$D/tokenizer.model"
 }
 
 case "${1:-}" in
   --asr) asr ;;
   --asr-small) SMALL_EN=1 asr ;;
-  --llama) llama "$2" "$3" "${5:-both}" ;;
+  --asr-hi-big) asr_hi_big ;;
+  --llama) llama "$2" "$3" ;;
   --official-spinquant)
     hfdl executorch-community/Llama-3.2-1B-Instruct-SpinQuant_INT4_EO8-ET \
       Llama-3.2-1B-Instruct-SpinQuant_INT4_EO8.pte tokenizer.model --local-dir "$CACHE/spinquant"
-    llama "$CACHE/spinquant/Llama-3.2-1B-Instruct-SpinQuant_INT4_EO8.pte" "$CACHE/spinquant/tokenizer.model" both ;;
-  *) sed -n 2,9p "$0"; exit 1 ;;
+    llama "$CACHE/spinquant/Llama-3.2-1B-Instruct-SpinQuant_INT4_EO8.pte" "$CACHE/spinquant/tokenizer.model" ;;
+  *) sed -n 2,10p "$0"; exit 1 ;;
 esac
 echo "done"

@@ -1,0 +1,26 @@
+name: fetch-hi-asr
+# Copies the Hindi streaming speech model (Apache-2.0, see models/asr/README.md) from Hugging Face to
+# the release "dev-models", so the host tests in bench/ can run where Hugging Face is not reachable.
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/fetch-hi-asr.yml"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          pip -q install huggingface_hub
+          python - <<'PY'
+          from huggingface_hub import hf_hub_download
+          for f in ["encoder.int8.onnx", "tokens.txt"]:
+              hf_hub_download("mobilebytesensei/betterflow-hindi-streaming-ctc", f, local_dir="hi")
+          PY
+          ls -la hi
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view dev-models -R $GITHUB_REPOSITORY >/dev/null 2>&1 || gh release create dev-models -R $GITHUB_REPOSITORY --prerelease --title "Dev models (host tests)" --notes "Hindi streaming ASR model (Apache-2.0) mirrored for host tests."
+          gh release upload dev-models hi/encoder.int8.onnx hi/tokens.txt -R $GITHUB_REPOSITORY --clobber

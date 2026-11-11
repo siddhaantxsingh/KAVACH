@@ -130,7 +130,7 @@ class BenchmarkActivity : Activity() {
         val files = section(t("2 · मॉडल फ़ाइलें", "2 · Model files"))
         val fm = linkedMapOf<String, Any?>()
         val sb = StringBuilder()
-        for ((name, rel) in listOf("Hindi speech (int8)" to "asr-hi/model.int8.onnx", "English speech encoder" to "asr-en/encoder.onnx",
+        for ((name, rel) in listOf("Hindi speech (int8)" to "asr-hi/model.int8.onnx", "Hindi+ IndicConformer" to AsrEngine.IC_MODEL, "English speech encoder" to "asr-en/encoder.onnx",
                 "English speech decoder" to "asr-en/decoder.onnx", "English speech joiner" to "asr-en/joiner.onnx",
                 "Voice detector (Silero)" to "silero_vad.onnx", "Llama 3.2 1B (.pte)" to "llama/kavach_llama3_2_1b.pte")) {
             val f = File(models, rel)
@@ -204,6 +204,21 @@ class BenchmarkActivity : Activity() {
                 if (threads == 2 && lang == "en") asrRes["en_sample_text"] = heard.take(120)
                 show(asr, asrText.toString())
             }
+        }
+        // Hindi, AI4Bharat IndicConformer (whole sentences; the 15 s clip is decoded as one piece)
+        if (AsrEngine.hasIndicConformer(models)) for (threads in listOf(2, 4)) {
+            val pss0 = pssMb()
+            val tl = SystemClock.elapsedRealtime()
+            val rec = AsrEngine.buildOfflineHindi(models, threads)
+            val loadMs = SystemClock.elapsedRealtime() - tl
+            val t0 = SystemClock.elapsedRealtime()
+            val st = rec.createStream(); st.acceptWaveform(audio, 16000); rec.decode(st)
+            val ms = SystemClock.elapsedRealtime() - t0
+            st.release(); rec.release()
+            val rtf = ms / 1000.0 / seconds
+            asrRes["hi_indicconformer_t$threads"] = linkedMapOf("rtf" to rtf, "load_ms" to loadMs, "pss_delta_mb" to (pssMb() - pss0))
+            asrText.append(String.format(Locale.US, "%-7s %d thr  RTF %.3f  (%.1fx real time)  load %d ms\n", "Hindi+", threads, rtf, 1 / rtf, loadMs))
+            show(asr, asrText.toString())
         }
         results["asr"] = asrRes
         show(asr, asrText.toString().ifEmpty { t("मॉडल नहीं हैं", "models missing") })

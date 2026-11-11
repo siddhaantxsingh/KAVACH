@@ -271,7 +271,8 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         val dir = ModelFiles.dir(this)
         fun has(vararg rel: String) = rel.all { File(dir, it).isFile && File(dir, it).length() > 0 }
         val mic = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-        val hiAsr = has("asr-hi/model.int8.onnx", "asr-hi/tokens.txt")
+        val hiBig = AsrEngine.hasIndicConformer(dir)
+        val hiAsr = hiBig || has("asr-hi/model.int8.onnx", "asr-hi/tokens.txt")
         val enAsr = has("asr-en/encoder.onnx", "asr-en/decoder.onnx", "asr-en/joiner.onnx", "asr-en/tokens.txt")
         val vad = has("silero_vad.onnx")
         val llamaFile = ModelFiles.llamaPte(this).isFile && ModelFiles.llamaTokenizer(this).isFile
@@ -279,7 +280,8 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         val access = kavach.shared.AppState.callAccessEnabled(this)
         Ui.addRow(ready, Ui.status(this, t("कॉल सुनने की अनुमति", "Call listening permission"), access,
             if (access) t("चालू — स्पीकर पर रखी कॉल सुन सकता है", "On — can hear a call on speaker") else t("बंद — सिर्फ़ डेमो और पास के स्पीकर", "Off — demo and nearby speakers only")))
-        Ui.addRow(ready, Ui.status(this, t("हिंदी / Hinglish बोली मॉडल", "Hindi / Hinglish speech model"), hiAsr && vad, if (hiAsr && vad) t("इस फ़ोन पर है", "On this phone") else t("नहीं है", "Missing")))
+        Ui.addRow(ready, Ui.status(this, t("हिंदी / Hinglish बोली मॉडल", "Hindi / Hinglish speech model"), hiAsr && vad, if (!(hiAsr && vad)) t("नहीं है", "Missing")
+            else if (hiBig) t("AI4Bharat IndicConformer — इस फ़ोन पर", "AI4Bharat IndicConformer — on this phone") else t("छोटा मॉडल — बेहतर मॉडल के लिए push_models.sh --asr-hi-big", "Small model — run push_models.sh --asr-hi-big for the better one")))
         Ui.addRow(ready, Ui.status(this, t("English बोली मॉडल", "English speech model"), enAsr && vad, if (enAsr && vad) t("इस फ़ोन पर है", "On this phone") else t("नहीं है", "Missing")))
         val ls = GuardianBus.llamaState
         val (lok, ltext) = when {

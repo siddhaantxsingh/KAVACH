@@ -9,6 +9,8 @@ Metrics (same validator the phone uses, kavach_core.llm.validate):
   type_acc         scam-type accuracy on scam examples
   stop_stage_acc   stage in {isolation, action, payment} agreement
   evidence_ok      share of verdicts whose quotes all survived the verbatim check
+  copied_example   share of valid verdicts whose 'say' is the worked example of the prompt (lower is better)
+  say_lang_ok      'say' written in the language of the expected answer (Devanagari for Hindi)
   gen_tokens, seconds per example
 Run for BF16 -> 8-bit -> 4-bit and LoRA on/off; results JSON goes to bench/results/.
 """
@@ -78,7 +80,9 @@ def main() -> None:
     gen = hf_backend(a.hf) if a.hf else pte_backend(a.pte, a.tokenizer)
     ids = [e["id"] for e in Playbook().entries]
     rows = [json.loads(l) for l in open(a.data, encoding="utf-8")][: a.n]
-    n = valid = scam_ok = type_ok = type_n = stage_ok = ev_ok = 0
+    n = valid = scam_ok = type_ok = type_n = stage_ok = ev_ok = copied = lang_ok = 0
+    example = "This is a scam. Real police never ask for money on a call. Do not send anything. Hang up and call 1930."
+    deva = lambda t: any("\u0900" <= ch <= "\u097f" for ch in t)
     secs = 0.0
     for r in rows:
         msgs = r["messages"]
@@ -97,9 +101,12 @@ def main() -> None:
             type_ok += v.type == gold["type"]
             stage_ok += (v.stage in STOP_STAGES) == (gold["stage"] in STOP_STAGES)
         ev_ok += not any("non-verbatim" in e for e in errs)
+        copied += v.say.strip() == example
+        lang_ok += deva(v.say) == deva(gold["say"])
     res = {"name": a.name, "n": n, "json_valid": round(valid / n, 4), "scam_acc": round(scam_ok / n, 4),
            "type_acc": round(type_ok / max(1, type_n), 4), "stop_stage_acc": round(stage_ok / max(1, type_n), 4),
-           "evidence_ok": round(ev_ok / max(1, valid), 4), "sec_per_example": round(secs / n, 2)}
+           "evidence_ok": round(ev_ok / max(1, valid), 4), "copied_example": round(copied / max(1, valid), 4),
+           "say_lang_ok": round(lang_ok / max(1, valid), 4), "sec_per_example": round(secs / n, 2)}
     print(json.dumps(res, indent=2))
     out = ROOT / f"bench/results/{a.name}.json"
     out.write_text(json.dumps(res, indent=2))

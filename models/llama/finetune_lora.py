@@ -84,7 +84,7 @@ def main() -> None:
     args = TrainingArguments(output_dir=a.out, num_train_epochs=a.epochs, max_steps=a.max_steps, per_device_train_batch_size=2,
                              gradient_accumulation_steps=8, learning_rate=a.lr, lr_scheduler_type="cosine", warmup_ratio=0.03,
                              logging_steps=10, eval_strategy="steps", eval_steps=100, save_steps=200, save_total_limit=2,
-                             bf16=bf16, fp16=not bf16, report_to=[], per_device_eval_batch_size=2, remove_unused_columns=False)
+                             bf16=bf16, fp16=torch.cuda.is_available() and not bf16, report_to=[], per_device_eval_batch_size=2, remove_unused_columns=False)
     Trainer(model=model, args=args, train_dataset=train, eval_dataset=dev, data_collator=Collator(tok.pad_token_id)).train()
 
     model.save_pretrained(Path(a.out) / "adapter")

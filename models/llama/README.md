@@ -27,6 +27,14 @@ path. Results (`bench/results/llama_pipeline_check.json`):
 Known limitation found here: `qmode: int8` fails on GQA projections in ExecuTorch 1.5.1 and
 `torchao:8da8w` cannot be combined with XNNPACK, so the ladder's middle rung is 4-bit g128.
 
+## Easiest way: the Colab notebook
+
+Open `notebooks/kavach_llama_lora_colab.ipynb` in Google Colab (File → Open notebook → GitHub →
+`siddhaantxsingh/KAVACH`), choose a T4 GPU and Run all. It does steps 2–5 below with
+`executorch==1.4.0` (the app's runtime), scores the model before and after (including
+`copied_example` and `say_lang_ok`), and saves the `.pte`, tokenizer and score files to
+Google Drive → `kavach/`. The pipeline was smoke-tested end to end on a tiny random Llama here.
+
 ## Steps on real weights
 
 1. **Accept the licence** for `meta-llama/Llama-3.2-1B-Instruct` on Hugging Face, `huggingface-cli login`.

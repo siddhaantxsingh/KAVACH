@@ -77,7 +77,7 @@ below come from the owner's check of the page on 10 Nov 2026 and **must be re-ve
 | D (by 21 Nov) | report v2 with the measured phone numbers, honest limits, and this matrix | Claude |
 | E (22–23 Nov) | demo video and submission, with a day of buffer | team |
 
-Out of scope before Phase 1: Pi hub, NPU offload, Llama fine-tuning, payment interception, and the full Home/Check/Activity/Settings rebuild (Gate C/D for the PoC).
+Out of scope before Phase 1: Pi hub, NPU offload, Llama fine-tuning (ready to run: `notebooks/kavach_llama_lora_colab.ipynb`; only reported if its numbers are measured), payment interception, and the full Home/Check/Activity/Settings rebuild (Gate C/D for the PoC).
 
 ## 6. Owner actions (need your phone)
 

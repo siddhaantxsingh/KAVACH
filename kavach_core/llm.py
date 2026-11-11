@@ -32,6 +32,17 @@ from .normalize import normalize
 STAGES = ["none", "contact", "hook", "isolation", "action", "payment"]
 ACTIONS = ["none", "continue_with_care", "verify_independently", "do_not_share", "do_not_pay", "hang_up"]
 MAX_SAY_WORDS = 35
+_SENT_END = ".!?\u0964"  # . ! ? and the Devanagari danda
+
+
+def whole_sentences(say: str) -> str:
+    """Drop an unfinished last sentence ("... 1930 par"), which happens when generation stops or
+    the 35-word cap cuts mid-sentence. Kept as is if it has no complete sentence at all."""
+    s = say.rstrip()
+    if not s or s[-1] in _SENT_END:
+        return s
+    cut = max(s.rfind(c) for c in _SENT_END)
+    return s[:cut + 1] if cut > 0 else s
 
 BOT = "<|begin_of_text|>"
 SH, EH, EOT = "<|start_header_id|>", "<|end_header_id|>", "<|eot_id|>"
@@ -213,6 +224,7 @@ def validate(raw: str, transcript: str, type_ids: list[str]) -> tuple[Verdict | 
     words = say.split()
     if len(words) > MAX_SAY_WORDS:
         say = " ".join(words[:MAX_SAY_WORDS])
+    say = whole_sentences(say)
     action = str(d.get("action", "none")).strip()
     if action not in ACTIONS:
         errors.append(f"unknown action '{action}'")

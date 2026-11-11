@@ -236,14 +236,18 @@ object ShieldHub {
             guardianLevel = lv
             val say = m["say"] as? String ?: ""
             record(Item(System.currentTimeMillis(), "call", lv, "Guardian: $lv", say))
-            // the risky call itself becomes cross-channel evidence on this phone: a dangerous
-            // link or APK during / after a suspicious call escalates to STOP (cross-channel-multi)
-            if (lv == "caution" || lv == "stop") feed(ctx, KcEvent(now(), "call", "scam_call", 2.0, "guardian:$lv"), forward = false)
+            // The Guardian's own STOP text goes out first. Feeding the call into the kill chain below
+            // can also reach STOP; its (non-forced) stop card is then skipped for 60 s, so the Stop
+            // screen and the notification show the same scam, not two different playbook entries.
             if (lv == "stop") {
                 // Same app: if the call screen is open it already shows STOP; otherwise (e.g. the user is
                 // on the in-call screen) the full-screen stop card is raised.
-                if (m["same_device"] == true && m["show_stop"] != true) familyAlert(ctx, say) else showStop(ctx, force = true, reason = say)
+                if (m["same_device"] == true && m["show_stop"] != true) { lastStopAt = SystemClock.elapsedRealtime(); familyAlert(ctx, say) }
+                else showStop(ctx, force = true, reason = say)
             }
+            // the risky call itself becomes cross-channel evidence on this phone: a dangerous
+            // link or APK during / after a suspicious call escalates to STOP (cross-channel-multi)
+            if (lv == "caution" || lv == "stop") feed(ctx, KcEvent(now(), "call", "scam_call", 2.0, "guardian:$lv"), forward = false)
         }
     }
 

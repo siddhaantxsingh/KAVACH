@@ -133,6 +133,9 @@ class KillChain(private val stageOf: Map<String, String>, val cfg: KillChainConf
                 "beaconing_app" to (if (hi) "छुपकर डेटा भेजता ऐप" else "an app secretly sending data"),
                 "malicious_domain" to (if (hi) "खतरनाक वेबसाइट से संपर्क" else "contact with a dangerous website"),
             )[what] ?: what
+            // the call itself is the evidence: "Suspicious call + a suspicious call" would read oddly
+            if (what == "scam_call" && base in setOf("call+action", "cross-channel", "single-channel"))
+                return if (hi) "कॉल की बातचीत स्कैम जैसी है" else "What the caller said matches a scam"
             return when (base) {
                 "isolation+authority" -> if (hi) "कॉल: अधिकारी बनकर बात छुपाने को कहा" else "Call: posed as an officer and demanded secrecy"
                 "authority+identity+threat" -> if (hi) "कॉल: पुलिस, आधार और गिरफ्तारी की धमकी" else "Call: police claim + Aadhaar + arrest threat"

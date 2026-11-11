@@ -248,9 +248,12 @@ class GuardianService : Service() {
     private fun onAlert(a: Alert) {
         val call = inPhoneCall()
         // During a real phone call the warning is NOT spoken (it would go into the call and mute our
-        // own listening); the phone vibrates and the screen shows it instead.
+        // own listening); the phone vibrates and the screen shows it instead. A yellow warning is
+        // never spoken either: the microphone is muted while KAVACH speaks, and the sentences right
+        // after the first suspicion are the ones that decide whether the call is a scam. Only the
+        // red warning is spoken aloud (outside a call), after the decision has been made.
         kavach.shared.AppState.callLevel = a.level
-        if (call) vibrate(a.level) else speaker?.speak(spoken(a.level, a.verdict.say), lang)
+        if (call || a.level != "stop") vibrate(a.level) else speaker?.speak(spoken(a.level, a.verdict.say), lang)
         GuardianBus.post { it.onAlert(a) }
         link?.send(linkedMapOf("type" to "level", "level" to a.level, "rule" to a.rule, "scam_type" to a.verdict.type, "say" to a.verdict.say,
             "show_stop" to (a.level == "stop" && (call || !GuardianActivity.visible))))

@@ -2,6 +2,7 @@
 # Download the on-device models and push them to the phones with adb.
 #
 #   scripts/push_models.sh --asr                      # English + Hindi speech models + VAD -> the KAVACH app
+#   scripts/push_models.sh --asr-en-big               # only the NVIDIA Parakeet 110M English model (126 MB, from GitHub)
 #   scripts/push_models.sh --asr-hi-big               # only the AI4Bharat IndicConformer Hindi model (198 MB, from GitHub)
 #   scripts/push_models.sh --asr-small                # same, but the small 20M English model (low-end phones)
 #   scripts/push_models.sh --llama <file.pte> <tokenizer.model>
@@ -85,6 +86,21 @@ asr_hi_big() {
   adb push "$CACHE/silero_vad.onnx" "$D/silero_vad.onnx"
 }
 
+# English, better model: NVIDIA Parakeet TDT-CTC 110M (CC-BY-4.0), int8 for sherpa-onnx, run sentence
+# by sentence behind the VAD like the Hindi one. Mirrored on this repo's GitHub release "dev-models".
+asr_en_big() {
+  local R=https://github.com/siddhaantxsingh/KAVACH/releases/download/dev-models
+  mkdir -p "$CACHE/en-big"
+  [[ -f "$CACHE/en-big/model.int8.onnx" ]] || curl -fL -o "$CACHE/en-big/model.int8.onnx" "$R/parakeet-110m-en-model.int8.onnx"
+  [[ -f "$CACHE/en-big/tokens.txt" ]] || curl -fL -o "$CACHE/en-big/tokens.txt" "$R/parakeet-110m-en-tokens.txt"
+  [[ -f "$CACHE/silero_vad.onnx" ]] || curl -fL -o "$CACHE/silero_vad.onnx" https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+  local D; D=$(dst $G)
+  adb shell mkdir -p "$D/asr-en-big"
+  adb push "$CACHE/en-big/model.int8.onnx" "$D/asr-en-big/model.onnx"
+  adb push "$CACHE/en-big/tokens.txt" "$D/asr-en-big/tokens.txt"
+  adb push "$CACHE/silero_vad.onnx" "$D/silero_vad.onnx"
+}
+
 llama() {
   local pte=$1 tok=$2
   local D; D=$(dst $G)/llama
@@ -97,6 +113,7 @@ case "${1:-}" in
   --asr) asr ;;
   --asr-small) SMALL_EN=1 asr ;;
   --asr-hi-big) asr_hi_big ;;
+  --asr-en-big) asr_en_big ;;
   --llama) llama "$2" "$3" ;;
   --official-spinquant)
     hfdl executorch-community/Llama-3.2-1B-Instruct-SpinQuant_INT4_EO8-ET \

@@ -452,7 +452,7 @@ word), English digital arrest **red**, English KYC **red**, English delivery cal
 genuine bank call **no warning**. 6/6 as expected. Yellow warnings are no longer spoken, so the
 microphone is never muted before the decision (the 19–33 s gap above is gone).
 
-**Real phone calls, one phone (12 Nov 2026, 03:15–03:52).** A teammate called the test phone
+**Real phone calls, one phone (12 Nov 2026, 03:15–03:53): 3/3 as expected.** A teammate called the test phone
 from a number not in its contacts over the normal cellular network; the call was answered in the
 phone's own dialer and put on speaker; KAVACH started listening by itself (call language: Auto).
 The teammate read the role-play scripts (`demo/roleplay_scripts.md` style).
@@ -461,6 +461,7 @@ The teammate read the role-play scripts (`demo/roleplay_scripts.md` style).
 |---|---|
 | Hindi digital-arrest scam (fake police, Aadhaar parcel, arrest warrant, "tell no one", RBI safe account) | **STOP** during the call; transcript through the phone line was close to the script; full-screen Stop card |
 | English KYC scam (SBI KYC, account blocked, link by SMS, OTP) | **STOP** during the call; Auto chose English; scam type "Fake KYC / bank account block" |
+| Genuine bank fraud check in Hindi (card transaction, card blocked, "never share your OTP or PIN") | **no warning** ("no warning signs so far") for the whole call |
 
 What went wrong first and was fixed: when the phone's default dialer app was changed, Android
 stopped KAVACH ("permissions revoked") and marked the call-listening accessibility service as

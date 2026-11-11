@@ -288,10 +288,24 @@ class BenchmarkActivity : Activity() {
 
         // 6. one minute of listening
         val live = section(t("6 · 1 मिनट सुनना (बैटरी और तापमान)", "6 · One minute of listening (battery and temperature)"))
-        if (!File(models, "asr-en/encoder.onnx").isFile) { show(live, t("English मॉडल नहीं है", "English model missing")) }
+        // What the phone really runs: Auto (VAD sentences, each recognised by BOTH big models) when
+        // both are installed, otherwise the small streaming English model.
+        val auto = AsrEngine.autoReady(models) && File(models, "silero_vad.onnx").isFile
+        if (!auto && !File(models, "asr-en/encoder.onnx").isFile) { show(live, t("English मॉडल नहीं है", "English model missing")) }
         else {
-            val rec = AsrEngine.buildRecognizer(models, "en", 2)
-            val st = rec.createStream()
+            val rec = if (auto) null else AsrEngine.buildRecognizer(models, "en", 2)
+            val st = rec?.createStream()
+            val offHi = if (auto) AsrEngine.buildOffline(models, "hi", 2) else null
+            val offEn = if (auto) AsrEngine.buildOffline(models, "en", 2) else null
+            val vad = if (auto) com.k2fsa.sherpa.onnx.Vad(assetManager = null, config = com.k2fsa.sherpa.onnx.VadModelConfig(
+                sileroVadModelConfig = com.k2fsa.sherpa.onnx.SileroVadModelConfig(model = File(models, "silero_vad.onnx").path, threshold = 0.5f,
+                    minSilenceDuration = 0.5f, minSpeechDuration = 0.25f, windowSize = 512, maxSpeechDuration = 12.0f),
+                sampleRate = 16000, numThreads = 1, provider = "cpu")) else null
+            var sentences = 0
+            fun both(seg: FloatArray) {
+                for (r in listOf(offHi!!, offEn!!)) { val s2 = r.createStream(); s2.acceptWaveform(seg, 16000); r.decode(s2); s2.release() }
+                sentences++
+            }
             val snapA = PerfStats.snapshot(this)
             val cpu0 = Process.getElapsedCpuTime()
             val wall0 = SystemClock.elapsedRealtime()
@@ -300,9 +314,15 @@ class BenchmarkActivity : Activity() {
             while (SystemClock.elapsedRealtime() - wall0 < 60_000) {
                 val tick = SystemClock.elapsedRealtime()
                 val e = minOf(audio.size, pos + 1600)
-                st.acceptWaveform(audio.copyOfRange(pos, e), 16000)
-                while (rec.isReady(st)) rec.decode(st)
-                if (rec.isEndpoint(st)) rec.reset(st)
+                if (vad != null) {
+                    var i = pos
+                    while (i + 512 <= e) { vad.acceptWaveform(audio.copyOfRange(i, i + 512)); i += 512 }
+                    while (!vad.empty()) { val seg = vad.front(); vad.pop(); both(seg.samples) }
+                } else {
+                    st!!.acceptWaveform(audio.copyOfRange(pos, e), 16000)
+                    while (rec!!.isReady(st)) rec.decode(st)
+                    if (rec.isEndpoint(st)) rec.reset(st)
+                }
                 pos = if (e >= audio.size) 0 else e
                 if ((tick - wall0) % 1000 < 100) currentMa()?.let { cur.add(it) }
                 val left = 100 - (SystemClock.elapsedRealtime() - tick)
@@ -311,15 +331,17 @@ class BenchmarkActivity : Activity() {
                     show(live, t("सुन रहा है… ", "Listening… ") + "${(SystemClock.elapsedRealtime() - wall0) / 1000} s")
             }
             val cpuPct = (Process.getElapsedCpuTime() - cpu0) * 100.0 / (SystemClock.elapsedRealtime() - wall0)
-            st.release(); rec.release()
+            st?.release(); rec?.release(); offHi?.release(); offEn?.release(); vad?.release()
             val snapB = PerfStats.snapshot(this)
             val avg = if (cur.isNotEmpty()) cur.average() else null
             val cap = batteryCapacityMah()
             val pctPerHour = if (avg != null && cap != null && !snapB.charging) avg / cap * 100 else null
-            results["listening_60s"] = linkedMapOf("cpu_percent_of_one_core" to cpuPct, "battery_current_ma" to avg, "battery_capacity_mah" to cap,
+            results["listening_60s"] = linkedMapOf("mode" to (if (auto) "auto: VAD + IndicConformer hi + Parakeet en on every sentence" else "streaming English"),
+                "sentences" to sentences, "cpu_percent_of_one_core" to cpuPct, "battery_current_ma" to avg, "battery_capacity_mah" to cap,
                 "battery_pct_per_hour" to pctPerHour, "battery_temp_start_c" to snapA.batteryTempC, "battery_temp_end_c" to snapB.batteryTempC,
                 "thermal_status_end" to snapB.thermalStatus, "pss_mb" to snapB.pssMB, "charging" to snapB.charging)
-            show(live, String.format(Locale.US, "CPU: %.0f%% of one core\n", cpuPct) +
+            show(live, (if (auto) t("Auto (दोनों मॉडल, हर वाक्य)\n", "Auto (both models, every sentence)\n") else t("छोटा English मॉडल\n", "small English model\n")) +
+                String.format(Locale.US, "CPU: %.0f%% of one core\n", cpuPct) +
                 (avg?.let { String.format(Locale.US, "battery current: %.0f mA\n", it) } ?: "") +
                 (pctPerHour?.let { String.format(Locale.US, "≈ %.1f%% battery per hour of listening\n", it) } ?: if (snapB.charging) t("चार्जिंग: बैटरी अनुमान नहीं\n", "charging: no battery estimate\n") else "") +
                 String.format(Locale.US, "battery temperature %.1f → %.1f °C · thermal status %s", snapA.batteryTempC, snapB.batteryTempC, snapB.thermalStatus ?: "-"))

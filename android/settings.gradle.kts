@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "kavach"
-include(":core", ":shared", ":guardian", ":app", ":netwatch")
+include(":core", ":ui", ":shared", ":guardian", ":app", ":netwatch")

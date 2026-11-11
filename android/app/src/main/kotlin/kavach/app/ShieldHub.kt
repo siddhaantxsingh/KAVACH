@@ -52,8 +52,9 @@ object ShieldHub {
     private val FORWARD = KillChain.CROSS_KINDS + setOf(KillChain.CALL_START, KillChain.CALL_END, KillChain.PAYMENT_OPEN)
     private var btLink: DeviceLink? = null
     private var localLink: LocalLink? = null
-    private val links: List<KavachLink> get() = listOfNotNull(btLink, localLink)
-    private var advisor: LlamaAdvisor? = null
+    private var inProc: kavach.shared.InProcessLink? = null
+    private val links: List<KavachLink> get() = listOfNotNull(inProc, btLink)
+    private val advisor: LlamaAdvisor? get() = kavach.shared.AppState.llama
     private var lastStopAt = 0L
 
     fun now(): Double = SystemClock.elapsedRealtime() / 1000.0
@@ -82,7 +83,7 @@ object ShieldHub {
     }
 
     /** "urgent" | "caution" | "info" for any of the level names used by the detectors. */
-    fun tone(level: String): String = when (level) { "stop", "dangerous" -> "urgent"; "caution", "suspicious" -> "caution"; else -> "info" }
+    fun tone(level: String): String = when (level) { "stop", "dangerous", "urgent" -> "urgent"; "caution", "suspicious" -> "caution"; else -> "info" }
 
     // real counters shown on the home screen (kept on this phone only)
     @Volatile private var appCtx: Context? = null
@@ -221,6 +222,14 @@ object ShieldHub {
 
     /** Messages from the Guardian about the live call. */
     private fun onGuardianMessage(ctx: Context, m: Map<String, Any?>) = exec.execute {
+        // Network Watch's Wi-Fi check: a device on the home network with a risky open service
+        if (m["type"] == "finding") {
+            val title = m["title"] as? String ?: return@execute
+            val detail = m["detail"] as? String ?: ""
+            record(Item(System.currentTimeMillis(), "network", m["level"] as? String ?: "caution", title, detail))
+            explainNetworkWithLlama(ctx, "risky_device", "$title. $detail")
+            return@execute
+        }
         DeviceLink.eventFrom(m, now())?.let { feed(ctx, it, forward = false) }
         if (m["type"] == "level") {
             val lv = m["level"] as? String ?: return@execute
@@ -231,8 +240,9 @@ object ShieldHub {
             // link or APK during / after a suspicious call escalates to STOP (cross-channel-multi)
             if (lv == "caution" || lv == "stop") feed(ctx, KcEvent(now(), "call", "scam_call", 2.0, "guardian:$lv"), forward = false)
             if (lv == "stop") {
-                // Same phone: the Guardian screen already shows STOP and has spoken; don't cover it.
-                if (m["same_device"] == true) familyAlert(ctx, say) else showStop(ctx, force = true, reason = say)
+                // Same app: if the call screen is open it already shows STOP; otherwise (e.g. the user is
+                // on the in-call screen) the full-screen stop card is raised.
+                if (m["same_device"] == true && m["show_stop"] != true) familyAlert(ctx, say) else showStop(ctx, force = true, reason = say)
             }
         }
     }
@@ -310,13 +320,9 @@ object ShieldHub {
     }
 
     // ------------------------------------------------------------------ Llama explanations for messages
-    fun startAdvisor(ctx: Context) {
-        if (advisor != null) return
-        val dir = File(ctx.getExternalFilesDir(null), "models/llama")
-        advisor = LlamaAdvisor(File(dir, "kavach_llama3_2_1b.pte").path, File(dir, "tokenizer.model").path).also { a ->
-            a.loadAsync { st -> Log.i(TAG, "Llama $st"); core?.let { c -> if (st == LlamaAdvisor.State.READY) a.warm(LlmContract.formatLlama3(LlmContract.systemPrompt(c.playbook.typeIds), "").first) } }
-        }
-    }
+    /** Llama is loaded once, by call protection (kavach.shared.AppState.llama), and shared here:
+     *  two copies would not fit in a phone's memory. Nothing to start. */
+    @Suppress("UNUSED_PARAMETER") fun startAdvisor(ctx: Context) {}
 
     private fun explainWithLlama(ctx: Context, v: MessageVerdict) {
         val a = advisor ?: return
@@ -342,10 +348,15 @@ object ShieldHub {
 
     fun startLink(ctx: Context) {
         val app = ctx.applicationContext
-        // same-phone link (Guardian installed on this phone) - always on, costs nothing
+        // the call listener is part of this same app: in-memory link
+        if (inProc == null) {
+            inProc = kavach.shared.InProcessLink(kavach.shared.InProcessBus.SHIELD, onMessage = { m -> onGuardianMessage(app, m) },
+                onState = { s -> linkState = s; changed() })
+        }
+        // KAVACH Network Watch (optional separate app) reports network events by broadcast
         if (localLink == null) {
-            localLink = LocalLink(app, LocalLink.GUARDIAN_PACKAGE, onMessage = { m -> onGuardianMessage(app, m) },
-                onState = { s -> linkState = s; changed() }).also { it.start() }
+            localLink = LocalLink(app, LocalLink.NETWATCH_PACKAGE, onMessage = { m -> onGuardianMessage(app, m) },
+                onState = { }).also { it.start() }
         }
         // Bluetooth link for a Guardian on another phone
         if (btLink != null) return
@@ -353,5 +364,5 @@ object ShieldHub {
         btLink = DeviceLink(app, onMessage = { m -> onGuardianMessage(app, m) }, onState = { s -> linkState = s; changed() }).also { it.startServer() }
     }
 
-    fun stopLink() { btLink?.stop(); btLink = null; localLink?.stop(); localLink = null; calls?.stop(); calls = null }
+    fun stopLink() { btLink?.stop(); btLink = null; localLink?.stop(); localLink = null; inProc?.stop(); inProc = null; calls?.stop(); calls = null }
 }

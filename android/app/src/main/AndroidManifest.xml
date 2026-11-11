@@ -25,18 +25,14 @@
     <!-- optional KAVACH Phone (dialer role): place calls from the KAVACH keypad -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <queries>
-        <package android:name="io.kavach.guardian" />
+        <package android:name="io.kavach.netwatch" />
     </queries>
     <!-- deliberately NO INTERNET permission: nothing can leave this phone -->
 
-    <application
-        android:allowBackup="false"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:label="KAVACH Shield"
-        android:theme="@android:style/Theme.Material.NoActionBar">
+    <!-- application attributes (name, icon, theme) are set by the app module android/guardian -->
+    <application>
 
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

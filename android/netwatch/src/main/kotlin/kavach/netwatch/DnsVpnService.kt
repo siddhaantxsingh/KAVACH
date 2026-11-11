@@ -96,6 +96,11 @@ class DnsVpnService : VpnService() {
             val r = DnsWatch.parse(resp)
             val evs = synchronized(watch) { watch.observe(SystemClock.elapsedRealtime() / 1000.0, pkg, q.name, r?.rcode == 3) }
             lookups++
+            synchronized(apps) {
+                val a = apps.getOrPut(pkg) { AppStat(pkg) }
+                a.lookups++; a.lastHost = q.name; a.lastAt = System.currentTimeMillis()
+                if (evs.isNotEmpty()) a.flagged++
+            }
             for (ev in evs) onVerdict(ev, pkg, q.name)
         }
     }
@@ -136,11 +141,12 @@ class DnsVpnService : VpnService() {
 
     private fun onVerdict(ev: KcEvent, pkg: String, host: String) {
         val label = try { packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, 0)).toString() } catch (_: Throwable) { pkg }
-        recent.add(0, "$label: ${ev.detail}"); while (recent.size > 20) recent.removeAt(recent.size - 1)
+        recent.add(0, Finding(System.currentTimeMillis(), label, host, ev.detail)); while (recent.size > 30) recent.removeAt(recent.size - 1)
         val nm = getSystemService(NotificationManager::class.java)
         nm.notify(100 + (host.hashCode() and 0xFFF), Notification.Builder(this, CH).setSmallIcon(android.R.drawable.stat_sys_warning)
             .setContentTitle("\"$label\" contacted a dangerous website")
-            .setContentText(ev.detail).setStyle(Notification.BigTextStyle().bigText(ev.detail + ". If you don't trust this app, uninstall it."))
+            .setContentText(ev.detail).setStyle(Notification.BigTextStyle().bigText(ev.detail +
+                ". Do not log in or pay inside \"$label\". If you don't recognise this app, remove it (its data on this phone is deleted with it)."))
             .setAutoCancel(true).build())
         // tell KAVACH Shield (same-phone link, signature permission); it adds this to the kill chain
         val msg = linkedMapOf<String, Any?>("type" to "event", "t" to ev.t, "channel" to ev.channel, "kind" to ev.kind,
@@ -175,12 +181,24 @@ class DnsVpnService : VpnService() {
         private const val CH = "netwatch"
         private const val TUN_ADDR = "10.111.222.2"
         private const val DNS_ADDR = "10.111.222.1"
-        private const val SHIELD = "io.kavach.shield"
+        /** the one KAVACH app (package id kept from the former Guardian app) */
+        private const val SHIELD = "io.kavach.guardian"
         private const val LINK_ACTION = "io.kavach.LINK"
         private const val LINK_PERMISSION = "io.kavach.permission.LINK"
         @Volatile var state = "off"
         @Volatile var lookups = 0L
-        val recent: MutableList<String> = java.util.Collections.synchronizedList(ArrayList())
+        data class Finding(val at: Long, val app: String, val host: String, val detail: String)
+        class AppStat(val pkg: String) { var lookups = 0; var flagged = 0; var lastHost = ""; var lastAt = 0L }
+        val recent: MutableList<Finding> = java.util.Collections.synchronizedList(ArrayList())
+        val apps = HashMap<String, AppStat>()
+
+        /** Tell the KAVACH app about something Network Watch found (signature-protected broadcast). */
+        fun report(ctx: Context, msg: Map<String, Any?>) {
+            try {
+                ctx.sendBroadcast(Intent(LINK_ACTION).setPackage(SHIELD).putExtra("json", MiniJson.write(msg + mapOf("source" to "netwatch", "same_device" to true)))
+                    .putExtra("from", ctx.packageName), LINK_PERMISSION)
+            } catch (t: Throwable) { Log.w(TAG, "link", t) }
+        }
 
         fun loadDomainModel(ctx: Context) = DomainModel(LinearModel.load(
             ctx.assets.open("models/domain_model.json").use { it.readBytes().toString(Charsets.UTF_8) },

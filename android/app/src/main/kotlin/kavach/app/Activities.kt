@@ -23,6 +23,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import kavach.shared.KavachRuntime
 import kavach.shared.Speaker
+import kavach.shared.AppState
 import kavach.shared.Ui
 
 /** Reads SMS / WhatsApp / Telegram notifications (no READ_SMS permission needed) and screens them. */
@@ -48,6 +49,8 @@ class ShieldListenerService : NotificationListenerService() {
         else ShieldHub.onMessage(this, sbn.packageName, "$title: $text")
     }
 }
+
+private const val NETWATCH = "io.kavach.netwatch"
 
 class MainActivity : Activity(), ShieldHub.Listener {
     private var tab = 0
@@ -77,13 +80,20 @@ class MainActivity : Activity(), ShieldHub.Listener {
 
     override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); outState.putInt("tab", tab) }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        intent.getStringExtra("lang")?.let { getSharedPreferences("kavach", Context.MODE_PRIVATE).edit().putString("lang", it).apply() }
+        if (intent.hasExtra("tab")) { tab = intent.getIntExtra("tab", Nav.HOME); build() }
+    }
+
     private fun build() {
         Ui.theme(this, Ui.P.card)
         hero = null; whyTag = null; homeBody = null; feedBox = null; input = null; resultBox = null; homeKey = ""; feedKey = ""
-        val (root, holder) = Ui.tabs(this, listOf(t("होम", "Home"), t("जाँचें", "Check"), t("गतिविधि", "Activity"), t("सेटिंग", "Settings")),
-            listOf(Ui.Ic.home, Ui.Ic.search, Ui.Ic.bell, Ui.Ic.settings), tab) { tab = it; build() }
+        if (tab == Nav.CALLS) tab = Nav.HOME
+        val (root, holder) = Ui.tabs(this, Nav.labels(hi), Nav.icons, tab) { if (it == Nav.CALLS) Nav.go(this, it) else { tab = it; build() } }
         val col = Ui.column(this)
-        when (tab) { 0 -> buildHome(col); 1 -> buildCheck(col); 2 -> buildActivity(col); else -> buildSettings(col) }
+        when (tab) { Nav.CHECK -> buildCheck(col); Nav.ACTIVITY -> buildActivity(col); Nav.SETTINGS -> buildSettings(col); else -> buildHome(col) }
         holder.addView(Ui.scroll(this, col))
         setContentView(root)
         onChanged()
@@ -108,14 +118,18 @@ class MainActivity : Activity(), ShieldHub.Listener {
         val h = hero ?: return
         val lang = ShieldHub.lang(this)
         val lv = ShieldHub.last?.level ?: "none"
-        val n = notificationAccess(); val u = ShieldService.hasUsageAccess(this); val p = ShieldService.running
+        val n = notificationAccess(); val u = ShieldService.hasUsageAccess(this); val a = AppState.callAccessEnabled(this)
+        val callOn = AppState.callMode in setOf("standby", "listening", "demo")
+        val p = ShieldService.running && callOn
         val stopNow = ShieldHub.guardianLevel == "stop" || lv == "stop"
         when {
             stopNow -> Ui.setState(h, "stop", t("रुकिए — स्कैम जैसा पैटर्न", "Stop — scam pattern detected"), t("पैसे, ओटीपी या पिन मत दीजिए।", "Don't pay or share any OTP or PIN."))
             lv == "caution" -> Ui.setState(h, "caution", t("सावधान — संदिग्ध पैटर्न", "Caution — suspicious pattern"), t("पैसे भेजने से पहले रुकिए।", "Pause before you send money."))
-            !(n && u) -> Ui.setState(h, "off", t("सेटअप बाकी है", "Setup needed"), t("सुरक्षा चालू करने के लिए नीचे के कदम पूरे करें।", "Finish the steps below to turn on protection."))
-            !p -> Ui.setState(h, "off", t("सुरक्षा बंद है", "Protection is off"), t("नीचे 'शुरू करें' दबाएँ।", "Tap Start below to turn it on."))
-            else -> Ui.setState(h, "listen", t("सुरक्षा चालू है", "Protection is on"), t("अभी तक कोई चेतावनी नहीं। यह गारंटी नहीं है — सतर्क रहें।", "No warnings so far. This is not a guarantee — stay alert."), Ui.Ic.shieldCheck)
+            !(n && u && a) -> Ui.setState(h, "off", t("सेटअप बाकी है", "Setup needed"), t("सुरक्षा चालू करने के लिए नीचे के कदम पूरे करें।", "Finish the steps below to turn on protection."))
+            !p -> Ui.setState(h, "off", t("सुरक्षा बंद है", "Protection is off"), t("नीचे 'चालू करें' दबाएँ।", "Tap Turn on below."))
+            AppState.callMode == "listening" -> Ui.setState(h, "listen", t("कॉल सुन रहा है", "Listening to a call"), t("अभी तक कोई चेतावनी नहीं। यह गारंटी नहीं है।", "No warnings so far. This is not a guarantee."), Ui.Ic.ear)
+            else -> Ui.setState(h, "listen", t("सुरक्षा चालू है", "Protection is on"), t("मैसेज, लिंक, ऐप और कॉल पर नज़र। अभी तक कोई चेतावनी नहीं — यह गारंटी नहीं है।", "Watching messages, links, apps and calls. No warnings so far — this is not a guarantee."), Ui.Ic.shieldCheck)
+        }
         }
         val why = ShieldHub.last?.let { a -> if (a.level != "none") kavach.core.KillChain.ruleLabel(a.rule, lang) else "" } ?: ""
         whyTag?.let { w ->
@@ -124,7 +138,7 @@ class MainActivity : Activity(), ShieldHub.Listener {
         }
 
         val items = synchronized(ShieldHub.items) { ShieldHub.items.toList() }
-        val key = "$lang$n$u$p$stopNow$lv${ShieldHub.stat(this, "stat_msgs")}/${ShieldHub.stat(this, "stat_links")}/${ShieldHub.stat(this, "stat_alerts")}" +
+        val key = "$lang$n$u$a$p${AppState.callMode}$stopNow$lv${ShieldHub.stat(this, "stat_msgs")}/${ShieldHub.stat(this, "stat_links")}/${ShieldHub.stat(this, "stat_alerts")}" +
             "${ShieldHub.linkState}${ShieldHub.callState}${items.firstOrNull()?.wallMs}${ShieldHub.netAlertApps.size}"
         if (key == homeKey) return
         homeKey = key
@@ -133,21 +147,25 @@ class MainActivity : Activity(), ShieldHub.Listener {
 
         if (stopNow || lv == "caution") body.addView(Ui.button(this, t("मैंने पढ़ लिया — चेतावनी हटाएँ", "I've read this — clear the warning"), Ui.Ic.check) { ShieldHub.clearWarning() })
 
-        // setup: numbered steps with a progress bar; disappears when all three are done
-        val done = listOf(n, u, p).count { it }
-        if (done < 3) {
+        // setup: numbered steps with a progress bar; disappears when all four are done
+        val done = listOf(n, u, a, p).count { it }
+        if (done < 4) {
             val card = Ui.card(this, 0)
             val top = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(d(18), d(18), d(18), d(6)) }
             val line = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
             line.addView(Ui.text(this, t("सेटअप पूरा करें", "Finish setup"), 17f, weight = 600), LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-            line.addView(Ui.text(this, t("3 में से $done", "$done of 3"), 13.5f, color = Ui.MUTED, weight = 500))
-            top.addView(line); top.addView(Ui.progress(this, done, 3))
+            line.addView(Ui.text(this, t("4 में से $done", "$done of 4"), 13.5f, color = Ui.MUTED, weight = 500))
+            top.addView(line); top.addView(Ui.progress(this, done, 4))
             card.addView(top)
             card.addView(Ui.step(this, 1, n, t("मैसेज जाँच", "Message checking"), t("SMS और चैट की सूचनाओं में स्कैम पहचानता है", "Spots scams in SMS and chat notifications"), t("चालू करें", "Turn on")) {
                 startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) })
             Ui.addRow(card, Ui.step(this, 2, u, t("स्क्रीन-शेयर गार्ड", "Screen-share guard"), t("स्क्रीन शेयर के दौरान पेमेंट ऐप खुलने पर रोकता है", "Warns if a payment app opens while your screen is shared"), t("चालू करें", "Turn on")) {
                 startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) })
-            Ui.addRow(card, Ui.step(this, 3, p, t("सुरक्षा शुरू करें", "Start protection"), t("पीछे चलता रहता है, बैटरी पर हल्का", "Runs quietly in the background"), t("शुरू करें", "Start")) { startProtection() })
+            Ui.addRow(card, Ui.item(this, if (a) Ui.Ic.check else Ui.Ic.ear, t("कॉल सुनने की अनुमति", "Call listening"),
+                t("स्पीकर पर रखी कॉल इसी फ़ोन पर सुनता है (Android की ऐक्सेसिबिलिटी अनुमति)", "Hears a call you put on speaker, on this phone (Android accessibility permission)"),
+                trailing = if (a) null else Ui.small(this, t("चालू करें", "Turn on")) { showAccessHelp() },
+                fg = if (a) Ui.GOOD else Ui.GOLD, bg = if (a) Ui.P.goodSoft else Ui.P.goldSoft))
+            Ui.addRow(card, Ui.step(this, 4, p, t("सुरक्षा चालू करें", "Turn on protection"), t("मैसेज, लिंक, ऐप और कॉल — पीछे चुपचाप", "Messages, links, apps and calls — quietly in the background"), t("चालू करें", "Turn on")) { startProtection() })
             body.addView(card)
         }
 
@@ -161,9 +179,20 @@ class MainActivity : Activity(), ShieldHub.Listener {
         body.addView(tiles)
 
         body.addView(Ui.label(this, t("अभी की स्थिति", "Right now")))
+        val callWords = when (AppState.callMode) {
+            "standby" -> t("तैयार — अनजान नंबर की कॉल पर सुनना शुरू", "Ready — starts listening when an unknown number calls")
+            "listening" -> t("इस कॉल को सुन रहा है", "Listening to this call")
+            "demo" -> t("डेमो कॉल चल रही है", "Playing a demo call")
+            "models_missing" -> t("बोली मॉडल नहीं मिले", "Speech models missing")
+            else -> t("बंद", "Off")
+        }
+        val nw = netWatchInstalled()
         body.addView(Ui.group(this,
-            Ui.item(this, Ui.Ic.phoneCall, t("कॉल", "Call"), stateWords(ShieldHub.callState)),
-            Ui.item(this, Ui.Ic.ear, "Guardian", stateWords(ShieldHub.linkState))))
+            Ui.item(this, Ui.Ic.phoneCall, t("फ़ोन कॉल", "Phone call"), stateWords(ShieldHub.callState)),
+            Ui.item(this, Ui.Ic.ear, t("कॉल सुरक्षा", "Call protection"), callWords, chevron = true) { Nav.go(this, Nav.CALLS) },
+            Ui.item(this, Ui.Ic.wifi, t("नेटवर्क वॉच", "Network Watch"),
+                if (nw) t("ऐप पर भेजे जा रहे डेटा और संदिग्ध वेबसाइटों पर नज़र", "Watches app uploads and suspicious websites") else t("वैकल्पिक ऐप इंस्टॉल नहीं है", "Optional app not installed"),
+                chevron = nw) { if (nw) packageManager.getLaunchIntentForPackage(NETWATCH)?.let { startActivity(it) } }))
 
         for ((pkg, label) in ShieldHub.netAlertApps) body.addView(Ui.button(this, t("मैं \"$label\" को पहचानता हूँ — भरोसा करें", "I know \"$label\" — trust it"), Ui.Ic.check) {
             ShieldHub.trustApp(this, pkg); homeKey = ""; onChanged() })
@@ -171,7 +200,7 @@ class MainActivity : Activity(), ShieldHub.Listener {
         items.firstOrNull()?.let { latest ->
             body.addView(Ui.label(this, t("सबसे नई चेतावनी", "Latest")))
             body.addView(alertCard(latest))
-            body.addView(Ui.button(this, t("सारी गतिविधि देखें", "See all activity"), Ui.Ic.history) { tab = 2; build() })
+            body.addView(Ui.button(this, t("सारी गतिविधि देखें", "See all activity"), Ui.Ic.history) { tab = Nav.ACTIVITY; build() })
         }
     }
 
@@ -356,7 +385,7 @@ class MainActivity : Activity(), ShieldHub.Listener {
     private fun askRuntimePermissions() {
         val want = ArrayList<String>()
         if (Build.VERSION.SDK_INT >= 33) want.add(Manifest.permission.POST_NOTIFICATIONS)
-        if (Build.VERSION.SDK_INT >= 31) want.add(Manifest.permission.BLUETOOTH_CONNECT)
+        want.add(Manifest.permission.RECORD_AUDIO)
         // call awareness: know that a call with an unknown number is going on (never its audio)
         want.add(Manifest.permission.READ_PHONE_STATE)
         want.add(Manifest.permission.READ_CALL_LOG)
@@ -365,7 +394,22 @@ class MainActivity : Activity(), ShieldHub.Listener {
         if (missing.isNotEmpty()) requestPermissions(missing.toTypedArray(), 2)
     }
 
+    private fun netWatchInstalled(): Boolean = try { packageManager.getPackageInfo(NETWATCH, 0); true } catch (_: Throwable) { false }
+
+    private fun showAccessHelp() {
+        android.app.AlertDialog.Builder(this, Ui.dialogTheme())
+            .setTitle(t("कॉल सुनने की अनुमति", "Allow call listening"))
+            .setMessage(t("कॉल के दौरान Android माइक सिर्फ़ ऐक्सेसिबिलिटी सेवाओं को देता है।\n\nसेटिंग में: Downloaded apps / Installed services → KAVACH call listening → चालू करें।\n\nकवच इससे सिर्फ़ स्पीकर पर रखी कॉल सुनता है। स्क्रीन नहीं पढ़ता, कुछ दबाता नहीं, आवाज़ सेव नहीं करता।",
+                "During a call, Android shares the microphone only with accessibility services.\n\nIn Settings: Downloaded apps (or Installed services) → KAVACH call listening → turn it on.\n\nKAVACH uses it only to hear a call on speaker. It does not read your screen, tap anything, or save audio."))
+            .setPositiveButton(t("सेटिंग खोलें", "Open Settings")) { _, _ -> AppState.openCallAccessSettings(this) }
+            .setNegativeButton(t("बाद में", "Later"), null).show()
+    }
+
     private fun startProtection() {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 4); return
+        }
+        AppState.startCallProtection(this, getSharedPreferences("guardian", Context.MODE_PRIVATE).getString("call_lang", null) ?: ShieldHub.lang(this))
         startForegroundService(Intent(this, ShieldService::class.java))
         getSharedPreferences("kavach", Context.MODE_PRIVATE).edit().putBoolean("protection_started", true).apply()
         hero?.postDelayed({ onChanged() }, 400)
@@ -376,7 +420,12 @@ class MainActivity : Activity(), ShieldHub.Listener {
         return flat.contains(ComponentName(this, ShieldListenerService::class.java).flattenToString())
     }
 
-    override fun onResume() { super.onResume(); ShieldHub.addListener(this); onChanged() }
+    override fun onResume() { super.onResume(); ShieldHub.addListener(this); homeKey = ""; onChanged() }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode == 4 && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) startProtection()
+        homeKey = ""; onChanged()
+    }
     override fun onPause() { ShieldHub.removeListener(this); super.onPause() }
 
     override fun onChanged() { renderHome(); renderFeed() }
@@ -453,7 +502,8 @@ class StopActivity : Activity() {
         col.addView(Ui.solid(this, if (lang == "hi") "मैं समझ गया, भुगतान नहीं करूंगा" else "I understand, I won't pay", 0xFF7F1D1D.toInt(), Color.WHITE) { finish() })
         setContentView(Ui.scroll(this, col).apply { setBackgroundColor(red) })
         speaker = Speaker(this)
-        col.postDelayed({ speaker?.speak(text, lang) }, 600)
+        // during a phone call the warning is not spoken (it would go into the call); the phone vibrates instead
+        if (!AppState.inPhoneCall(this)) col.postDelayed({ speaker?.speak(text, lang) }, 600)
     }
 
     override fun onDestroy() { speaker?.shutdown(); super.onDestroy() }

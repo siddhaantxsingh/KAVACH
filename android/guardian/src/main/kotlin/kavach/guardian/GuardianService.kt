@@ -53,7 +53,7 @@ object GuardianBus {
     @Volatile var llamaLastRun: String = ""
     /** "" | "copied_example" | "wrong_language": why Llama's own wording was not shown */
     @Volatile var llamaSayNote: String = ""
-    fun mode(m: String) { mode = m; post { it.onMode(m) } }
+    fun mode(m: String) { mode = m; kavach.shared.AppState.callMode = m; post { it.onMode(m) } }
     fun add(l: Listener) = main.post { listeners.add(l) }
     fun remove(l: Listener) = main.post { listeners.remove(l) }
     fun post(block: (Listener) -> Unit) { main.post { listeners.toList().forEach(block) } }
@@ -86,6 +86,8 @@ class GuardianService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP -> { stopSelf(); return START_NOT_STICKY }
+            // "Stop listening" while call protection is on: end this call's listening, keep protection
+            ACTION_END_SESSION -> { if (standby) { if (sessionActive) engine.execute { endSession("stopped by the user") } } else stopSelf(); return START_NOT_STICKY }
             ACTION_START -> {
                 setup(intent.getStringExtra(EXTRA_LANG) ?: "hi", intent.getStringExtra(EXTRA_LINK_ADDR), standbyMode = false)
                 beginSession(intent.getStringExtra(EXTRA_DEMO), reason = "manual")
@@ -103,13 +105,17 @@ class GuardianService : Service() {
     private fun setup(language: String, linkAddr: String?, standbyMode: Boolean) {
         lang = language
         standby = standby || standbyMode
-        if (GuardianBus.running) return
+        protecting = standby
+        if (GuardianBus.running) {
+            if (standbyMode && !sessionActive) GuardianBus.mode("standby")
+            return
+        }
         GuardianBus.running = true
         startedAt = System.currentTimeMillis()
         Ui.ensureChannel(this, CHANNEL, "KAVACH Guardian", android.app.NotificationManager.IMPORTANCE_LOW)
         val pi = PendingIntent.getActivity(this, 0, Intent(this, GuardianActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
-        val n = Ui.ongoing(this, CHANNEL, if (standbyMode) "KAVACH Guardian is on standby" else "KAVACH is guarding this call",
-            if (standbyMode) "It starts listening by itself when the protected phone gets a call from an unknown number."
+        val n = Ui.ongoing(this, CHANNEL, if (standbyMode) "KAVACH call protection is on" else "KAVACH is guarding this call",
+            if (standbyMode) "When a call from an unknown number starts, put it on speaker: KAVACH listens on this phone."
             else "Audio is processed on this phone only and never stored.", android.R.drawable.ic_lock_idle_lock, pi)
         if (Build.VERSION.SDK_INT >= 29) startForeground(NOTIF_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE) else startForeground(NOTIF_ID, n)
 
@@ -122,13 +128,14 @@ class GuardianService : Service() {
             adv.loadAsync { st ->
                 GuardianBus.llamaState = st.name.lowercase()
                 GuardianBus.status("Llama: $st")
+                kavach.shared.AppState.llama = if (st == LlamaAdvisor.State.READY) adv else null
                 // a warning fired while Llama was still loading: explain it now
                 if (st == LlamaAdvisor.State.READY) pendingAlert?.let { pa -> pendingAlert = null; if (sessionActive) engine.execute { askLlamaFor(pa) } }
                 if (st == LlamaAdvisor.State.READY) guardian?.let { adv.warm(it.buildLlmPrompt("", emptyMap(), emptyList()).first) }
             }
         }
         openLog()
-        linkAddr?.let { connectLink(it) }
+        connectLink(linkAddr ?: LocalLink.SAME_PHONE)
         KavachRuntime.ensureLoaded(this) { core ->
             val g = core.newGuardian(GuardianConfig(lang = lang))
             g.onAlert = { a -> onAlert(a) }
@@ -148,6 +155,7 @@ class GuardianService : Service() {
                 val g = guardian ?: return@execute
                 g.reset()
                 g.cfg.lang = lang
+                kavach.shared.AppState.callLevel = "none"
                 synchronized(finals) { finals.clear() }
                 sessionStart = System.currentTimeMillis()
                 sessionActive = true
@@ -238,9 +246,14 @@ class GuardianService : Service() {
 
     /** Runs on the engine thread (called from Guardian.tick via onAlert). */
     private fun onAlert(a: Alert) {
-        speaker?.speak(spoken(a.level, a.verdict.say), lang)
+        val call = inPhoneCall()
+        // During a real phone call the warning is NOT spoken (it would go into the call and mute our
+        // own listening); the phone vibrates and the screen shows it instead.
+        kavach.shared.AppState.callLevel = a.level
+        if (call) vibrate(a.level) else speaker?.speak(spoken(a.level, a.verdict.say), lang)
         GuardianBus.post { it.onAlert(a) }
-        link?.send(linkedMapOf("type" to "level", "level" to a.level, "rule" to a.rule, "scam_type" to a.verdict.type, "say" to a.verdict.say))
+        link?.send(linkedMapOf("type" to "level", "level" to a.level, "rule" to a.rule, "scam_type" to a.verdict.type, "say" to a.verdict.say,
+            "show_stop" to (a.level == "stop" && (call || !GuardianActivity.visible))))
         logLine("alert", a.level, a.rule, a.verdict.type)
         val adv = advisor ?: return
         if (adv.state == LlamaAdvisor.State.LOADING) { pendingAlert = a; return }
@@ -248,6 +261,21 @@ class GuardianService : Service() {
     }
 
     private var pendingAlert: Alert? = null
+
+    /** A cellular or internet (WhatsApp etc.) call is in progress on this phone. */
+    private fun inPhoneCall(): Boolean {
+        val m = (getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager).mode
+        return m == android.media.AudioManager.MODE_IN_CALL || m == android.media.AudioManager.MODE_IN_COMMUNICATION
+    }
+
+    private fun vibrate(level: String) {
+        val pattern = if (level == "stop") longArrayOf(0, 600, 250, 600, 250, 900) else longArrayOf(0, 350, 200, 350)
+        try {
+            val v = if (Build.VERSION.SDK_INT >= 31) (getSystemService(android.os.VibratorManager::class.java)).defaultVibrator
+            else @Suppress("DEPRECATION") (getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator)
+            v.vibrate(android.os.VibrationEffect.createWaveform(pattern, -1))
+        } catch (t: Throwable) { Log.w(TAG, "vibrate", t) }
+    }
 
     /** The 1B model sometimes copies the example answer from its instructions word for word, or
      *  answers in English during a Hindi call. Its verdict (scam type, evidence) is kept, but such a
@@ -296,8 +324,10 @@ class GuardianService : Service() {
                 g.applyLlmVerdict(callTime(), v, a.retrieved, a.window)
                 if (before != "stop" && g.level == "stop") {
                     val say = v.say.ifBlank { a.verdict.say }
-                    speaker?.speak(spoken("stop", say), lang)
-                    link?.send(linkedMapOf("type" to "level", "level" to "stop", "rule" to "llm-early-warning", "scam_type" to v.type, "say" to say))
+                    kavach.shared.AppState.callLevel = "stop"
+                    if (inPhoneCall()) vibrate("stop") else speaker?.speak(spoken("stop", say), lang)
+                    link?.send(linkedMapOf("type" to "level", "level" to "stop", "rule" to "llm-early-warning", "scam_type" to v.type, "say" to say,
+                        "show_stop" to (inPhoneCall() || !GuardianActivity.visible)))
                 }
                 GuardianBus.post { it.onLlm(v, adv.lastStats) }
                 adv.lastStats?.let { s -> logLine("llm", s.promptTokens, s.generatedTokens, s.ttftMs, "%.1f".format(s.prefillTokPerS), "%.1f".format(s.decodeTokPerS), s.usedWarmPrefix) }
@@ -319,7 +349,8 @@ class GuardianService : Service() {
             }
         }
         if (address == LocalLink.SAME_PHONE) {
-            link = LocalLink(this, LocalLink.SHIELD_PACKAGE, onMsg) { s -> GuardianBus.status("Shield link: $s") }.also { it.start() }
+            // one app: the protection part (messages, links, apps, calls) is in this same app
+            link = kavach.shared.InProcessLink(kavach.shared.InProcessBus.GUARDIAN, onMsg) { s -> GuardianBus.status("Shield link: $s") }
             return
         }
         val bm = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager ?: return
@@ -352,10 +383,12 @@ class GuardianService : Service() {
 
     override fun onDestroy() {
         GuardianBus.running = false
-        sessionActive = false; standby = false
+        sessionActive = false; standby = false; protecting = false
+        kavach.shared.AppState.callLevel = "none"
         asr?.stop(); demo?.stop(); link?.stop()
         if (::engine.isInitialized) engine.shutdownNow()
         llmQueue.shutdownNow()
+        kavach.shared.AppState.llama = null
         advisor?.close(); speaker?.shutdown()
         try { log?.close() } catch (_: Throwable) { }
         GuardianBus.status("stopped"); GuardianBus.mode("idle")
@@ -388,6 +421,9 @@ class GuardianService : Service() {
         const val ACTION_START = "kavach.guardian.START"
         const val ACTION_STOP = "kavach.guardian.STOP"
         const val ACTION_STANDBY = "kavach.guardian.STANDBY"
+        const val ACTION_END_SESSION = "kavach.guardian.END_SESSION"
+        /** true while call protection (standby) is on */
+        @Volatile var protecting = false
         const val AUTO_STOP_DELAY_MS = 30_000L
         const val PREF_AUTOSTART = "autostart"
         const val EXTRA_LANG = "lang"

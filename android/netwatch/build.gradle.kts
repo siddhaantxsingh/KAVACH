@@ -53,4 +53,5 @@ tasks.named("preBuild") { dependsOn(copyAssets) }
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":ui"))
 }

@@ -3,7 +3,6 @@ package kavach.guardian
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
-import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -30,6 +29,11 @@ import java.io.File
  * Llama has actually run.
  */
 class GuardianActivity : Activity(), GuardianBus.Listener {
+    companion object {
+        /** true while the Calls screen is on screen (then it shows STOP itself) */
+        @Volatile var visible = false
+    }
+
     private lateinit var banner: Ui.Hero
     private lateinit var modeTag: Ui.Chip
     private lateinit var whyTag: Ui.Chip
@@ -45,7 +49,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     private var ready: LinearLayout? = null
     private var lang = "hi"
     private var tab = 0
-    private var linkAddr: String? = null
+    private var protectHolder: LinearLayout? = null
     private var lastLlm: LlamaAdvisor.Stats? = null
     private var level = "none"
     // last values, so the screen can be rebuilt (tab change) without losing what it showed
@@ -64,14 +68,16 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         }
     }
 
-    private val hi get() = lang == "hi"
+    /** Screen language (app setting); `lang` is the language of the call being heard. */
+    private val uiLang get() = kavach.app.ShieldHub.lang(this)
+    private val hi get() = uiLang == "hi"
     private fun t(h: String, e: String) = if (hi) h else e
+    private fun d(v: Int) = Ui.dp(this, v)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Ui.keepScreenOn(this)
         lang = getPreferences(Context.MODE_PRIVATE).getString("lang", "hi") ?: "hi"
-        linkAddr = getPreferences(Context.MODE_PRIVATE).getString("link", null)
         tab = savedInstanceState?.getInt("tab") ?: intent.getIntExtra("tab", 0)
         intent.getStringExtra("lang")?.let { lang = it; getPreferences(Context.MODE_PRIVATE).edit().putString("lang", it).apply() }
         build()
@@ -81,14 +87,15 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
 
     override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); outState.putInt("tab", tab) }
 
-    /** Builds the whole screen for the current tab, then re-applies the last known state. */
+    /** Builds the whole screen for the current section, then re-applies the last known state. */
     private fun build() {
         Ui.theme(this, Ui.P.card)
-        status = null; perf = null; bubbles = null; explain = null; explainLead = null; explainCard = null; actionHolder = null; ready = null; explainFoot = null
-        val (root, holder) = Ui.tabs(this, listOf(t("सुनें", "Listen"), t("सेटअप", "Setup")), listOf(Ui.Ic.ear, Ui.Ic.settings), tab) { tab = it; build() }
+        status = null; perf = null; bubbles = null; explain = null; explainLead = null; explainCard = null; actionHolder = null; ready = null; explainFoot = null; protectHolder = null
+        val (root, holder) = Ui.tabs(this, kavach.app.Nav.labels(hi), kavach.app.Nav.icons, kavach.app.Nav.CALLS) { if (it != kavach.app.Nav.CALLS) kavach.app.Nav.go(this, it) }
         val col = Ui.column(this)
-        col.addView(Ui.header(this, "KAVACH Guardian", t("कॉल सुनकर स्कैम पहचानता है", "Hears the call. Spots the scam."), true,
-            Ui.iconButton(this, Ui.Ic.languages, t("भाषा बदलें", "Change language")) { setLang(if (hi) "en" else "hi") }))
+        col.addView(Ui.header(this, t("कॉल सुरक्षा", "Call protection"), t("कॉल सुनकर स्कैम पहचानता है", "Hears the call. Spots the scam."), true))
+        col.addView(Ui.segmented(this, listOf(t("सुनें", "Listen"), t("तैयारी और औज़ार", "Setup & tools")), tab) { tab = it; build() }
+            .apply { (layoutParams as LinearLayout.LayoutParams).bottomMargin = d(14) })
         banner = Ui.banner(this); modeTag = Ui.pill(this); whyTag = Ui.pill(this); placement = Ui.pill(this)
         if (tab == 0) buildListen(col) else buildSetup(col)
         holder.addView(Ui.scroll(this, col))
@@ -101,22 +108,26 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         banner.extras.addView(modeTag); banner.extras.addView(whyTag); banner.extras.addView(placement)
         col.addView(banner)
 
-        col.addView(Ui.label(this, t("कॉल की भाषा", "Call language")))
-        col.addView(Ui.segmented(this, listOf("हिंदी / Hinglish", "English"), if (hi) 0 else 1) { setLang(if (it == 0) "hi" else "en") })
+        protectHolder = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(protectHolder)
+
+        col.addView(Ui.label(this, t("कॉल की भाषा", "Language of the call")))
+        col.addView(Ui.segmented(this, listOf("हिंदी / Hinglish", "English"), if (lang == "hi") 0 else 1) { setLang(if (it == 0) "hi" else "en") })
         actionHolder = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         col.addView(actionHolder)
-        col.addView(Ui.text(this, t("कॉल को स्पीकर पर रखें और यह फ़ोन उसके पास (10–30 सेमी) रखें।", "Put the call on speaker and keep this phone 10–30 cm from it."), 13.5f, color = Ui.MUTED)
-            .apply { gravity = Gravity.CENTER; setPadding(Ui.dp(this@GuardianActivity, 12), Ui.dp(this@GuardianActivity, 6), Ui.dp(this@GuardianActivity, 12), 0) })
+        col.addView(Ui.text(this, t("कॉल को स्पीकर पर रखें। फ़ोन आपके हाथ या मेज़ पर रहे — कवच इसी फ़ोन पर सुनता है।",
+            "Put the call on speaker. Keep the phone in your hand or on the table — KAVACH listens on this phone."), 13.5f, color = Ui.MUTED)
+            .apply { gravity = Gravity.CENTER; setPadding(d(12), d(6), d(12), 0) })
 
         // explanation (only when there is one)
-        explainCard = Ui.card(this).apply { visibility = View.GONE; (layoutParams as LinearLayout.LayoutParams).topMargin = Ui.dp(this@GuardianActivity, 18) }
+        explainCard = Ui.card(this).apply { visibility = View.GONE; (layoutParams as LinearLayout.LayoutParams).topMargin = d(18) }
         val eh = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         eh.addView(Ui.icon(this, Ui.Ic.sparkles, Ui.GOLD, 18))
-        eh.addView(Ui.text(this, t("कवच ने क्या देखा", "What KAVACH noticed"), 14f, color = Ui.GOLD, weight = 600).apply { setPadding(Ui.dp(this@GuardianActivity, 8), 0, 0, 0) })
+        eh.addView(Ui.text(this, t("कवच ने क्या देखा", "What KAVACH noticed"), 14f, color = Ui.GOLD, weight = 600).apply { setPadding(d(8), 0, 0, 0) })
         explainCard!!.addView(eh)
-        explainLead = Ui.text(this, "", 18f, weight = 600).apply { setPadding(0, Ui.dp(this@GuardianActivity, 10), 0, 0) }
+        explainLead = Ui.text(this, "", 18f, weight = 600).apply { setPadding(0, d(10), 0, 0) }
         explainCard!!.addView(explainLead)
-        explain = Ui.text(this, "", 15.5f, color = Ui.MUTED).apply { setPadding(0, Ui.dp(this@GuardianActivity, 6), 0, 0); setLineSpacing(Ui.dp(this@GuardianActivity, 4).toFloat(), 1f) }
+        explain = Ui.text(this, "", 15.5f, color = Ui.MUTED).apply { setPadding(0, d(6), 0, 0); setLineSpacing(d(4).toFloat(), 1f) }
         explainCard!!.addView(explain)
         explainFoot = Ui.pill(this); explainCard!!.addView(explainFoot)
         col.addView(explainCard)
@@ -130,53 +141,81 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         col.addView(Ui.footnote(this, t("आवाज़ इसी फ़ोन पर रहती है · कभी सेव नहीं होती", "Audio stays on this phone · never saved")))
     }
 
-    private fun buildSetup(col: LinearLayout) {
-        col.addView(Ui.label(this, t("तैयारी", "Readiness")))
-        ready = Ui.group(this); col.addView(ready)
+    /** "Protect my calls": the switch, and what is still missing for it to work on a real call. */
+    private fun renderProtect() {
+        val h = protectHolder ?: return
+        h.removeAllViews()
+        val on = GuardianService.protecting
+        val access = kavach.shared.AppState.callAccessEnabled(this)
+        val g = Ui.group(this, Ui.item(this, Ui.Ic.shieldCheck, t("मेरी कॉल सुरक्षित रखें", "Protect my calls"),
+            if (on) t("चालू — अनजान नंबर की कॉल आते ही सुनना शुरू", "On — listening starts when an unknown number calls")
+            else t("बंद — चालू करें ताकि हर अनजान कॉल पर कवच साथ रहे", "Off — turn on so KAVACH joins every call from an unknown number"),
+            trailing = Ui.toggle(this, on, t("मेरी कॉल सुरक्षित रखें", "Protect my calls")) { v -> if (v) startStandby() else stopStandby() }))
+        if (!access) Ui.addRow(g, Ui.item(this, Ui.Ic.ear, t("कॉल सुनने की अनुमति दें", "Allow call listening"),
+            t("ज़रूरी: कॉल के दौरान Android माइक सिर्फ़ इस अनुमति से देता है। सेटिंग में 'KAVACH call listening' चालू करें।",
+                "Needed for real calls: during a call Android only shares the mic with this permission. Turn on 'KAVACH call listening' in Settings."),
+            trailing = Ui.small(this, t("चालू करें", "Allow")) { showAccessHelp() }, fg = Ui.WARN, bg = Ui.P.warnSoft))
+        h.addView(g)
+    }
 
-        col.addView(Ui.label(this, t("अपने-आप", "Automation")))
-        val prefs = getSharedPreferences("guardian", Context.MODE_PRIVATE)
-        col.addView(Ui.group(this,
-            Ui.item(this, Ui.Ic.radio, t("स्टैंडबाय", "Standby"), t("अनजान कॉल आने पर अपने-आप सुनना शुरू करे", "Start listening by itself when an unknown number calls"), chevron = true) { startStandby() },
-            Ui.item(this, Ui.Ic.zap, t("अपने-आप शुरू", "Auto-start"), t("Shield के बताने पर सुनना शुरू करे", "Begin when Shield reports a call"),
-                trailing = Ui.toggle(this, prefs.getBoolean(GuardianService.PREF_AUTOSTART, true), "Auto-start") { prefs.edit().putBoolean(GuardianService.PREF_AUTOSTART, it).apply() }),
-            Ui.item(this, Ui.Ic.smartphone, t("Shield वाला फ़ोन", "Phone with Shield"), linkedText(), chevron = true) { pickPhone() }))
+    /** Explains the accessibility step before opening Settings (Xiaomi and others hide it a little). */
+    private fun showAccessHelp() {
+        AlertDialog.Builder(this, Ui.dialogTheme())
+            .setTitle(t("कॉल सुनने की अनुमति", "Allow call listening"))
+            .setMessage(t("सेटिंग में: Downloaded apps / Installed services → KAVACH call listening → चालू करें।\n\nकवच इससे सिर्फ़ स्पीकर पर रखी कॉल सुनता है। स्क्रीन नहीं पढ़ता, कुछ दबाता नहीं, आवाज़ सेव नहीं करता।",
+                "In Settings: Downloaded apps (or Installed services) → KAVACH call listening → turn it on.\n\nKAVACH uses it only to hear a call on speaker. It does not read your screen, tap anything, or save audio."))
+            .setPositiveButton(t("सेटिंग खोलें", "Open Settings")) { _, _ -> kavach.shared.AppState.openCallAccessSettings(this) }
+            .setNegativeButton(t("बाद में", "Later"), null).show()
+    }
+
+    private fun buildSetup(col: LinearLayout) {
+        col.addView(Ui.label(this, t("तैयारी", "Readiness")).apply { setPadding(d(4), d(4), 0, d(10)) })
+        ready = Ui.group(this); col.addView(ready)
 
         col.addView(Ui.label(this, t("जाँच के औज़ार", "Tools")))
         col.addView(Ui.group(this,
             Ui.item(this, Ui.Ic.play, t("डेमो कॉल चलाएँ", "Play a demo call"), t("रिकॉर्ड की हुई स्क्रिप्ट, असली कॉल नहीं", "A scripted call, not a live one"), chevron = true) { pickDemo() },
             Ui.item(this, Ui.Ic.cpu, t("फ़ोन का AI जाँचें", "Test the on-device AI"), t("Llama 3.2 1B से नमूना कॉल समझवाएँ", "Ask Llama 3.2 1B to explain a sample call"), chevron = true) { testLlama() },
+            Ui.item(this, Ui.Ic.zap, t("प्रदर्शन मापें", "Measure performance"), t("Arm CPU पर गति, मेमोरी, बैटरी और तापमान", "Speed, memory, battery and temperature on this Arm CPU"), chevron = true) {
+                startActivity(Intent(this, BenchmarkActivity::class.java)) },
             Ui.item(this, Ui.Ic.activity, t("तकनीकी जानकारी", "Technical details"), t("गति, मेमोरी और स्कोर दिखाएँ", "Show speed, memory and scores"),
                 trailing = Ui.toggle(this, techOn, "Technical details") { techOn = it; renderTech() })))
 
-        status = Ui.text(this, GuardianBus.lastStatus, 13f, color = Ui.MUTED).apply { setPadding(Ui.dp(this@GuardianActivity, 4), Ui.dp(this@GuardianActivity, 8), 0, 0) }
+        status = Ui.text(this, GuardianBus.lastStatus, 13f, color = Ui.MUTED).apply { setPadding(d(4), d(8), 0, 0) }
         col.addView(status)
-        perf = Ui.text(this, "", 12.5f, color = Ui.MUTED).apply { typeface = android.graphics.Typeface.MONOSPACE; setPadding(Ui.dp(this@GuardianActivity, 4), 0, 0, 0) }
+        perf = Ui.text(this, "", 12.5f, color = Ui.MUTED).apply { typeface = android.graphics.Typeface.MONOSPACE; setPadding(d(4), 0, 0, 0) }
         col.addView(perf)
         col.addView(Ui.footnote(this, t("इस ऐप के पास इंटरनेट की अनुमति नहीं है", "This app has no internet permission"), Ui.Ic.wifi))
     }
 
     private fun setLang(l: String) {
         if (l == lang) return
-        lang = l; getPreferences(Context.MODE_PRIVATE).edit().putString("lang", lang).apply(); build()
+        lang = l; getPreferences(Context.MODE_PRIVATE).edit().putString("lang", lang).apply()
+        getSharedPreferences("guardian", Context.MODE_PRIVATE).edit().putString("call_lang", lang).apply()
+        // call protection is on: it should listen in the newly chosen language from the next call
+        if (GuardianService.protecting && GuardianBus.running && GuardianBus.mode == "standby") kavach.shared.AppState.startCallProtection(this, lang)
+        build()
     }
 
-    private fun linkedText() = when (linkAddr) { null -> t("नहीं जुड़ा", "Not linked"); kavach.shared.LocalLink.SAME_PHONE -> t("इसी फ़ोन पर Shield", "Shield on this phone"); else -> t("ब्लूटूथ: ", "Bluetooth: ") + linkAddr }
+    override fun onResume() { super.onResume(); visible = true; GuardianBus.add(this); handler.post(perfTick); build() }
+    override fun onPause() { visible = false; GuardianBus.remove(this); handler.removeCallbacks(perfTick); super.onPause() }
 
-    override fun onResume() { super.onResume(); GuardianBus.add(this); handler.post(perfTick); renderAll() }
-    override fun onPause() { GuardianBus.remove(this); handler.removeCallbacks(perfTick); super.onPause() }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent); setIntent(intent)
+        intent.getStringExtra("demo")?.let { d -> intent.removeExtra("demo"); startGuard(if (d.endsWith("_en")) "en" else "hi", d) }
+    }
 
     // ------------------------------------------------------------------ truthful states
 
-    private fun renderAll() { renderMode(GuardianBus.mode); renderTranscript(); renderExplain(); renderTech() }
+    private fun renderAll() { renderMode(GuardianBus.mode); renderTranscript(); renderExplain(); renderTech(); renderProtect() }
 
     private fun renderTech() { status?.visibility = if (techOn) View.VISIBLE else View.GONE; perf?.visibility = if (techOn) View.VISIBLE else View.GONE }
 
     private fun renderMode(mode: String) {
         val live = mode == "listening" || mode == "demo"
         when (mode) {
-            "listening", "demo" -> Ui.setBanner(banner, level, lang)
-            "standby" -> Ui.setState(banner, "ready", t("स्टैंडबाय पर", "On standby"), t("अनजान नंबर से कॉल आने पर अपने-आप सुनना शुरू करेगा।", "Starts listening by itself when an unknown number calls."), Ui.Ic.radio)
+            "listening", "demo" -> Ui.setBanner(banner, level, uiLang)
+            "standby" -> Ui.setState(banner, "ready", t("कॉल के लिए तैयार", "Ready for calls"), t("अनजान नंबर की कॉल आते ही सुनना शुरू करेगा। कॉल स्पीकर पर रखें।", "Starts listening when an unknown number calls. Put the call on speaker."), Ui.Ic.shieldCheck)
             "models_missing" -> Ui.setState(banner, "caution", t("बोली पहचानने के मॉडल नहीं मिले", "Speech models missing"), t("सेटअप में 'तैयारी' देखें। डेमो कॉल फिर भी चलेगी।", "See Readiness in Setup. The demo call still works."))
             else -> { level = "none"; whyText = ""; snr = null
                 Ui.setState(banner, "ready", t("अभी नहीं सुन रहा", "Not listening"), t("कॉल स्पीकर पर हो तो नीचे 'सुनना शुरू करें' दबाएँ।", "When a call is on speaker, tap Start listening."), Ui.Ic.micOff) }
@@ -199,8 +238,8 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
 
         actionHolder?.let { h ->
             h.removeAllViews()
-            if (GuardianBus.running || live || mode == "standby") h.addView(Ui.danger(this, t("सुनना बंद करें", "Stop listening"), Ui.Ic.micOff) { stopGuard() })
-            else h.addView(Ui.primary(this, t("सुनना शुरू करें", "Start listening"), Ui.Ic.mic) { startGuard(lang, null) })
+            if (live) h.addView(Ui.danger(this, t("सुनना बंद करें", "Stop listening"), Ui.Ic.micOff) { stopGuard() })
+            else h.addView(Ui.primary(this, t("अभी सुनना शुरू करें", "Start listening now"), Ui.Ic.mic) { startGuard(lang, null) })
         }
         refreshReadiness()
     }
@@ -237,6 +276,9 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         val vad = has("silero_vad.onnx")
         val llamaFile = ModelFiles.llamaPte(this).isFile && ModelFiles.llamaTokenizer(this).isFile
         Ui.addRow(ready, Ui.status(this, t("माइक्रोफ़ोन", "Microphone"), mic, if (mic) t("अनुमति है", "Allowed") else t("अनुमति चाहिए", "Permission needed")))
+        val access = kavach.shared.AppState.callAccessEnabled(this)
+        Ui.addRow(ready, Ui.status(this, t("कॉल सुनने की अनुमति", "Call listening permission"), access,
+            if (access) t("चालू — स्पीकर पर रखी कॉल सुन सकता है", "On — can hear a call on speaker") else t("बंद — सिर्फ़ डेमो और पास के स्पीकर", "Off — demo and nearby speakers only")))
         Ui.addRow(ready, Ui.status(this, t("हिंदी / Hinglish बोली मॉडल", "Hindi / Hinglish speech model"), hiAsr && vad, if (hiAsr && vad) t("इस फ़ोन पर है", "On this phone") else t("नहीं है", "Missing")))
         Ui.addRow(ready, Ui.status(this, t("English बोली मॉडल", "English speech model"), enAsr && vad, if (enAsr && vad) t("इस फ़ोन पर है", "On this phone") else t("नहीं है", "Missing")))
         val ls = GuardianBus.llamaState
@@ -249,13 +291,11 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
             else -> false to t("फ़ाइल है; सुनना शुरू करने पर लोड होगा", "File present; loads when listening starts")
         }
         Ui.addRow(ready, Ui.status(this, "Llama 3.2 1B · ExecuTorch", lok, ltext))
-        Ui.addRow(ready, Ui.status(this, t("Shield से जुड़ाव", "Link to Shield"), linkAddr != null, linkedText()))
     }
 
     private fun requestPermissionsIfNeeded() {
         val want = mutableListOf(Manifest.permission.RECORD_AUDIO)
         if (Build.VERSION.SDK_INT >= 33) want.add(Manifest.permission.POST_NOTIFICATIONS)
-        if (Build.VERSION.SDK_INT >= 31) want.add(Manifest.permission.BLUETOOTH_CONNECT)
         val missing = want.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
         if (missing.isNotEmpty()) requestPermissions(missing.toTypedArray(), 1)
     }
@@ -273,27 +313,30 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         explainText = ""; explainBy = ""; whyText = ""; snr = null; finals = emptyList(); partial = ""
         if (tab != 0 || langChanged) { tab = 0; build() } else { renderTranscript(); renderExplain() }
         val i = Intent(this, GuardianService::class.java).setAction(GuardianService.ACTION_START)
-            .putExtra(GuardianService.EXTRA_LANG, lang).putExtra(GuardianService.EXTRA_DEMO, demo).putExtra(GuardianService.EXTRA_LINK_ADDR, linkAddr)
+            .putExtra(GuardianService.EXTRA_LANG, lang).putExtra(GuardianService.EXTRA_DEMO, demo)
         startForegroundService(i)
     }
 
     /** Standby: the service starts now (while this screen is visible, as Android requires for the
      *  microphone) and begins listening by itself when the protected phone reports an unknown call. */
     private fun startStandby() {
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) { requestPermissionsIfNeeded(); return }
-        if (linkAddr == null) { toast(t("पहले 'Shield वाला फ़ोन' चुनें।", "First choose the phone with Shield.")); return }
-        startForegroundService(Intent(this, GuardianService::class.java).setAction(GuardianService.ACTION_STANDBY)
-            .putExtra(GuardianService.EXTRA_LANG, lang).putExtra(GuardianService.EXTRA_LINK_ADDR, linkAddr))
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) { requestPermissionsIfNeeded(); renderProtect(); return }
+        kavach.shared.AppState.startCallProtection(this, lang)
+        handler.postDelayed({ renderProtect(); refreshReadiness() }, 400)
+        if (!kavach.shared.AppState.callAccessEnabled(this)) showAccessHelp()
+    }
+
+    private fun stopStandby() {
+        kavach.shared.AppState.stopCallProtection(this)
+        handler.postDelayed({ renderAll() }, 400)
     }
 
     private fun stopGuard() {
-        if (!GuardianBus.running) {
-            android.widget.Toast.makeText(this, t("अभी सुन नहीं रहा है।", "Not listening right now."), android.widget.Toast.LENGTH_SHORT).show()
-            return
-        }
-        startService(Intent(this, GuardianService::class.java).setAction(GuardianService.ACTION_STOP))
-        android.widget.Toast.makeText(this, t("सुनना बंद किया।", "Stopped listening."), android.widget.Toast.LENGTH_SHORT).show()
-        renderMode("idle")
+        if (!GuardianBus.running) { toast(t("अभी सुन नहीं रहा है।", "Not listening right now.")); return }
+        val keep = GuardianService.protecting
+        startService(Intent(this, GuardianService::class.java).setAction(if (keep) GuardianService.ACTION_END_SESSION else GuardianService.ACTION_STOP))
+        toast(if (keep) t("इस कॉल पर सुनना बंद किया। सुरक्षा चालू है।", "Stopped listening to this call. Protection stays on.") else t("सुनना बंद किया।", "Stopped listening."))
+        renderMode(if (keep) "standby" else "idle")
     }
 
     private fun pickDemo() {
@@ -307,26 +350,10 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         }.show()
     }
 
-    @Suppress("MissingPermission")
-    private fun pickPhone() {
-        val names = arrayListOf(t("यही फ़ोन (KAVACH Shield यहीं है)", "This phone (KAVACH Shield is installed here)"))
-        val addrs = arrayListOf(kavach.shared.LocalLink.SAME_PHONE)
-        val btAllowed = Build.VERSION.SDK_INT < 31 || checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
-        if (btAllowed) {
-            val bonded = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter?.bondedDevices?.toList() ?: emptyList()
-            for (d in bonded) { names.add("Bluetooth: " + (d.name ?: d.address)); addrs.add(d.address) }
-        }
-        AlertDialog.Builder(this, Ui.dialogTheme()).setTitle(t("KAVACH Shield किस फ़ोन पर है?", "Where is KAVACH Shield running?")).setItems(names.toTypedArray()) { _, w ->
-            linkAddr = addrs[w]
-            getPreferences(Context.MODE_PRIVATE).edit().putString("link", linkAddr).apply()
-            build()
-        }.show()
-    }
-
     /** Proof that Llama runs on this phone: load it, explain a short scripted scam transcript, show the
      *  answer and the measured speed. Clearly labelled as a sample, separate from real calls. */
     private fun testLlama() {
-        if (GuardianBus.running) { toast(t("पहले 'सुनना बंद करें' दबाएँ (Llama अभी उपयोग में है)।", "Tap Stop listening first (Llama is in use).")); return }
+        if (GuardianBus.running) { toast(t("पहले 'मेरी कॉल सुरक्षित रखें' बंद करें (Llama अभी उपयोग में है)।", "Turn off 'Protect my calls' first (Llama is in use by it).")); return }
         if (!ModelFiles.llamaPte(this).isFile) { toast(t("Llama फ़ाइल इस फ़ोन पर नहीं है।", "The Llama file is not on this phone.")); return }
         explainBy = ""
         explainText = t("Llama लोड हो रहा है और नमूना कॉल समझा रहा है (30–60 सेकंड)…", "Loading Llama and explaining a sample call (30–60 s)…")
@@ -368,13 +395,13 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     private fun toast(m: String) = android.widget.Toast.makeText(this, m, android.widget.Toast.LENGTH_LONG).show()
 
     // ------------------------------------------------------------------ bus events
-    override fun onMode(mode: String) = renderMode(mode)
+    override fun onMode(mode: String) { renderMode(mode); renderProtect() }
 
     override fun onTranscript(finals: List<String>, partial: String) { this.finals = finals; this.partial = partial; renderTranscript() }
 
     override fun onState(s: GuardState) {
         level = s.level
-        whyText = if (s.rule.isNotBlank() && s.level != "none") kavach.core.KillChain.ruleLabel(s.rule, lang) else ""
+        whyText = if (s.rule.isNotBlank() && s.level != "none") kavach.core.KillChain.ruleLabel(s.rule, uiLang) else ""
         renderMode(GuardianBus.mode)
         if (techOn) status?.text = "p(scam)=${"%.2f".format(s.pScam)} score=${s.score} stages=${s.stages} rule=${s.rule}"
     }

@@ -4,7 +4,7 @@ subtitle: "Bharat AI-SoC Challenge 2026–27 · Problem Statement 3 (Cybersecuri
 date: "November 2026"
 ---
 
-**Team:** Siddhant Singh (team lead; call listening: on-device speech recognition, Call Guardian
+**Team:** Siddhant Singh (call listening: on-device speech recognition, Call Guardian
 and the Android app) · Bogavalli Sai Akhilash (detection and Llama: scam playbook, data, classifiers,
 LoRA fine-tuning and evaluation) · Shivansh Bose (Shield and Network Watch: messages, links, apps,
 payments, network and Wi-Fi checks, privacy and security review) · **Faculty mentor:**

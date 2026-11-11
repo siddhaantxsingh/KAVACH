@@ -49,7 +49,13 @@ Open **KAVACH** (Home tab, "Finish setup 0 of 4"):
 
 Home now says **Protection is on**.
 
-## 3. Choose the call language
+## 3. Call language (normally nothing to do)
+
+**Auto** is the default: KAVACH runs both speech models on every sentence and keeps the one that
+matches the language spoken, so a caller may start in English and switch to Hindi or Hinglish.
+Auto needs both big models on the phone (`--asr-hi-big` and `--asr-en-big`); without them it
+listens with the Hindi/Hinglish model. You can still fix the language by hand:
+
 
 Tap **Calls** (bottom bar) → under *Language of the call* tap **हिंदी / Hinglish** or **English**.
 

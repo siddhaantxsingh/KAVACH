@@ -51,6 +51,10 @@ class AsrEngine(
     /** true while KAVACH's own spoken warning is playing: that audio is replaced by silence so the
      *  recogniser never transcribes our own voice */
     private val isMuted: (() -> Boolean)? = null,
+    /** "auto" only: chooses English or Hindi for every sentence (both big models must be on the phone) */
+    private val langPick: kavach.core.LangPick? = null,
+    /** "auto" only: the language chosen for each final sentence */
+    private val onLang: ((String) -> Unit)? = null,
 ) {
     /** which microphone / call source is actually in use (shown on the Guardian screen) */
     @Volatile var source: String = "mic"
@@ -67,9 +71,15 @@ class AsrEngine(
     fun missingFiles(): List<String> = requiredFiles().filter { !it.exists() }.map { it.path }
 
     /** The bigger whole-sentence model for this language is on the phone: sentence-by-sentence recognition */
-    val sentenceMode: Boolean get() = if (lang == "hi") hasIndicConformer(modelsDir) else hasEnglishBig(modelsDir)
+    val sentenceMode: Boolean get() = when (lang) {
+        "hi" -> hasIndicConformer(modelsDir)
+        "auto" -> autoReady(modelsDir)
+        else -> hasEnglishBig(modelsDir)
+    }
 
-    private fun requiredFiles(): List<File> = if (sentenceMode && lang == "hi")
+    private fun requiredFiles(): List<File> = if (lang == "auto")
+        listOf(File(modelsDir, IC_MODEL), File(modelsDir, IC_TOKENS), File(modelsDir, EN_BIG_MODEL), File(modelsDir, EN_BIG_TOKENS), File(modelsDir, "silero_vad.onnx"))
+    else if (sentenceMode && lang == "hi")
         listOf(File(modelsDir, IC_MODEL), File(modelsDir, IC_TOKENS), File(modelsDir, "silero_vad.onnx"))
     else if (sentenceMode)
         listOf(File(modelsDir, EN_BIG_MODEL), File(modelsDir, EN_BIG_TOKENS), File(modelsDir, "silero_vad.onnx"))
@@ -164,7 +174,10 @@ class AsrEngine(
         t0 = SystemClock.elapsedRealtime()
         thread = Thread({
             Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO)
-            val rec = buildOffline(modelsDir, lang, 2)
+            val auto = lang == "auto"
+            // Auto: both models stay loaded; every sentence is recognised by both and LangPick keeps one
+            val rec = buildOffline(modelsDir, if (auto) "hi" else lang, 2)
+            val recEn = if (auto) buildOffline(modelsDir, "en", 2) else null
             val vad = Vad(assetManager = null, config = VadModelConfig(
                 sileroVadModelConfig = SileroVadModelConfig(model = File(modelsDir, "silero_vad.onnx").path, threshold = 0.5f,
                     minSilenceDuration = 0.5f, minSpeechDuration = 0.25f, windowSize = VAD_WINDOW, maxSpeechDuration = 12.0f),
@@ -181,14 +194,29 @@ class AsrEngine(
             val current = FloatArray(SAMPLE_RATE * 12)
             var curLen = 0
             var lastPartialAt = 0.0
-            fun decode(samples: FloatArray, n: Int): String {
-                val st = rec.createStream()
+            fun decodeWith(r: OfflineRecognizer, samples: FloatArray, n: Int): String {
+                val st = r.createStream()
                 st.acceptWaveform(if (n == samples.size) samples else samples.copyOf(n), SAMPLE_RATE)
-                rec.decode(st)
-                val text = rec.getResult(st).text.trim()
+                r.decode(st)
+                val text = r.getResult(st).text.trim()
                 st.release()
                 return text
             }
+            var partialLang = "hi"
+            /** final sentence: in Auto both models, LangPick chooses; reports the language */
+            fun decodeFinal(samples: FloatArray, n: Int): String {
+                if (recEn == null) return decodeWith(rec, samples, n)
+                val hiText = decodeWith(rec, samples, n)
+                val enText = decodeWith(recEn, samples, n)
+                val l = langPick?.pick(enText, hiText) ?: "hi"
+                partialLang = l
+                val text = if (l == "en") enText else hiText
+                if (text.isNotEmpty()) onLang?.invoke(l)
+                return text
+            }
+            /** partial (every 2 s while speaking): only the language of the last sentence, to save work */
+            fun decode(samples: FloatArray, n: Int): String =
+                if (recEn != null && partialLang == "en") decodeWith(recEn, samples, n) else decodeWith(rec, samples, n)
             try {
                 audio.startRecording()
                 while (running) {
@@ -209,7 +237,7 @@ class AsrEngine(
                             while (!vad.empty()) {
                                 val seg = vad.front()
                                 vad.pop()
-                                val text = decode(seg.samples, seg.samples.size)
+                                val text = decodeFinal(seg.samples, seg.samples.size)
                                 if (text.isNotEmpty()) onFinal(text, (SystemClock.elapsedRealtime() - t0) / 1000.0)
                                 curLen = 0
                             }
@@ -233,13 +261,13 @@ class AsrEngine(
                 vad.flush()
                 while (!vad.empty()) {
                     val seg = vad.front(); vad.pop()
-                    decode(seg.samples, seg.samples.size).takeIf { it.isNotEmpty() }?.let { onFinal(it, (SystemClock.elapsedRealtime() - t0) / 1000.0) }
+                    decodeFinal(seg.samples, seg.samples.size).takeIf { it.isNotEmpty() }?.let { onFinal(it, (SystemClock.elapsedRealtime() - t0) / 1000.0) }
                 }
             } catch (t: Throwable) {
                 Log.e(TAG, "ASR (sentence mode) failed", t)
             } finally {
                 try { audio.stop() } catch (_: Throwable) { }
-                audio.release(); rec.release(); vad.release()
+                audio.release(); rec.release(); recEn?.release(); vad.release()
             }
         }, "kavach-asr").also { it.start() }
     }
@@ -276,6 +304,9 @@ class AsrEngine(
 
         const val EN_BIG_MODEL = "asr-en-big/model.onnx"
         const val EN_BIG_TOKENS = "asr-en-big/tokens.txt"
+
+        /** Auto language needs both whole-sentence models (Hindi IndicConformer + English Parakeet). */
+        fun autoReady(modelsDir: File) = hasIndicConformer(modelsDir) && hasEnglishBig(modelsDir)
 
         fun hasEnglishBig(modelsDir: File) = File(modelsDir, EN_BIG_MODEL).isFile && File(modelsDir, EN_BIG_TOKENS).isFile
 

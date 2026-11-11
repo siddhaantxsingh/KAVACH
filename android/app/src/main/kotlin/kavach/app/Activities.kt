@@ -408,7 +408,7 @@ class MainActivity : Activity(), ShieldHub.Listener {
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 4); return
         }
-        AppState.startCallProtection(this, getSharedPreferences("guardian", Context.MODE_PRIVATE).getString("call_lang", null) ?: ShieldHub.lang(this))
+        AppState.startCallProtection(this, getSharedPreferences("guardian", Context.MODE_PRIVATE).getString("call_language", "auto") ?: "auto")
         startForegroundService(Intent(this, ShieldService::class.java))
         getSharedPreferences("kavach", Context.MODE_PRIVATE).edit().putBoolean("protection_started", true).apply()
         hero?.postDelayed({ onChanged() }, 400)

@@ -17,10 +17,14 @@ jobs:
           from huggingface_hub import hf_hub_download
           for f in ["encoder.int8.onnx", "tokens.txt"]:
               hf_hub_download("mobilebytesensei/betterflow-hindi-streaming-ctc", f, local_dir="hi")
+          from huggingface_hub import snapshot_download, list_repo_files
+          print(list_repo_files("ippocode/indic-asr-onnx"))
+          snapshot_download("ippocode/indic-asr-onnx", allow_patterns=["whisper-small-hi/*"], local_dir="w")
           PY
-          ls -la hi
+          ls -la hi w/whisper-small-hi
+          cd w/whisper-small-hi && for f in *; do mv "$f" "../../hi/whisper-small-hi-$f"; done
       - env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view dev-models -R $GITHUB_REPOSITORY >/dev/null 2>&1 || gh release create dev-models -R $GITHUB_REPOSITORY --prerelease --title "Dev models (host tests)" --notes "Hindi streaming ASR model (Apache-2.0) mirrored for host tests."
-          gh release upload dev-models hi/encoder.int8.onnx hi/tokens.txt -R $GITHUB_REPOSITORY --clobber
+          gh release upload dev-models hi/* -R $GITHUB_REPOSITORY --clobber

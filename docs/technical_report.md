@@ -438,10 +438,50 @@ varied near-speaker conditions: scam red 12/12; genuine calm 10/12, yellow 2/12,
 speech model (69 MB vs 188 MB for English): with telephone-band noise its text is mostly
 unusable. Training and test audio share one TTS voice, so human voices will score lower.
 
-**On-phone benchmark** (§4, `docs/benchmarks.md`): the app measures model sizes, detector time,
-speech real-time factor at 1/2/4 threads, Llama load/first-token/tokens-per-second and memory,
-and one minute of listening (CPU, battery current, temperature). Numbers from the team's phone
-are added when measured.
+**Retest on the phone, 12 Nov 2026 (IndicConformer Hindi + Parakeet English installed).** The
+team's six test files, played from a laptop speaker 10–30 cm from the phone: Hindi digital arrest
+**red** (twice), Hindi genuine bank call lowest hint only ("worth watching", caused by one misheard
+word), English digital arrest **red**, English KYC **red**, English delivery call and English
+genuine bank call **no warning**. 6/6 as expected. Yellow warnings are no longer spoken, so the
+microphone is never muted before the decision (the 19–33 s gap above is gone).
+
+**Better English speech model and Auto language.** NVIDIA Parakeet TDT-CTC 110M (CC-BY-4.0, int8,
+126 MB) now recognises English sentence by sentence, like IndicConformer for Hindi. With the call
+language on **Auto** (the default) every sentence is recognised by both models and
+`kavach_core/langpick.py` keeps the transcript whose words are more often real words of its
+language (word lists: wordfreq). A caller can switch between English and Hindi/Hinglish mid-call.
+Per-sentence choice on the held-out test split (first two caller sentences of each call, Piper
+TTS; `bench/results/langpick_test.json`):
+
+| Channel | English chosen for English speech | Hindi chosen for Hindi speech |
+|---|---|---|
+| telephone band, SNR 10–30 dB | 93.0 % (80/86) | 91.0 % (91/100) |
+| near speaker | 87.2 % (75/86) | 99.0 % (99/100) |
+
+Overall 92.7 % (345/372). Most errors are short English sentences whose Hindi transcript is a
+1–2 word fragment; borderline sentences keep the previous sentence's language, and warnings
+follow the majority of the last three sentences. Not yet measured: how much a wrong choice
+changes the final warning.
+
+**On-phone benchmark** (§4, `docs/benchmarks.md`), measured on the team's phone on battery,
+12 Nov 2026 (`bench/results/device/kavach_bench_20261112_013528.json`). Phone: Xiaomi 2312DRA50I,
+Snapdragon 7s Gen 2 (SM7435: 4 × Cortex-A78 2.4 GHz + 4 × Cortex-A55 1.96 GHz), 7.3 GB RAM,
+Android 15.
+
+| What | Result |
+|---|---|
+| Detector (rules + classifier + kill-chain) | 4.07 ms per sentence |
+| Hindi IndicConformer (sentence) | RTF 0.153 at 2 threads, 0.092 at 4 (6.5× / 10.9× faster than real time) |
+| English Parakeet 110M (sentence) | RTF 0.052 at 2 threads, 0.037 at 4 (19× / 27×) |
+| Small streaming models (fallback) | Hindi RTF 0.239, English 0.117 at 2 threads |
+| **Auto listening, one minute** (VAD + both models on every sentence, 2 threads each) | **54 % of one core, 385 mA ≈ 7.6 % battery per hour**, battery 38.0 → 37.9 °C, thermal status 0, 235 MB |
+| Llama 3.2 1B INT4 (ExecuTorch, XNNPACK) | load 4.1 s, +1.1 GB; first token 12.9 s cold (768-token prompt), **5.9 s with the warm system prefix**; prefill 56–60 tok/s; **decode 11.6–11.9 tok/s**; 858 mA while generating; no thermal throttling |
+
+Reading: speech recognition of both languages together uses about a fifth of real time, so the
+transcript keeps up with the caller; listening for a whole hour costs under 8 % battery. Llama is
+the slowest part, which is why its explanation always follows the instant rule-based warning.
+Four threads make the big models clearly faster (Hindi 6.5× → 10.9×); the app uses two to save
+battery, a setting to revisit with a 4-thread battery measurement.
 
 ## 7.6 Network Watch
 

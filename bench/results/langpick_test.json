@@ -1,0 +1,23 @@
+{
+ "phone_en": [
+  80,
+  86
+ ],
+ "phone_hi": [
+  91,
+  100
+ ],
+ "near_en": [
+  75,
+  86
+ ],
+ "near_hi": [
+  99,
+  100
+ ],
+ "all": [
+  345,
+  372
+ ],
+ "note": "test split, first 2 caller sentences of each call, Piper TTS, phone = telephone band SNR 10-30 dB, near = full band; Latin-script Hinglish rows (either pick acceptable) excluded: 28"
+}

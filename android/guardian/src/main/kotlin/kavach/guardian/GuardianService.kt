@@ -53,6 +53,8 @@ object GuardianBus {
     @Volatile var llamaLastRun: String = ""
     /** "" | "copied_example" | "wrong_language": why Llama's own wording was not shown */
     @Volatile var llamaSayNote: String = ""
+    /** language the caller is speaking now (Auto), "hi" | "en" */
+    @Volatile var callLang: String = "hi"
     fun mode(m: String) { mode = m; kavach.shared.AppState.callMode = m; post { it.onMode(m) } }
     fun add(l: Listener) = main.post { listeners.add(l) }
     fun remove(l: Listener) = main.post { listeners.remove(l) }
@@ -72,7 +74,14 @@ class GuardianService : Service() {
     private var demo: DemoPlayer? = null
     private var log: FileWriter? = null
     private val finals = ArrayList<String>()
+    /** Language actually used for warnings, Llama and the detector ("hi" | "en"). With the "auto"
+     *  setting it follows the language of the caller's recent sentences. */
     private var lang = "hi"
+    /** What the user chose: "auto" | "hi" | "en" */
+    private var setting = "auto"
+    private var langPick: kavach.core.LangPick? = null
+    /** languages of the last few final sentences (Auto) */
+    private val recentLangs = ArrayDeque<String>()
     private var startedAt = 0L
 
     private var standby = false
@@ -89,10 +98,10 @@ class GuardianService : Service() {
             // "Stop listening" while call protection is on: end this call's listening, keep protection
             ACTION_END_SESSION -> { if (standby) { if (sessionActive) engine.execute { endSession("stopped by the user") } } else stopSelf(); return START_NOT_STICKY }
             ACTION_START -> {
-                setup(intent.getStringExtra(EXTRA_LANG) ?: "hi", intent.getStringExtra(EXTRA_LINK_ADDR), standbyMode = false)
+                setup(intent.getStringExtra(EXTRA_LANG) ?: "auto", intent.getStringExtra(EXTRA_LINK_ADDR), standbyMode = false)
                 beginSession(intent.getStringExtra(EXTRA_DEMO), reason = "manual")
             }
-            ACTION_STANDBY -> setup(intent.getStringExtra(EXTRA_LANG) ?: "hi", intent.getStringExtra(EXTRA_LINK_ADDR), standbyMode = true)
+            ACTION_STANDBY -> setup(intent.getStringExtra(EXTRA_LANG) ?: "auto", intent.getStringExtra(EXTRA_LINK_ADDR), standbyMode = true)
         }
         return START_NOT_STICKY
     }
@@ -103,7 +112,8 @@ class GuardianService : Service() {
      * engine thread, TTS, Llama, link, detection core.
      */
     private fun setup(language: String, linkAddr: String?, standbyMode: Boolean) {
-        lang = language
+        setting = language
+        lang = if (language == "auto") "hi" else language
         standby = standby || standbyMode
         protecting = standby
         if (GuardianBus.running) {
@@ -154,6 +164,7 @@ class GuardianService : Service() {
                 if (sessionActive) return@execute
                 val g = guardian ?: return@execute
                 g.reset()
+                if (setting == "auto") { lang = "hi"; recentLangs.clear(); langPick?.reset() }
                 g.cfg.lang = lang
                 kavach.shared.AppState.callLevel = "none"
                 synchronized(finals) { finals.clear() }
@@ -167,7 +178,16 @@ class GuardianService : Service() {
                     demo = DemoPlayer(this, demoScript, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) }).also { it.start() }
                     GuardianBus.status("demo replay: $demoScript"); GuardianBus.mode("demo")
                 } else {
-                    val a = AsrEngine(models ?: ModelFiles.dir(this), lang, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) },
+                    val dir = models ?: ModelFiles.dir(this)
+                    // Auto needs both whole-sentence models; without them it listens as Hindi/Hinglish
+                    // (that model also writes English loanwords, which the detector knows).
+                    val engineLang = if (setting == "auto") (if (AsrEngine.autoReady(dir)) "auto" else "hi") else setting
+                    if (engineLang == "auto" && langPick == null) langPick = try {
+                        kavach.core.LangPick.fromText(assets.open("langid/en_words.txt").bufferedReader().readText(),
+                            assets.open("langid/hi_words.txt").bufferedReader().readText())
+                    } catch (t: Throwable) { Log.e(TAG, "language lists", t); null }
+                    val a = AsrEngine(dir, if (engineLang == "auto" && langPick == null) "hi" else engineLang,
+                        langPick = langPick, onLang = { l -> onSentenceLang(l) }, onPartial = { p -> publishTranscript(p) }, onFinal = { text, _ -> onFinalSegment(text) },
                         onPlacement = { snr -> GuardianBus.post { it.onPlacement(snr) } }, callAudio = oemMode(this),
                         isMuted = { speaker?.isSpeakingOrJustSpoke(700) == true })
                     val missing = a.missingFiles()
@@ -176,7 +196,7 @@ class GuardianService : Service() {
                         sessionActive = false; GuardianBus.mode("models_missing")
                     } else {
                         asr = a; a.start(); GuardianBus.mode("listening")
-                        GuardianBus.status((if (reason == "call_started") "call detected — " else "") + "listening (${if (lang == "hi") "Hindi/Hinglish" else "English"})" +
+                        GuardianBus.status((if (reason == "call_started") "call detected — " else "") + "listening (${when { setting == "auto" && AsrEngine.autoReady(dir) -> "Auto: Hindi + English"; setting == "auto" -> "Auto: Hindi/Hinglish model only"; lang == "hi" -> "Hindi/Hinglish"; else -> "English" }})" +
                             if (oemMode(this)) " · system mode: reading the call audio directly" else "")
                     }
                 }
@@ -215,6 +235,21 @@ class GuardianService : Service() {
             synchronized(finals) { finals.add(text); while (finals.size > 40) finals.removeAt(0) }
             publishTranscript("")
             tickNow()
+        }
+    }
+
+    /** Auto: the caller's language follows the majority of the last 3 sentences (latest wins a tie),
+     *  so one English word-heavy sentence in a Hindi call does not flip warnings and Llama to English. */
+    private fun onSentenceLang(l: String) {
+        engine.execute {
+            recentLangs.addLast(l); while (recentLangs.size > 3) recentLangs.removeFirst()
+            val en = recentLangs.count { it == "en" }; val hi = recentLangs.size - en
+            val now = if (en > hi) "en" else if (hi > en) "hi" else l
+            if (now != lang) {
+                lang = now; guardian?.cfg?.lang = now
+                GuardianBus.status("caller is speaking " + if (now == "hi") "Hindi/Hinglish" else "English")
+            }
+            GuardianBus.callLang = lang
         }
     }
 

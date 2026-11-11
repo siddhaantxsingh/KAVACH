@@ -97,7 +97,7 @@ class BenchmarkActivity : Activity() {
             try { runAll() } catch (t: Throwable) { results["error"] = t.toString() }
             save()
             runOnUiThread {
-                if (wasProtecting) AppState.startCallProtection(this, getSharedPreferences("guardian", Context.MODE_PRIVATE).getString("call_lang", "hi") ?: "hi")
+                if (wasProtecting) AppState.startCallProtection(this, getSharedPreferences("guardian", Context.MODE_PRIVATE).getString("call_language", "auto") ?: "auto")
                 running = false
                 runBtn.text = t("फिर से मापें", "Measure again"); runBtn.visibility = View.VISIBLE
                 list.addView(Ui.button(this, t("नतीजे शेयर करें", "Share results"), Ui.Ic.history) { share() })

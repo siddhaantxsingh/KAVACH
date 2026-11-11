@@ -47,7 +47,8 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     private var explainCard: LinearLayout? = null
     private var actionHolder: LinearLayout? = null
     private var ready: LinearLayout? = null
-    private var lang = "hi"
+    /** call language setting: "auto" (default) | "hi" | "en" */
+    private var lang = "auto"
     private var tab = 0
     private var protectHolder: LinearLayout? = null
     private var lastLlm: LlamaAdvisor.Stats? = null
@@ -77,9 +78,9 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Ui.keepScreenOn(this)
-        lang = getPreferences(Context.MODE_PRIVATE).getString("lang", "hi") ?: "hi"
+        lang = getSharedPreferences("guardian", Context.MODE_PRIVATE).getString("call_language", "auto") ?: "auto"
         tab = savedInstanceState?.getInt("tab") ?: intent.getIntExtra("tab", 0)
-        intent.getStringExtra("lang")?.let { lang = it; getPreferences(Context.MODE_PRIVATE).edit().putString("lang", it).apply() }
+        intent.getStringExtra("lang")?.let { lang = it }
         build()
         if (!intent.getBooleanExtra("quiet", false)) requestPermissionsIfNeeded()
         intent.getStringExtra("demo")?.let { d -> intent.removeExtra("demo"); startGuard(if (d.endsWith("_en")) "en" else "hi", d) }
@@ -112,7 +113,11 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         col.addView(protectHolder)
 
         col.addView(Ui.label(this, t("कॉल की भाषा", "Language of the call")))
-        col.addView(Ui.segmented(this, listOf("हिंदी / Hinglish", "English"), if (lang == "hi") 0 else 1) { setLang(if (it == 0) "hi" else "en") })
+        col.addView(Ui.segmented(this, listOf(t("अपने आप", "Auto"), "हिंदी / Hinglish", "English"), when (lang) { "hi" -> 1; "en" -> 2; else -> 0 }) {
+            setLang(when (it) { 1 -> "hi"; 2 -> "en"; else -> "auto" }) })
+        if (lang == "auto") col.addView(Ui.footnote(this, if (AsrEngine.autoReady(ModelFiles.dir(this)))
+            t("KAVACH हर वाक्य की भाषा खुद पहचानता है — हिंदी, Hinglish या English, बीच में बदले तो भी।", "KAVACH recognises the language of every sentence by itself: Hindi, Hinglish or English, even if the caller switches.")
+            else t("Auto के लिए दोनों बड़े मॉडल चाहिए (push_models.sh --asr-hi-big और --asr-en-big)। अभी हिंदी/Hinglish मॉडल सुनेगा।", "Auto needs both big speech models (push_models.sh --asr-hi-big and --asr-en-big). Until then it listens with the Hindi/Hinglish model."), Ui.Ic.info))
         actionHolder = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         col.addView(actionHolder)
         col.addView(Ui.text(this, t("कॉल को स्पीकर पर रखें। फ़ोन आपके हाथ या मेज़ पर रहे — कवच इसी फ़ोन पर सुनता है।",
@@ -190,8 +195,8 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
 
     private fun setLang(l: String) {
         if (l == lang) return
-        lang = l; getPreferences(Context.MODE_PRIVATE).edit().putString("lang", lang).apply()
-        getSharedPreferences("guardian", Context.MODE_PRIVATE).edit().putString("call_lang", lang).apply()
+        lang = l
+        getSharedPreferences("guardian", Context.MODE_PRIVATE).edit().putString("call_language", lang).apply()
         // call protection is on: it should listen in the newly chosen language from the next call
         if (GuardianService.protecting && GuardianBus.running && GuardianBus.mode == "standby") kavach.shared.AppState.startCallProtection(this, lang)
         build()
@@ -312,7 +317,7 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         }
         val langChanged = language != lang
         lang = language
-        getPreferences(Context.MODE_PRIVATE).edit().putString("lang", lang).apply()
+        getSharedPreferences("guardian", Context.MODE_PRIVATE).edit().putString("call_language", lang).apply()
         level = "none"
         explainText = ""; explainBy = ""; whyText = ""; snr = null; finals = emptyList(); partial = ""
         if (tab != 0 || langChanged) { tab = 0; build() } else { renderTranscript(); renderExplain() }

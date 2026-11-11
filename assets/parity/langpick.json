@@ -1,0 +1,386 @@
+[
+{
+"en": "Hello, Kamee Antanji. S Basara Hamman",
+"hi": "हेलो क्या मैं अंकल जी से बात कर रहा हूँ",
+"score": -1.2077922077922079,
+"pick": "hi"
+},
+{
+"en": "Hello Kyamee Ankalji. Sibbat Kahhau",
+"hi": "हेलो क्या मैं अंकल जी से बात कर रहा हूँ",
+"score": -1.4696969696969697,
+"pick": "hi"
+},
+{
+"en": "Client meeting moved to four PM s. The slidees before that",
+"hi": "फाइ ली नूपोर्ट  एम सेफ द वाज बिफोर हैट",
+"score": 0.75,
+"pick": "en"
+},
+{
+"en": "The cllient meeting moved to four PM snd. The slides before that",
+"hi": "",
+"score": 1.153846153846154,
+"pick": "en"
+},
+{
+"en": "Hello, this Sneichia customer, supportupport you raised A",
+"hi": "हवा डस्टिस में शखा स्तमन सपोर्ट यू रेइस ए",
+"score": 0.3999999999999999,
+"pick": "en"
+},
+{
+"en": "Hello, this is M show Customer. Support you raised A",
+"hi": "फलो कस्टमर सपोर्ट यू रेस्ट ए",
+"score": 0.6493506493506493,
+"pick": "en"
+},
+{
+"en": "below you can earn three thousand zero five zero zero daily byjA. Lking video is",
+"hi": "तो म यू कन र्न थ्री थौसन्द ज़ीरो फाइव ज़ीरो ज़ीरो देवल बायज मी किंग थे",
+"score": 0.29779411764705876,
+"pick": "en"
+},
+{
+"en": "below you can earn three thousand zero five zero zero daily by just. Liking videos",
+"hi": "फ्लव यू केन अर्न थ्री थाउजेंड ज़ीरो फाइव ज़ीरो ज़ीरो डेली बाय चस्ट लाइकिंग वेरियस",
+"score": 0.6875,
+"pick": "en"
+},
+{
+"en": "Tar of Qatar insurance for the Hadari co expire for official at your branch for Renwal",
+"hi": "सर आपका कार इंश्योरेंस पंद्रह तारीख को एक्सपायर हो रहा आप ऑफिशियल एप या ब्रांच पर रिन्यू करें",
+"score": 0.024767801857585148,
+"pick": "hi"
+},
+{
+"en": "Sarap Kakar Insurance Pandrahatari co expire. Huraa A official A Ya brranch for Renuga",
+"hi": "सर आपका कार इंश्योरेंस पंद्रह तारीख को एक्सपायर हो रहा आप ऑफ़िशियल ऐप या ब्रांच पर रिन्यू करें",
+"score": -0.4245614035087719,
+"pick": "hi"
+},
+{
+"en": "Can you approve the lef? request in the portal",
+"hi": "किन्यू वी प्रक्वास्ट इन ए फोर ऑफ",
+"score": 0.55,
+"pick": "en"
+},
+{
+"en": "Can you approve the leave? Request in the portal",
+"hi": "तो र",
+"score": 0.4000000000000001,
+"pick": "en"
+},
+{
+"en": "Hello, good afternoon. We will come on Sunday for lunch",
+"hi": "ग आफ्टरडव वी वो क्रम ह प्र",
+"score": 0.5795454545454545,
+"pick": "en"
+},
+{
+"en": "Hello, G afternoon. We will come on Sunday for lunch",
+"hi": "ग आफ्टरनून व वोमन फ",
+"score": 0.6969696969696969,
+"pick": "en"
+},
+{
+"en": "Hello, this is Flipheader Customer supportupp You raised a refund request",
+"hi": "तो त इस व थेडर कस्टमरफोरू वेट रे सेंट्रल क्वास्ट",
+"score": 0.17424242424242425,
+"pick": "en"
+},
+{
+"en": "Hello, this is Flipheadter Customer Support You, raaised a Rfund request",
+"hi": "फलो दिस इज़ फ्लिपफेडर कस्टमर्स फॉर यू रेस्ड अ रिफंड र क्वेस्ट",
+"score": 0.5384615384615383,
+"pick": "en"
+},
+{
+"en": "which is sub sub they called Ara sginn of the GRT regy",
+"hi": "बिजली दफ्तर से कॉल है आज रात साढ़े नौ नौ बजे आपकी बिजली",
+"score": -0.14285714285714282,
+"pick": "hi"
+},
+{
+"en": "Bijilitap Turse called Ajraath Sarhino no Baji Aki Biji",
+"hi": "बिजली दफ़्तर से कॉल है आज रात साढ़े नौ नौ बजे आपकी बिजली",
+"score": -0.842857142857143,
+"pick": "hi"
+},
+{
+"en": "Hello Namas Sita Ji will come on Sunday for lunch and",
+"hi": "हमर नया मैस सू नीरर चाय वोकम ऑन संडे फ्रॉम अंच एंक",
+"score": 0.7051282051282051,
+"pick": "en"
+},
+{
+"en": "Hello, Namasks youita Ji. We'll come on Sunday for lunch Ap",
+"hi": "ों नेमस्सीनरे चाय वुकम ऑन संडे फॉर वंच एंड",
+"score": 0.5,
+"pick": "en"
+},
+{
+"en": "Mib Baksib Burahu Afka Sterin. uplease update Nahi",
+"hi": "मैं विभाग से बोल रहा हूं आपका सिस्टम में अप्र अपडेट नहीं है",
+"score": -1.1746031746031746,
+"pick": "hi"
+},
+{
+"en": "Mebibhaksib Burahahu, Aka Sstem M. Udate, update Nehi",
+"hi": "मैं विग से बोल रहा हूं आपका सिस्टमेडे नहीं है",
+"score": -0.8484848484848485,
+"pick": "hi"
+},
+{
+"en": "City Clinic CCall Cow eleven age doctor, Gutuki softs ACA appointment",
+"hi": "सिरी खनिक सीखॉक हवे वदन डेज डॉक्टर गफ दखी साफ आकर अप्पॉइंटमेंट",
+"score": 0.43589743589743585,
+"pick": "en"
+},
+{
+"en": "City Clinic CCal Cal eleven Bege Doctor Guptekisoth Aa appointment",
+"hi": "सिरी खवनिक सीखॉक हैेव इलेवन बेज डॉक्टर गुप्ट कीी साफ आकर अपॉइंटमेंट",
+"score": 0.32867132867132864,
+"pick": "en"
+},
+{
+"en": "Metal Eom withheal, Rahamu are c",
+"hi": "मैं टेलीकॉम विभाग से बोल रहा हूं आपकेथिन",
+"score": -0.5396825396825398,
+"pick": "hi"
+},
+{
+"en": "Metteikam Vibhagseal, Rahahum A Kisim",
+"hi": "मैं टेलीकॉम विभाग से बोल रहा हूं आपके सिम",
+"score": -0.9666666666666668,
+"pick": "hi"
+},
+{
+"en": "Hello, Jinamascar. Hello, I am Ping from the local police station",
+"hi": "अलोव ज्वाइन ए एम एस जॉड ए  आ एमफावंग फुल रोजर्व फ वीट स्टेशन",
+"score": 0.5,
+"pick": "en"
+},
+{
+"en": "Hello Gi Namascar. Hello, I am Ping from the local police station",
+"hi": "हलो जॉइनमक हलो आ आम फॉलोइंग फम लोऑव स्टेशन",
+"score": 0.7538461538461539,
+"pick": "en"
+},
+{
+"en": "Hello Kyame Sanajib Baskarahamu, Asku Aku Ai Tin Lak",
+"hi": "हेलो क्या मैं संता जी बात कर रहा हूँ आपको आपको आजी तीन लाख",
+"score": -1.1666666666666665,
+"pick": "hi"
+},
+{
+"en": "Hello Kyam Samajib Bat Karahamu. Aku Aku Ajitin Lak",
+"hi": "हेलो क्या मैं समता जी बात कर रहा हूँ आपको आपको आज ही तीन लाख",
+"score": -1.425,
+"pick": "hi"
+},
+{
+"en": "did you getal is or knee paying now",
+"hi": "जट यू ग हवे एटर्नी फन त",
+"score": 0.8333333333333334,
+"pick": "en"
+},
+{
+"en": "Did you eat how is her knee? Pain now",
+"hi": "जट यू गट हा इस रननी फे न",
+"score": 0.7222222222222222,
+"pick": "en"
+},
+{
+"en": "until Ma dos the h. Gaboo is problem book.",
+"hi": "अंकल म का दोस्त बोल रहा हूं एक प्रॉब्लम हो",
+"score": -0.27272727272727265,
+"pick": "hi"
+},
+{
+"en": "Uncle Meka dosed the bowl. Rahahu ek problem ho.",
+"hi": "अंकलमेय का दोस्त बोल रहा हूँ एक प्रॉब्लम हो",
+"score": -0.7000000000000001,
+"pick": "hi"
+},
+{
+"en": "Helog Genome scar, news that is eomy aiive doctor",
+"hi": "हेलो जी नमस्कार न्यूज देगी लखनऊ में एक रिडायर डॉक्टर",
+"score": -0.29090909090909095,
+"pick": "hi"
+},
+{
+"en": "Heeloji Namskar, News Deki Laknome ach retired doctor",
+"hi": "हैेलो जी नमस्कार न्यूज़ देखी लखनऊ में एक रिटायर्ड डॉक्टर",
+"score": -0.7575757575757576,
+"pick": "hi"
+},
+{
+"en": "but Hio Am KBC Li drama Pis L Ri. GJ N",
+"hi": "बधाई हो आपने केबीसी लक ड्रा में पच्चीस लाख रूपये जीते हैं",
+"score": -0.32692307692307687,
+"pick": "hi"
+},
+{
+"en": "Badhaiho Apnee KBC Lucky drama Pachis Lak Rupai. Jite He",
+"hi": "बधाई हो आप ने केबीसी लक ड्रॉ में पच्चीस लाख रुपये जीते हैं",
+"score": -0.8506493506493507,
+"pick": "hi"
+},
+{
+"en": "Hello my local Kane passport verification Viburahham. Sumbaru original document",
+"hi": "हलो मैं लोकल थाने पासपोर्ट वेरीफिकेशन य बोल रहा हूं सोमवार को ऑरिजिनल डाक्यूमेंटस",
+"score": -0.048484848484848436,
+"pick": "hi"
+},
+{
+"en": "Hello my Lukal Tthane passport verification Libbur Rahamu. Sumbaru original document",
+"hi": "हेलो मैं लोकल थाने पासपोर्ट वेरिफ़िकेशन लिए बोल रहा हूँ सोमवार को ओरिजिनल डॉक्यूमेंट",
+"score": -0.55,
+"pick": "hi"
+},
+{
+"en": "Y DGDC ke automive call Airfa Aur Group Dia Gas exQency",
+"hi": "यह डीजीईसी की ऑटोमेटिव कॉल है आपका पटल रोक दिया गया एक्जीक्यूटिव से",
+"score": -0.6428571428571428,
+"pick": "hi"
+},
+{
+"en": "Yahadi Tiiki automic call Her Apka Pral Rugiaga executive S",
+"hi": "यह डीटीसी की ऑटोमेटेड कॉल है आपका पार्सल रोक दिया गया एक्सेक्यूटिव से",
+"score": -0.6688311688311688,
+"pick": "hi"
+},
+{
+"en": "Sharmaku Kitini, police buner calledgia, Uncle D Turantu Gardia",
+"hi": "शर्मा को किसी ने पुलिस बनकर कॉल किया अंकल ने तुरंत फोन काट दिया",
+"score": -1.1,
+"pick": "hi"
+},
+{
+"en": "Sarmacu Casino, Police Buner Kolkia, Uncle Net Torontop Pon Gardia",
+"hi": "शर्मा को किसी ने पुलिस बनकर कॉल किया अंकल ने तुरंत फ़ोन काट दिया",
+"score": -1.0363636363636364,
+"pick": "hi"
+},
+{
+"en": "Hello, Is Menture customer support you had raised a refund request",
+"hi": "सलव इस मचरल कस्टमर्स फॉर्टू हाइड्राइस एंड प्रीफंट रक््वाेस्ट",
+"score": 0.8666666666666666,
+"pick": "en"
+},
+{
+"en": "Hello is Mentrra Customer support You had raaised a Refund Request",
+"hi": "हलो इज़मेंट्रल कस्टमर्स फॉर यू हैव रेस ए रिफ़ंड रीिक्वास्ट",
+"score": 0.6287878787878788,
+"pick": "en"
+},
+{
+"en": "Ay blood blood tests rep both the Yaran bget, killing it",
+"hi": "आपकी ब्लड ब्लड टेस्ट रिपोर्ट तैयार है पांच बजे के लिए है",
+"score": -0.23076923076923084,
+"pick": "hi"
+},
+{
+"en": "Aki blood blood test reports the Yar Panchpa. Killy he",
+"hi": "आपकी ब्लड गड टेस्ट रिपोर्ट तैयार है पाच बजे किले हैं",
+"score": -0.18939393939393942,
+"pick": "hi"
+},
+{
+"en": "Hello Genam Skar, Mc ina Bank, head Office KK I with Hi.",
+"hi": "हेलो जी नमस्कार मैं केनरा बैंक हेड आऑफिस के केवाईसी विभाग से",
+"score": -0.23076923076923073,
+"pick": "hi"
+},
+{
+"en": "Hello Ginam Skar, Mac Inra Bank head Office K of Iy Vibhagsi.",
+"hi": "हेलो जी नमस्कार मैं केनरा बैंक हेड ऑफ़िस के केवाईसी विभाग से",
+"score": -0.4615384615384616,
+"pick": "hi"
+},
+{
+"en": "when we should theund departments we have t caned orers giveiving",
+"hi": "मैं मिशो रिफंड डिपार्टमेंट से आपकी कैंसर ऑर्डर के बारे में",
+"score": -0.16666666666666663,
+"pick": "hi"
+},
+{
+"en": "May be sure if H department say up k cancel. Order Karim",
+"hi": "मैं मिशो रिफंड डिपार्टमेंट से आपके कैंसर ऑर्डर के बारे में",
+"score": 0.05769230769230771,
+"pick": "hi"
+},
+{
+"en": "Hello as the delivery boy from Nicho IM outside your building, which floor",
+"hi": "फ अ रिंग बॉय फ्रम मीश आई एम अ फाइज ऑ दलिंग विच फॉर",
+"score": 0.6142857142857143,
+"pick": "en"
+},
+{
+"en": "Hello, I'm the delivery boy from Michu I Outside your building, which floor",
+"hi": "हलो एम बटिलवरी बॉय फ्रॉम मी शो आय एम एट साइड यर बिल्डिंग वििच फ़्लोर",
+"score": 0.6607142857142856,
+"pick": "en"
+},
+{
+"en": "Uncle Maya Kipuda those torau who big problem who ahe",
+"hi": "अंकल मैं आपके पोता दोस्त बोल रहा हूं एक प्रॉब्लम हो गई है",
+"score": -0.4285714285714286,
+"pick": "hi"
+},
+{
+"en": "Uncle May A Kiputa do to Rhau problerom Hu",
+"hi": "अंकल मैं आपके पोता दोस्त बोल रहा हूँ एक प्रॉब्लम हो गई है",
+"score": -0.5,
+"pick": "hi"
+},
+{
+"en": "Sima Antelku Katinez, pololice Ba Palia, Antel Pa Pan Gardia",
+"hi": "शर्मा अंतल को कति ने पुलिस बनकर कॉल किया अंकल ने तुरंत तुरंत काट दिया",
+"score": -0.9147727272727273,
+"pick": "hi"
+},
+{
+"en": "Sharma Ankalku Casine, Police bankker Kalkia Ankalnet Turant Turont Gardia",
+"hi": "शर्मा अंकल को कसी ने पुलिस बनकर कॉल किया अंकल ने तुरंत तुरंत काट दिया",
+"score": -1.1306818181818181,
+"pick": "hi"
+},
+{
+"en": "matary incom with hibam mark. G are their famies themas were.",
+"hi": "मैं मैं टेलीकॉम विभाग से बोल रहा हूं आपके शिप कार का अवैध सामने इस्तेमार हुआ",
+"score": -0.46078431372549017,
+"pick": "hi"
+},
+{
+"en": "Meet telekambibhsibur Rahahumabkisim Kard Kaabd Kames Malhua.",
+"hi": "मैं मैं टेलीकॉम विभाग से बोल रहा हूं आपके सिम कार्ड का अवैध काम में इस्तेमाल हुआ",
+"score": -1.3194444444444444,
+"pick": "hi"
+},
+{
+"en": "",
+"hi": "",
+"score": 0.0,
+"pick": "hi"
+},
+{
+"en": "okay",
+"hi": "ठीक है",
+"score": -0.49999999999999994,
+"pick": "hi"
+},
+{
+"en": "Please tell me the OTP",
+"hi": "प्लीज़ टेल मी द ओटीपी",
+"score": 0.3333333333333333,
+"pick": "hi"
+},
+{
+"en": "Apna OTP bataiye",
+"hi": "अपना ओटीपी बताइए",
+"score": -0.75,
+"pick": "hi"
+}
+]

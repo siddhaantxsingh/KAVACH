@@ -67,6 +67,7 @@ asr() {
   adb push "$CACHE/hi/tokens.txt" "$D/asr-hi/tokens.txt"
   adb push "$CACHE/silero_vad.onnx" "$D/silero_vad.onnx"
   asr_hi_big
+  asr_en_big
 }
 
 # Hindi, better model: AI4Bharat IndicConformer Hindi (120M, CTC; MIT, ONNX export CC-BY-4.0), int8 for

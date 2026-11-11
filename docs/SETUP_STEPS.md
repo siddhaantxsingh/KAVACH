@@ -25,7 +25,9 @@ permission to pass the phone's website lookups through.
    models and settings of the old Guardian app are kept: the one KAVACH app keeps its package id
    `io.kavach.guardian`.
 3. Speech models and Llama (skip if they are already on the phone):
-   `scripts/push_models.sh --asr` and `scripts/push_models.sh --official-spinquant`.
+   `scripts/push_models.sh --asr` (English, Hindi and AI4Bharat IndicConformer Hindi) and
+   `scripts/push_models.sh --official-spinquant`. Phones that already have the speech models only need
+   `scripts/push_models.sh --asr-hi-big` (the better Hindi model, 198 MB, from this repo's GitHub release).
 
 ## 1. On the phone (about 2 minutes)
 

@@ -18,6 +18,17 @@ optional second app. Paths are for a Xiaomi/Redmi/POCO phone; other phones use s
 4. If it says `INSTALL_FAILED_USER_RESTRICTED`: on the phone, Settings → Additional settings →
    Developer options → **Install via USB** → on, then paste the line again.
 
+## 1b. Better Hindi speech model (once, about 5 minutes)
+
+Phone plugged in. In Git Bash, inside your KAVACH folder (the one you cloned from GitHub), paste:
+
+```bash
+git pull && export PATH="$PATH:$(dirname "$(find ~/Downloads -name adb.exe 2>/dev/null | head -1)")" && bash scripts/push_models.sh --asr-hi-big
+```
+
+It downloads AI4Bharat's IndicConformer Hindi model (198 MB) from our GitHub release and copies it to
+the phone. KAVACH → Calls → Setup & tools → Readiness then says *AI4Bharat IndicConformer — on this phone*.
+
 ## 2. Set up KAVACH on the phone (about 2 minutes)
 
 Open **KAVACH** (Home tab, "Finish setup 0 of 4"):

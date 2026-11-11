@@ -41,6 +41,8 @@ FILES = {
     # Hindi calls as the phone hears them: Piper TTS -> channel -> the Hindi streaming ASR (models/asr/make_asr_noisy_calls_hi.py)
     "test_asr_hi_near": ROOT / "data/synth/out/calls_test_asr_hi_near.jsonl",  # near speaker, quiet room
     "test_asr_hi": ROOT / "data/synth/out/calls_test_asr_hi.jsonl",  # 8 kHz telephone band, SNR 10-30 dB
+    "test_asr_hi_near_ic": ROOT / "data/synth/out/calls_test_asr_hi_near_ic.jsonl",  # same audio, AI4Bharat IndicConformer
+    "test_asr_hi_ic": ROOT / "data/synth/out/calls_test_asr_hi_ic.jsonl",
     "handwritten": ROOT / "data/dev/handwritten_calls.jsonl",
     "heldout": ROOT / "data/dev/heldout_calls.jsonl",  # locked: report only, never tune
 }

@@ -452,6 +452,23 @@ word), English digital arrest **red**, English KYC **red**, English delivery cal
 genuine bank call **no warning**. 6/6 as expected. Yellow warnings are no longer spoken, so the
 microphone is never muted before the decision (the 19–33 s gap above is gone).
 
+**Real phone calls, one phone (12 Nov 2026, 03:15–03:52).** A teammate called the test phone
+from a number not in its contacts over the normal cellular network; the call was answered in the
+phone's own dialer and put on speaker; KAVACH started listening by itself (call language: Auto).
+The teammate read the role-play scripts (`demo/roleplay_scripts.md` style).
+
+| Call | Result |
+|---|---|
+| Hindi digital-arrest scam (fake police, Aadhaar parcel, arrest warrant, "tell no one", RBI safe account) | **STOP** during the call; transcript through the phone line was close to the script; full-screen Stop card |
+| English KYC scam (SBI KYC, account blocked, link by SMS, OTP) | **STOP** during the call; Auto chose English; scam type "Fake KYC / bank account block" |
+
+What went wrong first and was fixed: when the phone's default dialer app was changed, Android
+stopped KAVACH ("permissions revoked") and marked the call-listening accessibility service as
+crashed; the switch still showed "on", but every recording during a call was silenced (seen in
+`dumpsys audio`: "silenced" exactly for each call). Turning the service off and on restored it.
+The app now detects both states (service switched on but not running; recording silenced during a
+call) and tells the user how to fix it.
+
 **Better English speech model and Auto language.** NVIDIA Parakeet TDT-CTC 110M (CC-BY-4.0, int8,
 126 MB) now recognises English sentence by sentence, like IndicConformer for Hindi. With the call
 language on **Auto** (the default) every sentence is recognised by both models and

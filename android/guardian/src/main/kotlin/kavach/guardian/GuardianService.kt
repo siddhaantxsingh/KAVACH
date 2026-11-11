@@ -271,8 +271,8 @@ class GuardianService : Service() {
     private fun vibrate(level: String) {
         val pattern = if (level == "stop") longArrayOf(0, 600, 250, 600, 250, 900) else longArrayOf(0, 350, 200, 350)
         try {
-            val v = if (Build.VERSION.SDK_INT >= 31) (getSystemService(android.os.VibratorManager::class.java)).defaultVibrator
-            else @Suppress("DEPRECATION") (getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator)
+            val v: android.os.Vibrator = if (Build.VERSION.SDK_INT >= 31) getSystemService(android.os.VibratorManager::class.java)!!.defaultVibrator
+            else getSystemService(android.os.Vibrator::class.java)!!
             v.vibrate(android.os.VibrationEffect.createWaveform(pattern, -1))
         } catch (t: Throwable) { Log.w(TAG, "vibrate", t) }
     }

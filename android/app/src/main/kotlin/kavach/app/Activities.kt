@@ -107,7 +107,7 @@ class MainActivity : Activity(), ShieldHub.Listener {
     // ------------------------------------------------------------------ Home
 
     private fun buildHome(col: LinearLayout) {
-        col.addView(Ui.header(this, "KAVACH Shield", t("आपके फ़ोन की सुरक्षा", "Scam protection for this phone")))
+        col.addView(Ui.header(this, "KAVACH", t("स्कैम से सुरक्षा, इसी फ़ोन पर", "Scam protection, on this phone")))
         hero = Ui.banner(this).also { h -> whyTag = Ui.pill(this); h.extras.addView(whyTag); col.addView(h) }
         homeBody = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         col.addView(homeBody)
@@ -130,8 +130,7 @@ class MainActivity : Activity(), ShieldHub.Listener {
             AppState.callMode == "listening" -> Ui.setState(h, "listen", t("कॉल सुन रहा है", "Listening to a call"), t("अभी तक कोई चेतावनी नहीं। यह गारंटी नहीं है।", "No warnings so far. This is not a guarantee."), Ui.Ic.ear)
             else -> Ui.setState(h, "listen", t("सुरक्षा चालू है", "Protection is on"), t("मैसेज, लिंक, ऐप और कॉल पर नज़र। अभी तक कोई चेतावनी नहीं — यह गारंटी नहीं है।", "Watching messages, links, apps and calls. No warnings so far — this is not a guarantee."), Ui.Ic.shieldCheck)
         }
-        }
-        val why = ShieldHub.last?.let { a -> if (a.level != "none") kavach.core.KillChain.ruleLabel(a.rule, lang) else "" } ?: ""
+        val why = ShieldHub.last?.let { x -> if (x.level != "none") kavach.core.KillChain.ruleLabel(x.rule, lang) else "" } ?: ""
         whyTag?.let { w ->
             if (why.isNotEmpty() && (stopNow || lv == "caution")) Ui.setPill(w, why, if (stopNow) 0xFFFFFFFF.toInt() else Ui.P.onCaution, if (stopNow) 0x33FFFFFF else 0x1F000000, Ui.Ic.info)
             else w.visibility = View.GONE

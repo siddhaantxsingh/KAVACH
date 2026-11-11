@@ -591,6 +591,12 @@ on the phone is checked on the phone (Calls → Setup & tools → Test on-device
 problems seen on the phone earlier (copied example advice, English advice in a Hindi call) are
 exactly the ones that go to 0 % and 100 %.
 
+On the phone (12 Nov, 04:24), the fine-tuned 4-bit `.pte` (820 MB, vs 1,083 MB for Meta's SpinQuant
+file) loaded and ran the self-test call: verdict "digital_arrest", confidence 0.91, its own advice
+("Hang up. Do not transfer any money. Tell a family member. Call 1930 or report at
+cybercrime.gov.in.") instead of the prompt's example; 92 tokens, first token 18.3 s (cold, no warm
+prefix), 11.5 tokens/s decode.
+
 # 9. Phase 2 plan
 
 1. Fine-tune the LoRA and export the quantisation ladder. A ready Colab notebook

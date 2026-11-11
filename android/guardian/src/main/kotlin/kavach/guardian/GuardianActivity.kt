@@ -151,12 +151,17 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         val h = protectHolder ?: return
         h.removeAllViews()
         val on = GuardianService.protecting
-        val access = kavach.shared.AppState.callAccessEnabled(this)
+        val stuck = kavach.shared.AppState.callAccessStuck(this)
+        val access = kavach.shared.AppState.callAccessEnabled(this) && !stuck
         val g = Ui.group(this, Ui.item(this, Ui.Ic.shieldCheck, t("मेरी कॉल सुरक्षित रखें", "Protect my calls"),
             if (on) t("चालू — अनजान नंबर की कॉल आते ही सुनना शुरू", "On — listening starts when an unknown number calls")
             else t("बंद — चालू करें ताकि हर अनजान कॉल पर कवच साथ रहे", "Off — turn on so KAVACH joins every call from an unknown number"),
             trailing = Ui.toggle(this, on, t("मेरी कॉल सुरक्षित रखें", "Protect my calls")) { v -> if (v) startStandby() else stopStandby() }))
-        if (!access) Ui.addRow(g, Ui.item(this, Ui.Ic.ear, t("कॉल सुनने की अनुमति दें", "Allow call listening"),
+        if (stuck) Ui.addRow(g, Ui.item(this, Ui.Ic.ear, t("कॉल सुनना Android ने रोक दिया", "Android stopped call listening"),
+            t("स्विच 'चालू' दिखता है पर Android उसे नहीं चला रहा, इसलिए कॉल के दौरान माइक चुप रहेगा। सेटिंग में 'KAVACH call listening' बंद करें, फिर चालू करें।",
+                "The switch still shows on, but Android is not running it, so calls would be heard as silence. In Settings turn 'KAVACH call listening' OFF, then ON again."),
+            trailing = Ui.small(this, t("ठीक करें", "Fix")) { kavach.shared.AppState.openCallAccessSettings(this) }, fg = Ui.WARN, bg = Ui.P.warnSoft))
+        else if (!access) Ui.addRow(g, Ui.item(this, Ui.Ic.ear, t("कॉल सुनने की अनुमति दें", "Allow call listening"),
             t("ज़रूरी: कॉल के दौरान Android माइक सिर्फ़ इस अनुमति से देता है। सेटिंग में 'KAVACH call listening' चालू करें।",
                 "Needed for real calls: during a call Android only shares the mic with this permission. Turn on 'KAVACH call listening' in Settings."),
             trailing = Ui.small(this, t("चालू करें", "Allow")) { showAccessHelp() }, fg = Ui.WARN, bg = Ui.P.warnSoft))
@@ -219,7 +224,10 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
     private fun renderMode(mode: String) {
         val live = mode == "listening" || mode == "demo"
         when (mode) {
-            "listening", "demo" -> Ui.setBanner(banner, level, uiLang)
+            "listening", "demo" -> if (mode == "listening" && GuardianBus.micBlocked && level != "stop" && level != "caution")
+                Ui.setState(banner, "caution", t("Android इस कॉल में माइक नहीं दे रहा", "Android is not sharing the microphone in this call"),
+                    t("सेटिंग → ऐक्सेसिबिलिटी → 'KAVACH call listening' बंद करें, फिर चालू करें।", "Settings → Accessibility → turn 'KAVACH call listening' OFF, then ON again."), Ui.Ic.micOff)
+                else Ui.setBanner(banner, level, uiLang)
             "standby" -> Ui.setState(banner, "ready", t("कॉल के लिए तैयार", "Ready for calls"), t("अनजान नंबर की कॉल आते ही सुनना शुरू करेगा। कॉल स्पीकर पर रखें।", "Starts listening when an unknown number calls. Put the call on speaker."), Ui.Ic.shieldCheck)
             "models_missing" -> Ui.setState(banner, "caution", t("बोली पहचानने के मॉडल नहीं मिले", "Speech models missing"), t("सेटअप में 'तैयारी' देखें। डेमो कॉल फिर भी चलेगी।", "See Readiness in Setup. The demo call still works."))
             else -> { level = "none"; whyText = ""; snr = null
@@ -283,9 +291,12 @@ class GuardianActivity : Activity(), GuardianBus.Listener {
         val vad = has("silero_vad.onnx")
         val llamaFile = ModelFiles.llamaPte(this).isFile && ModelFiles.llamaTokenizer(this).isFile
         Ui.addRow(ready, Ui.status(this, t("माइक्रोफ़ोन", "Microphone"), mic, if (mic) t("अनुमति है", "Allowed") else t("अनुमति चाहिए", "Permission needed")))
-        val access = kavach.shared.AppState.callAccessEnabled(this)
+        val stuckR = kavach.shared.AppState.callAccessStuck(this)
+        val access = kavach.shared.AppState.callAccessEnabled(this) && !stuckR
         Ui.addRow(ready, Ui.status(this, t("कॉल सुनने की अनुमति", "Call listening permission"), access,
-            if (access) t("चालू — स्पीकर पर रखी कॉल सुन सकता है", "On — can hear a call on speaker") else t("बंद — सिर्फ़ डेमो और पास के स्पीकर", "Off — demo and nearby speakers only")))
+            if (access) t("चालू और चल रहा — स्पीकर पर रखी कॉल सुन सकता है", "On and running — can hear a call on speaker")
+            else if (stuckR) t("Android ने रोका — सेटिंग में बंद करके फिर चालू करें", "Stopped by Android — turn it off and on again in Settings")
+            else t("बंद — सिर्फ़ डेमो और पास के स्पीकर", "Off — demo and nearby speakers only")))
         Ui.addRow(ready, Ui.status(this, t("हिंदी / Hinglish बोली मॉडल", "Hindi / Hinglish speech model"), hiAsr && vad, if (!(hiAsr && vad)) t("नहीं है", "Missing")
             else if (hiBig) t("AI4Bharat IndicConformer — इस फ़ोन पर", "AI4Bharat IndicConformer — on this phone") else t("छोटा मॉडल — बेहतर मॉडल के लिए push_models.sh --asr-hi-big", "Small model — run push_models.sh --asr-hi-big for the better one")))
         Ui.addRow(ready, Ui.status(this, t("English बोली मॉडल", "English speech model"), enAsr && vad, if (!(enAsr && vad)) t("नहीं है", "Missing")

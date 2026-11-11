@@ -59,6 +59,9 @@ class AsrEngine(
     /** which microphone / call source is actually in use (shown on the Guardian screen) */
     @Volatile var source: String = "mic"
         private set
+    /** AudioRecord session of the running recogniser (to ask Android whether it is silenced) */
+    @Volatile var audioSession = 0
+        private set
     @Volatile private var running = false
     private var thread: Thread? = null
     @Volatile var rtf: Double? = null
@@ -110,7 +113,7 @@ class AsrEngine(
             val vad = vad()
             var stream: OnlineStream = rec.createStream("")
             val minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
-            val audio = openAudio(maxOf(minBuf, SAMPLE_RATE / 5 * 2))
+            val audio = openAudio(maxOf(minBuf, SAMPLE_RATE / 5 * 2)).also { audioSession = it.audioSessionId }
             val chunk = ShortArray(SAMPLE_RATE / 10)
             val vadBuf = FloatArray(VAD_WINDOW)
             var vadFill = 0
@@ -183,7 +186,7 @@ class AsrEngine(
                     minSilenceDuration = 0.5f, minSpeechDuration = 0.25f, windowSize = VAD_WINDOW, maxSpeechDuration = 12.0f),
                 sampleRate = SAMPLE_RATE, numThreads = 1, provider = "cpu"))
             val minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
-            val audio = openAudio(maxOf(minBuf, SAMPLE_RATE / 5 * 2))
+            val audio = openAudio(maxOf(minBuf, SAMPLE_RATE / 5 * 2)).also { audioSession = it.audioSessionId }
             val chunk = ShortArray(SAMPLE_RATE / 10)
             val vadBuf = FloatArray(VAD_WINDOW)
             var vadFill = 0

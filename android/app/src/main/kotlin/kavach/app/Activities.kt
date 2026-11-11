@@ -118,7 +118,7 @@ class MainActivity : Activity(), ShieldHub.Listener {
         val h = hero ?: return
         val lang = ShieldHub.lang(this)
         val lv = ShieldHub.last?.level ?: "none"
-        val n = notificationAccess(); val u = ShieldService.hasUsageAccess(this); val a = AppState.callAccessEnabled(this)
+        val n = notificationAccess(); val u = ShieldService.hasUsageAccess(this); val stuck = AppState.callAccessStuck(this); val a = AppState.callAccessEnabled(this) && !stuck
         val callOn = AppState.callMode in setOf("standby", "listening", "demo")
         val p = ShieldService.running && callOn
         val stopNow = ShieldHub.guardianLevel == "stop" || lv == "stop"
@@ -161,8 +161,9 @@ class MainActivity : Activity(), ShieldHub.Listener {
             Ui.addRow(card, Ui.step(this, 2, u, t("स्क्रीन-शेयर गार्ड", "Screen-share guard"), t("स्क्रीन शेयर के दौरान पेमेंट ऐप खुलने पर रोकता है", "Warns if a payment app opens while your screen is shared"), t("चालू करें", "Turn on")) {
                 startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) })
             Ui.addRow(card, Ui.item(this, if (a) Ui.Ic.check else Ui.Ic.ear, t("कॉल सुनने की अनुमति", "Call listening"),
-                t("स्पीकर पर रखी कॉल इसी फ़ोन पर सुनता है (Android की ऐक्सेसिबिलिटी अनुमति)", "Hears a call you put on speaker, on this phone (Android accessibility permission)"),
-                trailing = if (a) null else Ui.small(this, t("चालू करें", "Turn on")) { showAccessHelp() },
+                if (stuck) t("Android ने इसे रोक दिया है। सेटिंग में 'KAVACH call listening' बंद करें, फिर चालू करें।", "Android stopped it (the switch still shows on). In Settings turn 'KAVACH call listening' OFF, then ON again.")
+                else t("स्पीकर पर रखी कॉल इसी फ़ोन पर सुनता है (Android की ऐक्सेसिबिलिटी अनुमति)", "Hears a call you put on speaker, on this phone (Android accessibility permission)"),
+                trailing = if (a) null else Ui.small(this, if (stuck) t("ठीक करें", "Fix") else t("चालू करें", "Turn on")) { if (stuck) AppState.openCallAccessSettings(this) else showAccessHelp() },
                 fg = if (a) Ui.GOOD else Ui.GOLD, bg = if (a) Ui.P.goodSoft else Ui.P.goldSoft))
             Ui.addRow(card, Ui.step(this, 4, p, t("सुरक्षा चालू करें", "Turn on protection"), t("मैसेज, लिंक, ऐप और कॉल — पीछे चुपचाप", "Messages, links, apps and calls — quietly in the background"), t("चालू करें", "Turn on")) { startProtection() })
             body.addView(card)

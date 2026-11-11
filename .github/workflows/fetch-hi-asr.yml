@@ -1,6 +1,9 @@
 name: fetch-hi-asr
-# Copies the Hindi streaming speech model (Apache-2.0, see models/asr/README.md) from Hugging Face to
-# the release "dev-models", so the host tests in bench/ can run where Hugging Face is not reachable.
+# Mirrors Hindi speech models from Hugging Face to the release "dev-models", so host tests run where
+# Hugging Face is not reachable and the phone setup script can fetch them from GitHub:
+#  - mobilebytesensei/betterflow-hindi-streaming-ctc (streaming, Apache-2.0)            -> encoder.int8.onnx, tokens.txt
+#  - ngiftsun/indicconformer-hi-int8-sherpa: AI4Bharat IndicConformer Hindi 120M CTC,
+#    int8 for sherpa-onnx (model MIT by AI4Bharat; ONNX export CC-BY-4.0, trysem)         -> ic-hi-*
 on:
   workflow_dispatch:
   push:
@@ -14,17 +17,18 @@ jobs:
       - run: |
           pip -q install huggingface_hub
           python - <<'PY'
-          from huggingface_hub import hf_hub_download
+          from huggingface_hub import hf_hub_download, snapshot_download, list_repo_files
           for f in ["encoder.int8.onnx", "tokens.txt"]:
               hf_hub_download("mobilebytesensei/betterflow-hindi-streaming-ctc", f, local_dir="hi")
-          from huggingface_hub import snapshot_download, list_repo_files
-          print(list_repo_files("ippocode/indic-asr-onnx"))
-          snapshot_download("ippocode/indic-asr-onnx", allow_patterns=["whisper-small-hi/*"], local_dir="w")
+          print(list_repo_files("ngiftsun/indicconformer-hi-int8-sherpa"))
+          snapshot_download("ngiftsun/indicconformer-hi-int8-sherpa", local_dir="ic")
           PY
-          ls -la hi w/whisper-small-hi
-          cd w/whisper-small-hi && for f in *; do mv "$f" "../../hi/whisper-small-hi-$f"; done
+          mkdir -p up
+          cp hi/encoder.int8.onnx hi/tokens.txt up/
+          for f in ic/*; do [ -f "$f" ] && cp "$f" "up/ic-hi-$(basename "$f")"; done
+          ls -la up
       - env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view dev-models -R $GITHUB_REPOSITORY >/dev/null 2>&1 || gh release create dev-models -R $GITHUB_REPOSITORY --prerelease --title "Dev models (host tests)" --notes "Hindi streaming ASR model (Apache-2.0) mirrored for host tests."
-          gh release upload dev-models hi/* -R $GITHUB_REPOSITORY --clobber
+          gh release view dev-models -R $GITHUB_REPOSITORY >/dev/null 2>&1 || gh release create dev-models -R $GITHUB_REPOSITORY --prerelease --title "Dev models" --notes "Hindi speech models mirrored for host tests and the phone setup script."
+          gh release upload dev-models up/* -R $GITHUB_REPOSITORY --clobber

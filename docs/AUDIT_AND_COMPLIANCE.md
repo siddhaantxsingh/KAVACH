@@ -195,3 +195,12 @@ Whisper-small run sentence by sentence) is the real fix and is not integrated ye
   the error log.
 - Risk: Play-store policy limits accessibility services; acceptable for a side-loaded prototype,
   documented in the report §8.
+
+
+## Hindi: AI4Bharat IndicConformer (11 Nov)
+
+Same 100 unseen synthetic Hindi calls, same audio: telephone-band red 0 % → 58 %, yellow-or-red
+46 % → 86 %; near-speaker red 44 % → 66 %, yellow-or-red 92 % → 96 %; genuine calls never red, 6 %
+yellow (3 bank/police genuine calls). Classifier retrained with 320 calls transcribed by the new
+model; text-only sets equal or better, 0 false STOPs. Owner action: `scripts/push_models.sh --asr-hi-big`,
+then re-test the Hindi files. Caveat: synthetic single-voice audio; human recordings still needed.

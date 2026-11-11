@@ -413,7 +413,22 @@ by Piper TTS, passed through a channel and decoded by the same streaming Hindi m
 | telephone band, SNR 10–30 dB | before | 0 % | 12 % | 0 % |
 | telephone band, SNR 10–30 dB | after | 0 % | 44 % | 0 % |
 
-Changes: 208 mixed-script word-list variants (the model writes "bank", "otp", "card" in Latin
+**A better Hindi speech model.** AI4Bharat's IndicConformer Hindi (120 M parameters, CTC; MIT
+licence; int8 ONNX export for sherpa-onnx, 198 MB) recognises each sentence cut out by the VAD
+instead of streaming word by word. Same 100 calls, same audio:
+
+| Condition | Streaming Hindi model: red / yellow-or-red | IndicConformer: red / yellow-or-red | Genuine → red / yellow (IndicConformer) |
+|---|---|---|---|
+| near speaker, quiet room | 44 % / 92 % | **66 % / 96 %** | 0 % / 6 % |
+| telephone band, SNR 10–30 dB | 0 % / 46 % | **58 % / 86 %** | 0 % / 6 % |
+
+The three genuine calls that reach yellow are a real traffic-police call and two real card-fraud
+checks from a bank, the closest benign twins of scams. The team's two Hindi test files: scam red
+12/12, genuine never yellow or red. Host speed: 0.04 × real time on 2 threads (the phone figure
+comes from the benchmark screen). The app uses IndicConformer whenever its files are on the phone
+(`scripts/push_models.sh --asr-hi-big`) and falls back to the streaming model otherwise.
+
+Earlier changes, streaming model: 208 mixed-script word-list variants (the model writes "bank", "otp", "card" in Latin
 letters inside Hindi), the classifier retrained with 410 Hindi calls as the model hears them,
 "tell no one" treated as safety advice when the sentence is about an OTP or PIN, and the
 `isolation+authority` rule made vetoable by a confidently benign classifier. Text-only sets are
@@ -483,7 +498,8 @@ SpinQuant on a OnePlus 12.
   unknown callers on speaker by itself. One-phone listening relies on the accessibility capture
   rule; Play policy limits accessibility use, so a store version would need the phone maker's
   system mode or a declared accessibility use case (`docs/threat_model.md`).
-* **Hindi speech recognition** is the weakest link (§7.5); a larger Hindi model is the Phase 2 fix.
+* **Hindi speech recognition** was the weakest link (§7.5). AI4Bharat IndicConformer closes most of
+  the gap on synthetic audio; human Hindi voices on real phone calls are still to be measured.
 
 # 9. Phase 2 plan
 

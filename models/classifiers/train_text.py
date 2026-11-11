@@ -138,7 +138,7 @@ def main() -> None:
         tr = tuple(t + x * 3 for t, x in zip(tr, xa))  # 3x weight: few calls, but the exact noise the phone sees
         print(f"+ {len(xa[0])} ASR windows (x3)")
     # same for Hindi, two channels: telephone band and near-speaker (models/asr/make_asr_noisy_calls_hi.py)
-    for name in ("calls_train_asr_hi.jsonl", "calls_train_asr_hi_near.jsonl"):
+    for name in ("calls_train_asr_hi.jsonl", "calls_train_asr_hi_near.jsonl", "calls_train_asr_hi_ic.jsonl", "calls_train_asr_hi_near_ic.jsonl"):
         f = SYNTH / name
         if f.exists() and not a.no_asr_aug:
             xh = call_windows(f)

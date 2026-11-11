@@ -1,0 +1,30 @@
+{
+ "base": "meta-llama/Llama-3.2-1B-Instruct",
+ "lora": "r=16, all projections, 1 epoch, 4000 pairs, Colab T4 (train 4.1 h, final train loss 0.111, dev loss 0.041)",
+ "data": "first 100 examples of data/synth/out/sft_dev.jsonl (dev split; same generator as training, not the held-out test split)",
+ "model_evaluated": "Hugging Face weights (merged LoRA), not the 4-bit .pte",
+ "before": {
+  "name": "llama_base",
+  "n": 100,
+  "json_valid": 0.71,
+  "scam_acc": 0.38,
+  "type_acc": 0.5806,
+  "stop_stage_acc": 0.7097,
+  "evidence_ok": 0.0845,
+  "copied_example": 0.3239,
+  "say_lang_ok": 0.5493,
+  "sec_per_example": 4.08
+ },
+ "after": {
+  "name": "llama_lora",
+  "n": 100,
+  "json_valid": 1.0,
+  "scam_acc": 0.89,
+  "type_acc": 0.7556,
+  "stop_stage_acc": 1.0,
+  "evidence_ok": 0.96,
+  "copied_example": 0.0,
+  "say_lang_ok": 1.0,
+  "sec_per_example": 3.35
+ }
+}

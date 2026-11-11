@@ -18,12 +18,14 @@ class CueCategory(
 class Lexicon(cuesJson: String) {
     val negators: Set<String>
     val stages: List<String>
+    val credentialWords: Set<String>
     val categories = LinkedHashMap<String, CueCategory>()
 
     init {
         val d = MiniJson.parse(cuesJson).obj()
         negators = d["negators"].strList().map { Normalize.normalize(it) }.toSet()
         stages = d["stages"].strList()
+        credentialWords = if (d["credential_words"] != null) d["credential_words"].strList().map { Normalize.normalize(it) }.toSet() else emptySet()
         for ((name, cv) in d["categories"].obj()) {
             val c = cv.obj()
             val cat = CueCategory(
@@ -87,10 +89,16 @@ class Lexicon(cuesJson: String) {
                 }
             }
         }
-        // "never tell your OTP to anyone" is the bank's safety advice, not a scammer's "tell no one":
-        // an isolation hit whose words overlap a safety-advice hit is dropped.
-        val safe = hits.filter { it.category == "safety_advice" }.map { it.start to it.end }
-        val kept = if (safe.isEmpty()) hits else hits.filter { h -> !(h.category == "isolation" && safe.any { (s, e) -> h.start < e && s < h.end }) }
+        // "Tell no one" is a scammer's isolation line when it is about the call, but safety advice when
+        // it is about a secret code ("the bank never asks for your OTP or PIN, never tell it to anyone").
+        // In a sentence that has a safety-advice hit, or that names a secret code without asking for
+        // it, isolation hits are dropped. (Same rule as kavach_core/lexicon.py.)
+        var kept: List<CueHit> = hits
+        if (hits.any { it.category == "isolation" }) {
+            val safe = hits.any { it.category == "safety_advice" }
+            val asks = hits.any { it.category == "credential_request" }
+            if (safe || (!asks && toks.any { it in credentialWords })) kept = hits.filter { it.category != "isolation" }
+        }
         return kept.sortedWith(compareBy<CueHit>({ it.start }, { it.category }))
     }
 

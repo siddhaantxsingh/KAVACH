@@ -149,3 +149,31 @@ Llama on the same call copied its example answer word for word and answered in E
 Hindi call. Its verdict (scam type, evidence) is still used, but such wording is now replaced by the
 playbook explanation for the call, and the screen says "Checked by Llama 3.2 1B on this phone ·
 advice from KAVACH's playbook" instead of "Explained by Llama". Proper fix: LoRA fine-tuning (Phase 2).
+
+
+## Hindi through the speech model: measured for the first time (11 Nov)
+
+The Hindi streaming speech model is now mirrored to the build machine (release `dev-models`), so
+Hindi audio can be replayed on the host. 100 unseen synthetic Hindi test calls (50 scam, 50 genuine)
+were spoken by Piper TTS, passed through a channel and decoded by the same Hindi model the phone uses.
+
+| Condition | Build | Red on scam calls | Yellow or red | Red on genuine calls |
+|---|---|---|---|---|
+| near speaker, quiet room | before | 24% | 58% | 0% |
+| near speaker, quiet room | now | 44% | 88% | 0% |
+| telephone band, SNR 10-30 dB | before | 0% | 12% | 0% |
+| telephone band, SNR 10-30 dB | now | 0% | 44% | 0% |
+
+What changed: 208 mixed-script word-list variants (`tools/expand_loanwords.py`; the model writes
+"bank", "otp", "card" in Latin letters inside Hindi); the call classifier retrained with 410 Hindi
+calls as the speech model hears them (two channels); "tell no one" is treated as safety advice when
+the sentence is about an OTP/PIN; the `isolation+authority` rule can be vetoed by a confidently
+benign classifier; a copied Llama answer can no longer raise yellow to red.
+Text-only sets after the change: dev, test, hand-written and held-out detection equal or better,
+0 false STOPs. The owner's two Hindi test files, replayed 12 times each in varied near conditions:
+scam call red 12/12; genuine bank call calm 10/12, yellow 2/12, red 0/12.
+
+Honest limits: (1) the Hindi speech model is the bottleneck: on a telephone-band noisy call its text
+is mostly unusable, and no word list can repair that; (2) training and test audio use the same TTS
+voice, so real human voices will score lower; (3) a stronger Hindi model (e.g. a Hindi fine-tuned
+Whisper-small run sentence by sentence) is the real fix and is not integrated yet.

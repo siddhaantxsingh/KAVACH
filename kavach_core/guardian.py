@@ -42,7 +42,7 @@ class GuardianConfig:
     # classifier has been confidently benign on the recent windows; strong rules
     # (isolation+authority, authority+identity+threat, cross-channel) are never vetoed
     p_veto: float = 0.50
-    veto_rules: tuple = ("hook+action", "multi-action", "score")
+    veto_rules: tuple = ("hook+action", "multi-action", "score", "isolation+authority")
     llm_escalate_conf: float = 0.80
     lang: str = "hi"
     killchain: KillChainConfig = field(default_factory=KillChainConfig)

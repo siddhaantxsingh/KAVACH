@@ -78,6 +78,7 @@ class Lexicon:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         self.negators = {normalize(n) for n in data["negators"]}
         self.stages: list[str] = data["stages"]
+        self.credential_words = {normalize(w) for w in data.get("credential_words", [])}
         self.categories: dict[str, Category] = {}
         for name, c in data["categories"].items():
             cat = Category(name, c["stage"], float(c["weight"]), bool(c["negatable"]), c["label_en"], c["label_hi"])
@@ -133,11 +134,15 @@ class Lexicon:
                         continue
                     hits.append(CueHit(cat.name, raw, i, e, cat.stage, cat.weight))
                     covered.update(range(i, e))
-        # "never tell your OTP to anyone" is the bank's safety advice, not a scammer's "tell no one":
-        # an isolation hit whose words overlap a safety-advice hit is dropped.
-        safe = [(h.start, h.end) for h in hits if h.category == "safety_advice"]
-        if safe:
-            hits = [h for h in hits if not (h.category == "isolation" and any(h.start < e and s < h.end for s, e in safe))]
+        # "Tell no one" is a scammer's isolation line when it is about the call ("don't tell your
+        # family"), but safety advice when it is about a secret code ("the bank never asks for your
+        # OTP or PIN, never tell it to anyone"). In a sentence that has a safety-advice hit, or that
+        # names a secret code without asking for it, isolation hits are dropped.
+        if any(h.category == "isolation" for h in hits):
+            safe = any(h.category == "safety_advice" for h in hits)
+            asks = any(h.category == "credential_request" for h in hits)
+            if safe or (not asks and any(t in self.credential_words for t in toks)):
+                hits = [h for h in hits if h.category != "isolation"]
         hits.sort(key=lambda h: (h.start, h.category))
         return hits
 

@@ -13,7 +13,7 @@ class GuardianConfig(
     val pCaution: Double = 0.80,
     val pStop: Double = 0.80,
     val pVeto: Double = 0.50,
-    val vetoRules: Set<String> = setOf("hook+action", "multi-action", "score"),
+    val vetoRules: Set<String> = setOf("hook+action", "multi-action", "score", "isolation+authority"),
     val llmEscalateConf: Double = 0.80,
     var lang: String = "hi",
     val killchain: KillChainConfig = KillChainConfig(),

@@ -100,7 +100,31 @@
     "कस्टम ऑफिसर",
     "क्राइम ब्रांच से",
     "पुलिस स्टेशन",
-    "साइबर क्राइम"
+    "साइबर क्राइम",
+    "cyber पुलिस",
+    "साइबर police",
+    "cyber सेल",
+    "crime ब्रांच",
+    "क्राइम branch",
+    "custom",
+    "income टैक्स",
+    "इनकम tax",
+    "income tax",
+    "supreme कोर्ट",
+    "सुप्रीम court",
+    "high कोर्ट",
+    "हाई court",
+    "court",
+    "custom ऑफिसर",
+    "कस्टम officer",
+    "custom officer",
+    "crime ब्रांच से",
+    "क्राइम branch से",
+    "crime branch से",
+    "police स्टेशन",
+    "पुलिस station",
+    "cyber क्राइम",
+    "साइबर crime"
    ]
   },
   "authority_bank": {
@@ -143,7 +167,20 @@
     "calling from ~ bank",
     "बैंक से",
     "बैंक की ओर से",
-    "बैंक की तरफ से"
+    "बैंक की तरफ से",
+    "bank मैनेजर",
+    "बैंक manager",
+    "head ऑफिस",
+    "हेड office",
+    "रिजर्व bank",
+    "customer केयर",
+    "कस्टमर care",
+    "sim कार्ड",
+    "सिम card",
+    "sim card",
+    "bank से",
+    "bank की ओर से",
+    "bank की तरफ से"
    ]
   },
   "identity_misuse": {
@@ -229,7 +266,29 @@
     "मनिलौं*",
     "मनी लांड*",
     "मनी लॉन्ड*",
-    "मनीलॉन्ड*"
+    "मनीलॉन्ड*",
+    "आधार ~ link",
+    "pan ~ लिंक",
+    "पैन ~ link",
+    "pan ~ link",
+    "money लॉन्ड्रिंग",
+    "मनी laundering",
+    "drugs",
+    "parcel ~ ड्रग्स",
+    "पार्सल ~ drugs",
+    "parcel ~ पकड़ा",
+    "parcel ~ जब्त",
+    "आतंकी funding",
+    "आपके नाम ~ case",
+    "sim ~ जारी",
+    "parcel बुक",
+    "पार्सल book",
+    "parcel book",
+    "fake पासपोर्ट",
+    "फेक passport",
+    "fake passport",
+    "money लांड*",
+    "money लॉन्ड*"
    ]
   },
   "threat": {
@@ -293,7 +352,26 @@
     "एफआईआर",
     "नाम से ~ निकला",
     "वारंट निकला",
-    "वारेंट"
+    "वारेंट",
+    "arrest",
+    "digital अरेस्ट",
+    "डिजिटल arrest",
+    "account ~ बंद",
+    "account ~ ब्लॉक",
+    "अकाउंट ~ block",
+    "account ~ block",
+    "account ~ फ्रीज",
+    "अकाउंट ~ freeze",
+    "account ~ freeze",
+    "sim ~ बंद",
+    "sim ~ ब्लॉक",
+    "सिम ~ block",
+    "sim ~ block",
+    "number ~ बंद",
+    "connection ~ कट",
+    "arrest वारंट",
+    "अरेस्ट warrant",
+    "fir"
    ]
   },
   "urgency": {
@@ -332,7 +410,8 @@
     "minute ke andar",
     "minutes ~ otherwise",
     "वरना",
-    "मिनट के अंदर"
+    "मिनट के अंदर",
+    "minute के अंदर"
    ]
   },
   "isolation": {
@@ -412,7 +491,20 @@
     "घर में किसी को",
     "डिस्कनेक्ट मत",
     "फ़ोन मत काट*",
-    "फोन मत काट*"
+    "फोन मत काट*",
+    "phone मत काटना",
+    "phone मत काटिए",
+    "call मत काटना",
+    "call मत काटिए",
+    "call ~ बने रहो",
+    "call ~ बने रहिए",
+    "video कॉल पर रह*",
+    "वीडियो call पर रह*",
+    "video call पर रह*",
+    "camera ~ चालू",
+    "घर वालों ~ arrest",
+    "वे भी arrest",
+    "phone मत काट*"
    ]
   },
   "credential_request": {
@@ -474,7 +566,26 @@
     "card ~ details",
     "कोड आया",
     "code aaya ~ bata*",
-    "पिन डाल*"
+    "पिन डाल*",
+    "otp ~ बता*",
+    "otp ~ बोलि*",
+    "otp ~ बोलो",
+    "otp ~ शेयर",
+    "ओटीपी ~ share",
+    "otp ~ भेज*",
+    "otp ~ पढ़*",
+    "upi पिन",
+    "यूपीआई pin",
+    "pin ~ बता*",
+    "pin ~ डाल*",
+    "pin डालिए",
+    "card नंबर",
+    "कार्ड number",
+    "password ~ बता*",
+    "code ~ बता*",
+    "code ~ बोल*",
+    "code आया",
+    "pin डाल*"
    ]
   },
   "remote_access": {
@@ -518,7 +629,24 @@
     "screen ~ permission",
     "permission ~ screen",
     "स्क्रीन ~ परमिशन",
-    "परमिशन ~ स्क्रीन"
+    "परमिशन ~ स्क्रीन",
+    "quick सपोर्ट",
+    "क्विक support",
+    "screen शेयर",
+    "स्क्रीन share",
+    "screen ~ शेयर",
+    "स्क्रीन ~ share",
+    "screen ~ share",
+    "app ~ डाउनलोड",
+    "ऐप ~ download",
+    "app ~ इंस्टॉल",
+    "ऐप ~ install",
+    "एप ~ download",
+    "एप ~ install",
+    "screen ~ परमिशन",
+    "स्क्रीन ~ permission",
+    "permission ~ स्क्रीन",
+    "परमिशन ~ screen"
    ]
   },
   "link_click": {
@@ -541,7 +669,12 @@
     "लिंक ~ क्लिक",
     "लिंक ~ खोल*",
     "लिंक ~ भेज*",
-    "लिंक पर"
+    "लिंक पर",
+    "link ~ क्लिक",
+    "लिंक ~ click",
+    "link ~ खोल*",
+    "link ~ भेज*",
+    "link पर"
    ]
   },
   "payment_request": {
@@ -647,7 +780,34 @@
     "आरबीआई ~ अकाउंट",
     "पैसे ~ transfer",
     "सेफ एकाउंट",
-    "सेविंग्स ~ ट्रांसफर"
+    "सेविंग्स ~ ट्रांसफर",
+    "रकम ~ transfer",
+    "transfer ~ कर*",
+    "fees ~ भर*",
+    "security डिपॉजिट",
+    "सिक्योरिटी deposit",
+    "safe अकाउंट",
+    "सेफ account",
+    "सरकारी account",
+    "verification ~ पैसे",
+    "qr कोड",
+    "क्यूआर code",
+    "scan",
+    "request ~ अप्रूव",
+    "रिक्वेस्ट ~ approve",
+    "request ~ approve",
+    "payment ~ कर*",
+    "tax ~ भर*",
+    "withdrawal",
+    "google पे",
+    "गूगल pay",
+    "approve",
+    "verification ~ transfer",
+    "rbi ~ अकाउंट",
+    "आरबीआई ~ account",
+    "safe एकाउंट",
+    "savings ~ ट्रांसफर",
+    "सेविंग्स ~ transfer"
    ]
   },
   "reward_greed": {
@@ -719,7 +879,17 @@
     "points ~ cash",
     "points ~ expir*",
     "guaranteed",
-    "गारंटी*"
+    "गारंटी*",
+    "lucky ड्रा",
+    "लकी draw",
+    "part टाइम",
+    "पार्ट time",
+    "part time",
+    "task",
+    "gift",
+    "vip",
+    "रोज ~ percent",
+    "guarantee*"
    ]
   },
   "family_emergency": {
@@ -752,7 +922,8 @@
     "पुलिस ~ पकड़",
     "हिरासत",
     "ज़मानत",
-    "जमानत"
+    "जमानत",
+    "police ~ पकड़"
    ]
   },
   "safety_advice": {
@@ -788,7 +959,32 @@
     "बैंक कभी",
     "शाखा ~ जाकर",
     "ब्रांच ~ जाकर",
-    "आधिकारिक"
+    "आधिकारिक",
+    "कभी ~ नहीं मांगता",
+    "कभी ~ नहीं मांगते",
+    "कभी ~ नहीं मानता",
+    "नहीं मांगता ~ किसी को मत",
+    "पीछे लिखे नंबर",
+    "कार्ड के पीछे",
+    "otp ~ किसी को ~ मत",
+    "otp ~ शेयर मत",
+    "ओटीपी ~ share मत",
+    "otp ~ share मत",
+    "otp ~ शेयर न",
+    "ओटीपी ~ share न",
+    "otp ~ share न",
+    "pin ~ शेयर मत",
+    "पिन ~ share मत",
+    "pin ~ share मत",
+    "कभी ~ otp ~ नहीं",
+    "bank कभी",
+    "branch ~ जाकर",
+    "पीछे लिखे number",
+    "card के पीछे",
+    "नहीं मांगता",
+    "नहीं मांगते",
+    "नहीं मांगती",
+    "नहीं मानता ~ किसी को मत"
    ]
   },
   "victim_fear": {
@@ -831,7 +1027,9 @@
     "केस मत करो",
     "मेरा क्या होगा",
     "सहयोग करूंगा",
-    "परिवार बर्बाद"
+    "परिवार बर्बाद",
+    "police घर मत",
+    "case मत करो"
    ]
   },
   "victim_sharing": {
@@ -880,7 +1078,21 @@
     "मेरा खाता नंबर",
     "कार्ड नंबर है",
     "पासवर्ड है",
-    "पिन है"
+    "पिन है",
+    "otp है",
+    "मेरा otp",
+    "otp आया",
+    "otp बता",
+    "otp पढ़",
+    "code है",
+    "code आ गया",
+    "खाता number है",
+    "मेरा खाता number",
+    "card नंबर है",
+    "कार्ड number है",
+    "card number है",
+    "password है",
+    "pin है"
    ]
   },
   "victim_paying": {
@@ -930,8 +1142,27 @@
     "पेमेंट कर रहा",
     "पेमेंट कर दिया",
     "किस खाते",
-    "कितना भेजना"
+    "कितना भेजना",
+    "transfer कर रहा",
+    "transfer कर रही",
+    "transfer कर दिया",
+    "transfer करता",
+    "payment कर रहा",
+    "payment कर दिया"
    ]
   }
- }
+ },
+ "credential_words": [
+  "otp",
+  "pin",
+  "cvv",
+  "password",
+  "passcode",
+  "mpin",
+  "ओटीपी",
+  "पिन",
+  "सीवीवी",
+  "पासवर्ड",
+  "एमपिन"
+ ]
 }

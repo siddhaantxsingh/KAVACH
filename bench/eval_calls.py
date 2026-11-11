@@ -38,6 +38,9 @@ FILES = {
     "dev": ROOT / "data/synth/out/calls_dev.jsonl",
     "test": ROOT / "data/synth/out/calls_test.jsonl",
     "test_far": ROOT / "data/synth/out/calls_test_far.jsonl",  # caller heard through the speaker: 3x ASR errors
+    # Hindi calls as the phone hears them: Piper TTS -> channel -> the Hindi streaming ASR (models/asr/make_asr_noisy_calls_hi.py)
+    "test_asr_hi_near": ROOT / "data/synth/out/calls_test_asr_hi_near.jsonl",  # near speaker, quiet room
+    "test_asr_hi": ROOT / "data/synth/out/calls_test_asr_hi.jsonl",  # 8 kHz telephone band, SNR 10-30 dB
     "handwritten": ROOT / "data/dev/handwritten_calls.jsonl",
     "heldout": ROOT / "data/dev/heldout_calls.jsonl",  # locked: report only, never tune
 }

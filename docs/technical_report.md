@@ -408,7 +408,8 @@ cause false alarms, so the aliases were discarded.
 
 Caveats found and kept visible: Llama's advice was at first identical to the worked example in its
 instructions; such wording is now replaced by the playbook text and labelled "advice from
-KAVACH's playbook", and a copied answer cannot raise a warning (Phase 2: LoRA fine-tuning).
+KAVACH's playbook", and a copied answer cannot raise a warning. LoRA fine-tuning (§7.9) takes
+copied advice from 32 % to 0 %.
 
 **Hindi through the speech model.** 100 unseen synthetic Hindi calls (50 scam, 50 genuine) spoken
 by Piper TTS, passed through a channel and decoded by the same streaming Hindi model the phone uses:
@@ -565,6 +566,30 @@ SpinQuant on a OnePlus 12.
   system mode or a declared accessibility use case (`docs/threat_model.md`).
 * **Hindi speech recognition** was the weakest link (§7.5). AI4Bharat IndicConformer closes most of
   the gap on synthetic audio; human Hindi voices on real phone calls are still to be measured.
+
+## 7.9 Llama 3.2 1B after LoRA fine-tuning (Colab, 12 Nov 2026)
+
+`notebooks/kavach_llama_lora_colab.ipynb` on a free Colab T4: LoRA r = 16 on all projections,
+1 epoch over 4,000 KAVACH instruction pairs (4.1 h; final training loss 0.111, dev loss 0.041),
+merged and exported to ExecuTorch 1.4 with the shipped 4-bit config. Scored with
+`models/llama/eval_llama.py` on the first 100 dev examples, before and after
+(`bench/results/llama_lora_colab.json`):
+
+| Metric | Base Llama 3.2 1B | + KAVACH LoRA |
+|---|---|---|
+| valid JSON verdict | 71 % | **100 %** |
+| scam / not scam correct | 38 % | **89 %** |
+| scam type correct | 58 % | **76 %** |
+| warning stage correct | 71 % | **100 %** |
+| quoted evidence really in the transcript | 8 % | **96 %** |
+| advice copied from the prompt's example | 32 % | **0 %** |
+| advice in the call's language | 55 % | **100 %** |
+
+Caveats: the dev examples come from the same synthetic generator as the training data (the
+held-out test split was not used), and this is the full-precision merged model; the 4-bit `.pte`
+on the phone is checked on the phone (Calls → Setup & tools → Test on-device AI). The two
+problems seen on the phone earlier (copied example advice, English advice in a Hindi call) are
+exactly the ones that go to 0 % and 100 %.
 
 # 9. Phase 2 plan
 

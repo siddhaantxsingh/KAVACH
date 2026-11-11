@@ -81,6 +81,10 @@ class LocalLink(
         const val EXTRA_FROM = "from"
         const val GUARDIAN_PACKAGE = "io.kavach.guardian"
         const val SHIELD_PACKAGE = "io.kavach.shield"
+        /** The one KAVACH app (Shield + call listener) keeps the Guardian's package id, so the
+         *  models already copied to /sdcard/Android/data/io.kavach.guardian stay where they are. */
+        const val KAVACH_PACKAGE = GUARDIAN_PACKAGE
+        const val NETWATCH_PACKAGE = "io.kavach.netwatch"
         /** Value of the Guardian's "link" setting meaning "Shield is on this same phone". */
         const val SAME_PHONE = "local"
     }

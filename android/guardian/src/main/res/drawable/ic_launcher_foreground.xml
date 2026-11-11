@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- KAVACH Guardian: gold outline shield holding a sound wave, on deep cobalt -->
+<!-- KAVACH Shield: solid gold shield with an inner keyline and a keyhole, on midnight -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:strokeColor="#D6B36A" android:strokeWidth="4" android:strokeLineJoin="round"
-        android:pathData="M54,28 L76,35.6 C76,58 68.4,71 54,79.6 C39.6,71 32,58 32,35.6 Z" />
-    <path android:strokeColor="#F4F1E8" android:strokeWidth="3.4" android:strokeLineCap="round"
-        android:pathData="M44,51 L44,57 M49,46 L49,62 M54,41 L54,67 M59,46 L59,62 M64,51 L64,57" />
+    <path android:fillColor="#D6B36A" android:pathData="M54,27 L77,35 C77,58.5 69,72 54,81 C39,72 31,58.5 31,35 Z" />
+    <path android:strokeColor="#9C7A3C" android:strokeWidth="1.6" android:strokeLineJoin="round"
+        android:pathData="M54,32.5 L72.2,38.8 C72.2,57.5 65.8,68.8 54,75.6 C42.2,68.8 35.8,57.5 35.8,38.8 Z" />
+    <path android:fillColor="#0B1020" android:pathData="M54,44.9 A5.6,5.6 0 1,1 53.99,44.9 Z M51.2,54 L49.6,64.5 L58.4,64.5 L56.8,54 Z" />
 </vector>

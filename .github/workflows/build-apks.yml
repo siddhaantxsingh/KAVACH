@@ -1,4 +1,4 @@
-# Builds the three KAVACH debug APKs on every push to main and publishes them (plus the build log)
+# Builds the KAVACH debug APKs (the one app + optional Network Watch) on every push to main and publishes them (plus the build log)
 # as the GitHub Release "apks-latest". Download from the repo's Releases page.
 name: build-apks
 on:
@@ -22,18 +22,17 @@ jobs:
           java-version: "17"
       - name: Fetch sherpa-onnx AAR
         run: bash scripts/fetch_android_deps.sh
-      - name: Build (parity tests + 3 APKs)
+      - name: Build (parity tests + APKs)
         run: |
           set -o pipefail
           cd android
           chmod +x gradlew
-          ./gradlew --no-daemon --stacktrace :core:test :guardian:assembleDebug :app:assembleDebug :netwatch:assembleDebug 2>&1 | tee ../build.log
+          ./gradlew --no-daemon --stacktrace :core:test :guardian:assembleDebug :netwatch:assembleDebug 2>&1 | tee ../build.log
       - name: Collect
         if: always()
         run: |
           mkdir -p dist
-          cp android/guardian/build/outputs/apk/debug/guardian-debug.apk dist/kavach-guardian-debug.apk || true
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/kavach-shield-debug.apk || true
+          cp android/guardian/build/outputs/apk/debug/guardian-debug.apk dist/kavach-debug.apk || true
           cp android/netwatch/build/outputs/apk/debug/netwatch-debug.apk dist/kavach-netwatch-debug.apk || true
           tail -c 900000 build.log > dist/build.log || true
           ls -la dist
@@ -50,7 +49,7 @@ jobs:
           else
             gh release create apks-latest dist/* --target "$GITHUB_SHA" --prerelease \
               --title "KAVACH debug APKs ${GITHUB_SHA::7}" \
-              --notes "Built on every push. Install: adb install kavach-shield-debug.apk and kavach-guardian-debug.apk (optional kavach-netwatch-debug.apk). Then scripts/push_models.sh --asr."
+              --notes "Built on every push. Install: adb install -r kavach-debug.apk (optional kavach-netwatch-debug.apk). Then scripts/push_models.sh --asr."
           fi
       - name: Publish build log on failure
         if: failure()
@@ -78,7 +77,7 @@ jobs:
           set -o pipefail
           cd android
           chmod +x gradlew
-          ./gradlew --no-daemon -PextraAbi=x86_64 :guardian:assembleDebug :app:assembleDebug 2>&1 | tee ../screens-build.log | tail -40
+          ./gradlew --no-daemon -PextraAbi=x86_64 :guardian:assembleDebug :netwatch:assembleDebug 2>&1 | tee ../screens-build.log | tail -40
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

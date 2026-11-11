@@ -64,28 +64,7 @@ class AsrEngine(
         listOf(File(modelsDir, "asr-en/encoder.onnx"), File(modelsDir, "asr-en/decoder.onnx"), File(modelsDir, "asr-en/joiner.onnx"),
             File(modelsDir, "asr-en/tokens.txt"), File(modelsDir, "silero_vad.onnx"))
 
-    private fun recognizer(): OnlineRecognizer {
-        val model = if (lang == "hi") OnlineModelConfig(
-            zipformer2Ctc = OnlineZipformer2CtcModelConfig(model = File(modelsDir, "asr-hi/model.int8.onnx").path),
-            tokens = File(modelsDir, "asr-hi/tokens.txt").path, numThreads = 2, provider = "cpu",
-        ) else OnlineModelConfig(
-            transducer = OnlineTransducerModelConfig(
-                encoder = File(modelsDir, "asr-en/encoder.onnx").path, decoder = File(modelsDir, "asr-en/decoder.onnx").path,
-                joiner = File(modelsDir, "asr-en/joiner.onnx").path,
-            ),
-            tokens = File(modelsDir, "asr-en/tokens.txt").path, numThreads = 2, provider = "cpu",
-        )
-        // Endpointing: a segment ends after 0.8 s of trailing silence, or after 12 s of speech,
-        // so the guardian sees a final segment at least every few seconds on a monologue.
-        val endpoint = EndpointConfig(
-            rule1 = EndpointRule(false, 2.4f, 0.0f),
-            rule2 = EndpointRule(true, 0.8f, 0.0f),
-            rule3 = EndpointRule(false, 0.0f, 12.0f),
-        )
-        val cfg = OnlineRecognizerConfig(featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80), modelConfig = model,
-            endpointConfig = endpoint, enableEndpoint = true, decodingMethod = "greedy_search")
-        return OnlineRecognizer(assetManager = null, config = cfg)
-    }
+    private fun recognizer(): OnlineRecognizer = buildRecognizer(modelsDir, lang, 2)
 
     private fun vad(): Vad = Vad(assetManager = null, config = VadModelConfig(
         sileroVadModelConfig = SileroVadModelConfig(model = File(modelsDir, "silero_vad.onnx").path, threshold = 0.5f,
@@ -186,5 +165,29 @@ class AsrEngine(
         private const val TAG = "AsrEngine"
         const val SAMPLE_RATE = 16000
         const val VAD_WINDOW = 512
+
+        /** The streaming recogniser for one language (also used by the performance benchmark). */
+        fun buildRecognizer(modelsDir: File, lang: String, threads: Int): OnlineRecognizer {
+            val model = if (lang == "hi") OnlineModelConfig(
+                zipformer2Ctc = OnlineZipformer2CtcModelConfig(model = File(modelsDir, "asr-hi/model.int8.onnx").path),
+                tokens = File(modelsDir, "asr-hi/tokens.txt").path, numThreads = threads, provider = "cpu",
+            ) else OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = File(modelsDir, "asr-en/encoder.onnx").path, decoder = File(modelsDir, "asr-en/decoder.onnx").path,
+                    joiner = File(modelsDir, "asr-en/joiner.onnx").path,
+                ),
+                tokens = File(modelsDir, "asr-en/tokens.txt").path, numThreads = threads, provider = "cpu",
+            )
+            // Endpointing: a segment ends after 0.8 s of trailing silence, or after 12 s of speech,
+            // so the guardian sees a final segment at least every few seconds on a monologue.
+            val endpoint = EndpointConfig(
+                rule1 = EndpointRule(false, 2.4f, 0.0f),
+                rule2 = EndpointRule(true, 0.8f, 0.0f),
+                rule3 = EndpointRule(false, 0.0f, 12.0f),
+            )
+            val cfg = OnlineRecognizerConfig(featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80), modelConfig = model,
+                endpointConfig = endpoint, enableEndpoint = true, decodingMethod = "greedy_search")
+            return OnlineRecognizer(assetManager = null, config = cfg)
+        }
     }
 }

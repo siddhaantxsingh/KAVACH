@@ -1,37 +1,14 @@
-// KAVACH Shield: the user's own phone (Message Shield, Link Check, kill-chain, stop card).
+// Shield part of the one KAVACH app (messages, links, apps, screen-share, calls, dialer, stop card).
+// An Android library: the app module :guardian includes it, so both parts ship as ONE app.
 plugins {
-    id("com.android.application")
+    id("com.android.library")
     id("org.jetbrains.kotlin.android")
 }
 
 android {
     namespace = "kavach.app"
     compileSdk = 34
-    defaultConfig {
-        applicationId = "io.kavach.shield"
-        minSdk = 26
-        targetSdk = 34
-        versionCode = 1
-        versionName = "0.1-phase1"
-        // -PextraAbi=x86_64 adds the emulator ABI (used only by the CI screenshot job)
-        ndk { abiFilters += listOf("arm64-v8a") + (if (project.hasProperty("extraAbi")) listOf(project.property("extraAbi") as String) else emptyList()) }
-    }
-    // one shared demo key for every build (GitHub or a laptop): Shield, Guardian and Network Watch
-    // only talk to each other when signed with the same key. Debug-only key, not for the Play Store.
-    signingConfigs {
-        getByName("debug") {
-            storeFile = rootProject.file("kavach-shared-debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-        }
-    }
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
-        }
-    }
+    defaultConfig { minSdk = 26 }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

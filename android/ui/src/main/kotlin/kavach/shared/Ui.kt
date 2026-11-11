@@ -29,6 +29,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
+import kavach.ui.R
 
 /**
  * KAVACH design system (programmatic, no XML layouts, no AndroidX): "Midnight, Ivory and Gold".

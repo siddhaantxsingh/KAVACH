@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KAVACH</string>
+    <string name="call_access_label">KAVACH call listening</string>
+    <string name="call_access_summary">Lets KAVACH hear a call you put on speaker, to warn you about scams.</string>
+    <string name="call_access_description">During a phone call, Android lets only accessibility services keep using the microphone. KAVACH uses this permission for one thing: to hear a call you have put on speaker, so it can warn you if the caller sounds like a scammer.\n\nKAVACH does not read your screen, does not tap or type anything, and never records or saves audio. Everything is processed on this phone, and the app has no internet permission.\n\nकॉल के दौरान Android सिर्फ़ ऐक्सेसिबिलिटी सेवाओं को माइक्रोफ़ोन इस्तेमाल करने देता है। कवच इसे सिर्फ़ स्पीकर पर रखी कॉल सुनने के लिए इस्तेमाल करता है, ताकि स्कैम पर आपको चेतावनी दे सके। कवच आपकी स्क्रीन नहीं पढ़ता, कुछ दबाता नहीं, और आवाज़ कभी रिकॉर्ड या सेव नहीं करता।</string>
+</resources>

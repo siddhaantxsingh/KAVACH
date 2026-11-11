@@ -10,34 +10,43 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <!-- same-phone link between KAVACH Guardian and KAVACH Shield: only apps signed with
          the same key can hold this permission, so no other app can read or fake messages -->
     <permission android:name="io.kavach.permission.LINK" android:protectionLevel="signature" />
     <uses-permission android:name="io.kavach.permission.LINK" />
-    <queries>
-        <package android:name="io.kavach.shield" />
-    </queries>
     <!-- deliberately NO INTERNET permission: nothing can leave this phone -->
 
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:label="KAVACH Guardian"
+        android:label="@string/app_name"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:extractNativeLibs="true">
 
+        <!-- the "Calls" tab of the app (the launcher screen is kavach.app.MainActivity) -->
         <activity
             android:name=".GuardianActivity"
-            android:exported="true"
-            android:screenOrientation="portrait">
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".BenchmarkActivity" android:exported="false" android:screenOrientation="portrait" />
+
+        <!-- lets KAVACH keep hearing a speaker-phone call (Android gives the mic to the call otherwise) -->
+        <service
+            android:name=".CallListenAccessService"
+            android:exported="false"
+            android:label="@string/call_access_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
-        </activity>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/kavach_call_access" />
+        </service>
 
         <service
             android:name=".GuardianService"

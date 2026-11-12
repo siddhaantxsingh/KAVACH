@@ -118,6 +118,7 @@ module.exports = [
   "App Inspector (preview) scores each new app’s permissions: SMS, accessibility and overlay together, sideloading, and names that imitate a bank or KYC app.",
   "Screen-share Guard (preview) raises STOP when a payment or banking app comes to the front while a remote-access app is active.",
   "Call awareness knows when a call is on, whether the number is a contact and how long the call has lasted, without hearing the call.",
+  "KAVACH Phone (optional): if the user makes KAVACH the phone\u2019s call app, it works as a complete phone app, with a keypad, recent calls from the phone\u2019s own call log, contacts with search, and a call screen with Answer and Decline, mute, speaker, keypad tones, hold, a call timer, a SIM choice on dual-SIM phones and screen-off at the ear. Incoming calls also raise a call notification with Answer and Decline, because some phones (Xiaomi\u2019s pop-up rule, Android 14\u2019s full-screen permission) can stop a background app from opening the call screen. For an unknown number it says it is turning on the speaker and does so.",
   "Every STOP opens a full-screen card with a plain reason and a one-tap call to 1930; the user may also choose to alert a family member by SMS."]},
  {h2:"Network Watch"},
  {bullets:[
@@ -172,6 +173,7 @@ module.exports = [
  {bullets:[
   "GuardianService: the foreground microphone service; runs VAD, both recognisers and the detector, writes a performance row every five seconds and raises warnings.",
   "AsrEngine: builds the sherpa-onnx recognisers (sentence mode for IndicConformer and Parakeet, streaming fallback) and runs LangPick in Auto mode.",
+  "KavachInCallService, InCallActivity, CallNotifier and DialerActivity: the optional phone app (call screen, call notification, keypad, recents, contacts, setup).",
   "CallListenAccessService and CallMonitor: the accessibility audio exception and call-state awareness.",
   "ShieldHub and KillChain: collect events from every channel and decide the level.",
   "LlmAdvisor: loads the .pte once with ExecuTorch’s LlmModule, keeps the warm prefix and validates the JSON.",

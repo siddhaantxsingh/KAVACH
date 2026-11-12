@@ -55,6 +55,7 @@ Wilson 95 % intervals are given for small samples; they assume independent calls
 | Claim | Source | Conditions | n | Status | Limitation |
 |---|---|---|---|---|---|
 | Three real cellular calls from an unknown number, one phone, speaker, Auto: Hindi digital arrest STOP, English KYC STOP, genuine Hindi bank call no warning | screenshots in `docs/media/real_calls.jpg`; §7.5 | role-play by a teammate, 12 Nov 03:15–03:53 | 3 | observed | 3 calls, one caller, demonstration only; no session CSV in the repo |
+| KAVACH Phone as the default phone app: answer / decline (screen and notification), recents, contacts, hold, keypad tones, SIM choice | `android/app/.../Dialer.kt` | rewritten 12 Nov after calls rang but could not be answered | | **built, compiled in CI; not yet checked on the phone** | `docs/OWNER_CHECKLIST.md` §3 |
 | Six replayed test files behave as expected | §7.5 | laptop speaker 10–30 cm | 6 | observed | acoustic replay, not a phone line |
 | Detector 4.07 ms per sentence | device JSON | 40 runs × 8 sentences | | measured once | |
 | IndicConformer RTF 0.153 (2 threads) / 0.092 (4); Parakeet 0.052 / 0.037 | device JSON | on battery | | measured once | short clips |

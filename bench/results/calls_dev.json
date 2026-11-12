@@ -2,11 +2,11 @@
   "rules": {
     "n_scam": 288,
     "n_benign": 312,
-    "stop_recall": 0.9757,
+    "stop_recall": 0.9826,
     "caution_recall": 0.9931,
-    "caught_before_money": 0.6458,
-    "time_to_stop_median_s": 18.9,
-    "time_to_stop_p90_s": 25.4,
+    "caught_before_money": 0.6701,
+    "time_to_stop_median_s": 18.8,
+    "time_to_stop_p90_s": 24.9,
     "false_stop_rate": 0.0032,
     "false_caution_rate": 0.0032,
     "by_type": {
@@ -38,7 +38,7 @@
       "electricity_bill": {
         "n": 22,
         "stop_recall": 1.0,
-        "before_money": 0.7273
+        "before_money": 0.8182
       },
       "family_chat": {
         "n": 44,
@@ -48,7 +48,7 @@
       "family_emergency": {
         "n": 28,
         "stop_recall": 0.9643,
-        "before_money": 0.3214
+        "before_money": 0.4286
       },
       "insurance_offer": {
         "n": 30,
@@ -62,13 +62,13 @@
       },
       "job_task": {
         "n": 37,
-        "stop_recall": 0.973,
+        "stop_recall": 1.0,
         "before_money": 0.7027
       },
       "kyc_bank": {
         "n": 27,
         "stop_recall": 1.0,
-        "before_money": 0.7407
+        "before_money": 0.7778
       },
       "lottery_prize": {
         "n": 28,
@@ -102,8 +102,8 @@
       },
       "sim_telecom": {
         "n": 24,
-        "stop_recall": 0.875,
-        "before_money": 0.875
+        "stop_recall": 0.9167,
+        "before_money": 0.9167
       },
       "upi_collect_refund": {
         "n": 22,
@@ -113,7 +113,7 @@
     },
     "by_lang": {
       "en": {
-        "stop_recall": 0.9888,
+        "stop_recall": 1.0,
         "false_stop": 0.0096
       },
       "hi": {
@@ -121,14 +121,12 @@
         "false_stop": 0.0
       },
       "hing": {
-        "stop_recall": 0.9626,
+        "stop_recall": 0.972,
         "false_stop": 0.0
       }
     },
     "misses": [
       "dev-00035",
-      "dev-00086",
-      "dev-00229",
       "dev-00284",
       "dev-00303",
       "dev-00483",
@@ -145,7 +143,7 @@
     "n_scam": 288,
     "n_benign": 312,
     "stop_recall": 0.0,
-    "caution_recall": 0.9965,
+    "caution_recall": 0.9931,
     "caught_before_money": 0.0,
     "time_to_stop_median_s": null,
     "time_to_stop_p90_s": null,
@@ -296,9 +294,9 @@
     "n_benign": 312,
     "stop_recall": 0.9931,
     "caution_recall": 1.0,
-    "caught_before_money": 0.8854,
-    "time_to_stop_median_s": 12.3,
-    "time_to_stop_p90_s": 19.7,
+    "caught_before_money": 0.8924,
+    "time_to_stop_median_s": 11.8,
+    "time_to_stop_p90_s": 19.0,
     "false_stop_rate": 0.0,
     "false_caution_rate": 0.0064,
     "by_type": {
@@ -340,7 +338,7 @@
       "family_emergency": {
         "n": 28,
         "stop_recall": 0.9643,
-        "before_money": 0.8929
+        "before_money": 0.9286
       },
       "insurance_offer": {
         "n": 30,
@@ -360,7 +358,7 @@
       "kyc_bank": {
         "n": 27,
         "stop_recall": 1.0,
-        "before_money": 0.8889
+        "before_money": 0.9259
       },
       "lottery_prize": {
         "n": 28,

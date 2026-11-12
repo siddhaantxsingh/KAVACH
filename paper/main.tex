@@ -93,7 +93,7 @@ Manipal, Karnataka, India}
 \end{figure*}
 
 \begin{abstract}
-Phone fraud in India increasingly happens on a \emph{live call}: a caller poses as police, a bank or a courier, isolates the victim and steers a payment while the call is still running. Cloud-based detectors cannot hear such calls without sending private audio off the phone. This paper presents \textbf{KAVACH}, a single Android application that listens to a call the user has put on speaker, recognises Hindi, Hinglish and English speech on the phone, and warns the user \emph{during} the call, with no internet permission at all. Speech is cut into sentences by a voice-activity detector and recognised by two int8 CTC models (AI4Bharat IndicConformer for Hindi, NVIDIA Parakeet~110M for English); an \emph{Auto} mode runs both on every sentence and keeps the transcript whose words are real words of its language. A sub-5\,ms detector (cue lexicon, hashed linear classifier and a multi-channel kill chain) raises CAUTION or STOP, and a LoRA-fine-tuned Llama~3.2~1B, quantised to 4~bits and run with ExecuTorch on the Arm CPU, explains the alert in the caller's language. On a mid-range Snapdragon~7s~Gen~2 phone, both speech models together run about $5\times$ faster than real time, an hour of listening costs about 7.6\,\% battery, and Llama decodes 11.5--11.9 tokens/s. In three real cellular calls from an unknown number, a Hindi ``digital arrest'' scam and an English KYC scam reached STOP during the call and a genuine bank call raised no warning. Fine-tuning raised Llama's valid-verdict rate from 71\,\% to 100\,\% and scam accuracy from 38\,\% to 89\,\%.
+Phone fraud in India increasingly happens on a \emph{live call}: a caller poses as police, a bank or a courier, isolates the victim and steers a payment while the call is still running. Cloud-based detectors cannot hear such calls without sending private audio off the phone. This paper presents \textbf{KAVACH}, a single Android application that listens to a call the user has put on speaker, recognises Hindi, Hinglish and English speech on the phone, and warns the user \emph{during} the call, with no internet permission at all. Speech is cut into sentences by a voice-activity detector and recognised by two int8 CTC models (AI4Bharat IndicConformer for Hindi, NVIDIA Parakeet~110M for English); an \emph{Auto} mode runs both on every sentence and keeps the transcript whose words are real words of its language. A sub-5\,ms detector (cue lexicon, hashed linear classifier and a multi-channel kill chain) raises CAUTION or STOP, and a LoRA-fine-tuned Llama~3.2~1B, quantised to 4~bits and run with ExecuTorch on the Arm CPU, explains the alert in the caller's language. On a mid-range Snapdragon~7s~Gen~2 phone, both speech models together run about $5\times$ faster than real time, a one-minute listening run drew 385\,mA for the whole phone without heating, and Llama decodes 11.5--11.9 tokens/s. In three real cellular calls from an unknown number, a Hindi ``digital arrest'' scam and an English KYC scam reached STOP during the call and a genuine bank call raised no warning. On 1,000 unseen synthetic calls the detector reached STOP on 93.4\,\% of scams with no genuine call stopped. An ablation shows that cross-channel fusion adds STOPs at the risky action (an app install or remote access during the call) but no earlier warnings, and can blame a genuine call for an unrelated scam SMS. Fine-tuning raised Llama's valid-verdict rate from 71\,\% to 100\,\% and scam accuracy from 38\,\% to 89\,\% (full-precision model, synthetic data).
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -115,7 +115,7 @@ A protection that only reads SMS or URLs arrives after the money has gone, a ban
 \begin{itemize}
 \item A one-phone architecture that listens to a speaker-phone call through Android's accessibility audio exception, with automatic start on calls from unknown numbers and a self-check that detects when Android silently stops the permission (Section~\ref{sec:arch}).
 \item A bilingual sentence-level speech front-end with per-sentence language choice (\emph{Auto}, 92.7\,\% correct), raising Hindi telephone-band detection from 0\,\% to 58\,\% STOP on 100 unseen calls (Sections~\ref{sec:speech}, \ref{sec:hindi}).
-\item A fast, explainable detector (16-category cue lexicon, hashed classifier, multi-channel kill chain) that is ported bit-exactly from Python to Kotlin (336 parity checks) and gives 0\,\% false STOPs on every evaluated set (Sections~\ref{sec:det}, \ref{sec:calllevel}).
+\item A fast, explainable detector (16-category cue lexicon, hashed classifier, multi-channel kill chain) that is ported bit-exactly from Python to Kotlin (336 parity checks) and stopped no genuine call in any evaluated set (Sections~\ref{sec:det}, \ref{sec:calllevel}).
 \item A LoRA-tuned Llama~3.2~1B advisor, exported to a 4-bit ExecuTorch file, with a strict JSON contract and a validator that removes invented evidence; fine-tuning raises scam accuracy from 38\,\% to 89\,\% (Sections~\ref{sec:llama}, \ref{sec:llamaeval}).
 \item Measurements on a real Snapdragon~7s~Gen~2 phone and three real cellular calls, two negative results that changed the design, and all code, data generators and results released (Section~\ref{sec:eval}).
 \end{itemize}
@@ -289,7 +289,7 @@ payment app in unknown call $>$3 min & CAUTION \\
 \end{table}
 
 \subsection{Llama advisor}\label{sec:llama}
-On CAUTION or STOP, the transcript window, active cues and the three most relevant playbook entries are given to Llama~3.2~1B~\cite{llama3}. The constant system prefix (rules, schema, scam types; 1,361 characters) is pre-filled into the KV cache when the app starts and re-armed after every alert, which halves the time to the first token. Decoding is greedy, stops as soon as the JSON object closes, and is limited to 8\,s. The model must return one JSON object (Table~\ref{tab:json}).
+On CAUTION or STOP, the transcript window, active cues and the three most relevant playbook entries are given to Llama~3.2~1B~\cite{llama3}. The constant system prefix (rules, schema, scam types; 1,361 characters) is pre-filled into the KV cache when the app starts and re-armed after every alert, which halves the time to the first token. Decoding is greedy and stops as soon as the JSON object closes. Each generation is limited to 35\,s, set from the phone measurements (warm path $\approx$15\,s, cold path of the fine-tuned file $\approx$26\,s); the timer covers waiting for a background prefix prefill, the prompt prefill and the generation, not model loading. The model must return one JSON object (Table~\ref{tab:json}).
 
 \begin{table}[t]
 \caption{Llama output contract}
@@ -384,7 +384,7 @@ Llama SFT & phone's prompt code & 4,000 / 400 \\
 \end{figure*}
 
 \subsection{Setup}
-Host experiments use the sets of Table~\ref{tab:data}; thresholds were tuned on development sets only, and the hand-written and locked held-out sets were run once for reporting. Audio experiments speak the calls with Piper TTS through a simulated 300--3,400\,Hz telephone band, room reverberation and noise. Phone experiments use a Xiaomi 2312DRA50I (Snapdragon~7s~Gen~2: 4$\times$Cortex-A78 at 2.4\,GHz + 4$\times$Cortex-A55 at 1.96\,GHz, 7.3\,GB RAM, Android~15), on battery. \emph{STOP before money} is the share of scam calls that reach STOP before the first payment request.
+Host experiments use the sets of Table~\ref{tab:data}; thresholds were tuned on development sets only, and the hand-written and locked held-out sets were never used for tuning (the held-out set has been scored on several builds). All host results were re-run on 12 Nov 2026 with the shipped models. Audio experiments speak the calls with Piper TTS through a simulated 300--3,400\,Hz telephone band, room reverberation and noise. Phone experiments use a Xiaomi 2312DRA50I (Snapdragon~7s~Gen~2: 4$\times$Cortex-A78 at 2.4\,GHz + 4$\times$Cortex-A55 at 1.96\,GHz, 7.3\,GB RAM, Android~15), on battery. \emph{STOP before money} is the share of scam calls that reach STOP before the first payment request.
 
 \subsection{Text classifiers}
 Table~\ref{tab:text} shows the classifiers on held-out test splits. Precision is high for all three, which matters because a false alarm on a genuine message teaches the user to ignore KAVACH. Link Check flags 98.5\,\% of generated Indian look-alike domains and 0\,\% of genuine Indian domains.
@@ -399,15 +399,15 @@ Table~\ref{tab:text} shows the classifiers on held-out test splits. Precision is
 \toprule
 Model & $n$ & P & R & F1 & AUC \\
 \midrule
-Call window (120 tokens) & 9,010 & 0.951 & 0.867 & 0.907 & 0.960 \\
-SMS / notification & 1,914 & 0.996 & 0.888 & 0.939 & 0.990 \\
+Call window (120 tokens) & 9,010 & 0.946 & 0.883 & 0.913 & 0.962 \\
+SMS / notification & 1,914 & 0.994 & 0.901 & 0.945 & 0.990 \\
 URL (rules + model) & 10,196 & 0.987 & 0.752 & 0.853 & 0.945 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Call-level detection}\label{sec:calllevel}
-Table~\ref{tab:guardian} replays whole calls in call time, comparing the rules alone with the shipped detector. The shipped detector raises STOP recall by 10--30 points on every set without a single false STOP; its veto removed both rule-only false STOPs on the hand-written set (people \emph{discussing} a scam, and an office call about screen sharing and payments). The targets of a median time-to-STOP under 30\,s and at most 2\,\% false STOPs are met everywhere. The target of 90\,\% STOP before money is not yet met (50--78\,\%), and false CAUTIONs on the small hand-written and held-out sets remain high; reducing both is the job Llama was designed for, and we will measure it in Phase~2 rather than claim it now.
+Table~\ref{tab:guardian} replays whole calls in call time, comparing the rules alone with the shipped detector. The shipped detector raises STOP recall by 10--30 points on every set without a single false STOP (0/489, 0/498, 0/14, 0/10; with only 24 human-written genuine calls, the 95\,\% Wilson upper bound is about 14\,\%, so a $\leq$2\,\% rate is not established); its veto removed both rule-only false STOPs on the hand-written set (people \emph{discussing} a scam, and an office call about screen sharing and payments). The median time-to-STOP is under 30\,s on every set. The target of 90\,\% STOP before money is not met (50--82\,\%), and false CAUTIONs on the small hand-written and held-out sets remain high. Llama can only escalate CAUTION to STOP, so it cannot reduce false CAUTIONs. Earlier builds scored 90.6\,\%, 71.1\,\% and 70\,\% STOP on the first, second and fourth sets; the gain comes from Hindi lexicon and classifier changes made for phone failures, not from tuning on these sets.
 
 \begin{table*}[t]
 \caption{Call-level results: rules only vs.\ shipped detector (rules + classifier + veto)}
@@ -419,19 +419,19 @@ Table~\ref{tab:guardian} replays whole calls in call time, comparing the rules a
 Set (scam / genuine) & Config & STOP & $\geq$CAUTION & STOP before & Median time & False & False \\
  & & & & money & to STOP & STOP & CAUTION \\
 \midrule
-\multirow{2}{*}{Synthetic test (511 / 489)} & rules & 80.0\,\% & 89.2\,\% & 62.8\,\% & 17.6 s & 0\,\% & 0\,\% \\
- & shipped & \textbf{90.6\,\%} & 97.3\,\% & 78.3\,\% & 12.7 s & \textbf{0\,\%} & 7.2\,\% \\
-\multirow{2}{*}{Caller through speaker (502 / 498)} & rules & 60.8\,\% & 68.7\,\% & 41.0\,\% & 19.3 s & 0\,\% & 0\,\% \\
- & shipped & \textbf{71.1\,\%} & 88.8\,\% & 55.6\,\% & 14.7 s & \textbf{0\,\%} & 4.6\,\% \\
-\multirow{2}{*}{Hand-written (16 / 14)} & rules & 75.0\,\% & 87.5\,\% & 37.5\,\% & 24.7 s & 14.3\,\% & 21.4\,\% \\
- & shipped & \textbf{93.8\,\%} & 93.8\,\% & 68.8\,\% & 17.0 s & \textbf{0\,\%} & 21.4\,\% \\
-\multirow{2}{*}{Locked held-out (10 / 10)} & rules & 40\,\% & 70\,\% & 20\,\% & 21.9 s & 0\,\% & 10\,\% \\
- & shipped & \textbf{70\,\%} & 80\,\% & 50\,\% & 22.6 s & \textbf{0\,\%} & 40\,\% \\
+\multirow{2}{*}{Synthetic test (511 / 489)} & rules & 82.8\,\% & 92.4\,\% & 65.8\,\% & 17.3 s & 0\,\% & 0\,\% \\
+ & shipped & \textbf{93.4\,\%} & 99.4\,\% & 82.2\,\% & 12.6 s & \textbf{0\,\%} & 5.9\,\% \\
+\multirow{2}{*}{Caller through speaker (502 / 498)} & rules & 62.2\,\% & 71.7\,\% & 43.4\,\% & 18.9 s & 0\,\% & 0\,\% \\
+ & shipped & \textbf{74.7\,\%} & 92.8\,\% & 60.6\,\% & 14.6 s & \textbf{0\,\%} & 5.2\,\% \\
+\multirow{2}{*}{Hand-written (16 / 14)} & rules & 75.0\,\% & 87.5\,\% & 43.8\,\% & 24.7 s & 14.3\,\% & 21.4\,\% \\
+ & shipped & \textbf{93.8\,\%} & 93.8\,\% & 62.5\,\% & 19.0 s & \textbf{0\,\%} & 21.4\,\% \\
+\multirow{2}{*}{Locked held-out (10 / 10)} & rules & 50\,\% & 80\,\% & 20\,\% & 21.2 s & 0\,\% & 10\,\% \\
+ & shipped & \textbf{80\,\%} & 80\,\% & 50\,\% & 21.3 s & \textbf{0\,\%} & 40\,\% \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-\textbf{Ablations.} Adding cue-category features raised the call classifier's test F1 from 0.817 to 0.903, and the three victim-side categories to 0.907. The victim-side cues raised STOP on the synthetic test from 88.3\,\% to 90.6\,\% and on caller-through-speaker from 68.5\,\% to 71.1\,\%, lowered hand-written false CAUTIONs from 28.6\,\% to 21.4\,\%, and added no false STOP anywhere. Template-disjoint splitting mattered most: with a development split that shared templates with training, the call classifier looked perfect on dev (F1 0.999) but reached only 0.817 on test.
+\textbf{Ablations (earlier builds).} Adding cue-category features raised the call classifier's test F1 from 0.817 to 0.903, and the three victim-side categories to 0.907. The victim-side cues raised STOP on the synthetic test from 88.3\,\% to 90.6\,\% and on caller-through-speaker from 68.5\,\% to 71.1\,\%, lowered hand-written false CAUTIONs from 28.6\,\% to 21.4\,\%, and added no false STOP anywhere. Template-disjoint splitting mattered most: with a development split that shared templates with training, the call classifier looked perfect on dev (F1 0.999) but reached only 0.817 on test.
 
 \subsection{Speech in noisy rooms}
 Four scripted calls were mixed with fan or traffic hum, a television, or several people talking at 30, 15, 8 and 3\,dB (48 calls per configuration; Table~\ref{tab:noise}). A larger English model let three times more noisy scam calls reach STOP. A speech denoiser helped on steady hum but invented speech-like fragments from TV and babble (WER above 1), and hotwords added one call; both were rejected. With background voices even the larger model transcribes the wrong speaker, which motivated the on-screen placement check. One TTS realisation per condition makes these numbers a direction, not precise rates.
@@ -554,8 +554,8 @@ Detector & 4.07 ms per sentence \\
 IndicConformer Hindi & RTF 0.153 (2 thr), 0.092 (4 thr) \\
 Parakeet 110M English & RTF 0.052 (2 thr), 0.037 (4 thr) \\
 Streaming fallback (hi / en) & RTF 0.239 / 0.117 (2 thr) \\
-Auto listening, 1 min & 54\,\% of one core, 385 mA, 235 MB \\
- & $\approx$7.6\,\% battery/hour, 38.0$\to$37.9\,\textdegree C \\
+Auto listening, 1 min & 54\,\% of one core, 385 mA (whole \\
+ & phone, screen on), 235 MB, 38.0$\to$37.9\,\textdegree C \\
 \multicolumn{2}{@{}l}{\emph{Llama 3.2 1B, Meta SpinQuant INT4 file (1,083 MB):}} \\
 Llama load & 4.1 s, +1.1 GB \\
 Llama first token & 5.9 s warm prefix, 12.9 s cold \\
@@ -589,8 +589,43 @@ Wi-Fi check & 254 addresses in 12 s; open ADB port found \\
 \end{tabular}
 \end{table}
 
+\subsection{Does cross-channel fusion help?}\label{sec:fusion}
+Our main novelty claim is that joining channels helps, and a rules-vs-shipped comparison does not test it. We therefore replay \emph{identical} timestamped event traces under five configurations: \textbf{A} the call detector alone; \textbf{B} message, link and app detectors alone; \textbf{C} A and B combined independently (the higher level wins); \textbf{B+} Shield with call awareness but no listening; and \textbf{D} full fusion exactly as wired in the app. Calls come from the caller-through-speaker test set, SMS texts are 8 scam and 4 genuine team-written examples, every configuration keeps the shipped thresholds, and the plan was fixed in the script before the first run (40 sessions per template; Table~\ref{tab:fusion}). D with Llama escalation is not run on the host.
+
+\begin{table}[t]
+\caption{Fusion ablation: STOPs out of 40 sessions per template (in brackets for genuine sessions: STOPs that blame the call)}
+\label{tab:fusion}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Template & A & C & B+ & D \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Scam sessions}} \\
+Scam call alone & 37 & 37 & 0 & 37 \\
++ scam SMS with link, mid-call & 32 & 40 & 40 & 40 \\
++ APK install & 30 & 30 & 40 & 40 \\
++ remote access, then payment app & 36 & 36 & 40 & 40 \\
+Scam SMS 5 min before the call & 30 & 37 & 33 & 40 \\
+First 40\,\% of the call, then APK & 7 & 7 & 40 & 40 \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Genuine sessions}} \\
+Genuine call alone & 0 & 0 & 0 & 0 \\
++ unrelated scam SMS mid-call & 0 & 32 (0) & 32 (22) & 40 (32) \\
++ scam SMS 20 min after the call & 0 & 32 (0) & 32 (0) & 32 (3) \\
++ payment app during the call & 0 & 0 & 0 & 4 (4) \\
++ risky APK 2 days earlier & 0 & 0 & 0 & 0 \\
++ genuine SMS, duplicated, reordered & 0 & 0 & 0 & 0 \\
++ work screen sharing, no payment & 0 & 0 & 40 (40) & 40 (40) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Fusion turns an ambiguous call into STOP \emph{at the risky action} (an install during the call: 30$\to$40; a call heard only in part: 7$\to$40), but the share of scams warned \emph{before} the risky step is identical for C and D in every template, so it does not warn earlier. Most of the gain comes from knowing that an unknown-number call is in progress (B+); what was heard adds 3/40 when a scam SMS preceded the call. The costs are concrete: an unrelated scam SMS during a genuine call is blamed on the call (32/40), and screen sharing for work during an unknown-number call is STOP by design. The rules join events by time only; matching the organisation named on the call with the sender of a message is future work.
+
 \subsection{Targets}
-Table~\ref{tab:targets} compares the Phase~1 targets with what was measured. Ten of eleven are met.
+Table~\ref{tab:targets} compares the Phase~1 targets with what was measured. Eight are met, one is partly met, one cannot be shown with the available genuine calls, and one is missed.
 
 \begin{table}[t]
 \caption{Targets vs.\ achieved}
@@ -607,11 +642,11 @@ Audio stored & none & memory only & \checkmark \\
 Languages & hi, en, auto & 92.7\,\% per sentence & \checkmark \\
 Detector & $<$10 ms & 4.07 ms & \checkmark \\
 Speech speed & $>$ real time & $\approx$5$\times$ & \checkmark \\
-Median to STOP & $<$30 s & 12.7--22.6 s & \checkmark \\
-False STOP & $\leq$2\,\% & 0\,\% & \checkmark \\
-STOP before money & $\geq$90\,\% & 50--78\,\% & -- \\
+Median to STOP & $<$30 s & 12.6--21.3 s & \checkmark \\
+False STOP & $\leq$2\,\% & 0 observed & not shown \\
+STOP before money & $\geq$90\,\% & 50--82\,\% & -- \\
 LLM on Arm CPU & 1B, 4-bit & 11.5--11.9 tok/s & \checkmark \\
-Battery & $<$10\,\%/h & 7.6\,\%/h & \checkmark \\
+Battery & $<$10\,\%/h & $\approx$7.6\,\%/h (1 min) & partly \\
 Real calls & correct & 3/3 & \checkmark \\
 \bottomrule
 \end{tabular}
@@ -619,7 +654,7 @@ Real calls & correct & 3/3 & \checkmark \\
 
 \section{Discussion and Limitations}\label{sec:disc}
 
-\textbf{Lessons.} Four findings changed the design. (1)~Speech quality, not the detector, limited Hindi: no lexicon fix recovered telephone-band Hindi until the recogniser changed. (2)~Speaking a warning during a call mutes the listener, so in-call warnings must be silent. (3)~Android can silently revoke a running accessibility service, so the app must verify capture rather than trust a settings switch. (4)~Benchmark-trained network models can fail completely on phone traffic, so a model with a good F1 still has to be tested on the target device's data.
+\textbf{Lessons.} Five findings changed the design. (1)~Speech quality, not the detector, limited Hindi: no lexicon fix recovered telephone-band Hindi until the recogniser changed. (2)~Speaking a warning during a call mutes the listener, so in-call warnings must be silent. (3)~Android can silently revoke a running accessibility service, so the app must verify capture rather than trust a settings switch. (4)~Benchmark-trained network models can fail completely on phone traffic, so a model with a good F1 still has to be tested on the target device's data. (5)~Joining channels by time alone helps at the risky action but can blame an innocent call (Section~\ref{sec:fusion}).
 
 \textbf{Evasion.} Table~\ref{tab:evasion} lists the main ways a scammer may try to avoid KAVACH and the defence for each.
 
@@ -642,12 +677,12 @@ Spoken prompt injection & Llama cannot lower STOP; verbatim evidence only \\
 \end{tabular}
 \end{table}
 
-\textbf{Limitations.} All accuracy numbers except the three real calls use synthetic text or TTS voices from one voice per language; human voices, accents and crowded rooms will score lower. The always-on detector misses about 10--30\,\% of scam calls depending on the set, and the ``warned before payment'' rate (50--78\,\%) is below our 90\,\% target. Llama's Hindi is understandable but not always polished. Listening requires the call on speaker and the accessibility permission running; a store version would need a phone maker's system mode or a declared accessibility use case. Network Watch rules are evaluated on simulated traces.
+\textbf{Limitations.} All accuracy numbers except the three real calls use synthetic text or TTS voices from one voice per language; human voices, accents and crowded rooms will score lower. The always-on detector misses 7--25\,\% of scam calls depending on the set, and the ``warned before payment'' rate (50--82\,\%) is below our 90\,\% target. The battery figure extrapolates a one-minute, whole-phone sample; a sustained soak with an idle baseline is pending. The deployed 4-bit Llama is only observed on the phone, its confidence is self-reported and uncalibrated, and prompt-injection resistance rests on the output contract rather than a measured attack rate. Llama's Hindi is understandable but not always polished. Listening requires the call on speaker and the accessibility permission running; a store version would need a phone maker's system mode or a declared accessibility use case. Network Watch rules are evaluated on simulated traces.
 
-\textbf{Ethics.} KAVACH listens only to unknown-number calls the user has chosen to protect, stores no audio and cannot use the network. Role-play recordings are collected only with written consent, and no real victim data is used. Zero false STOPs is a hard target because a false STOP on a genuine bank call could stop a user from acting on a real fraud alert.
+\textbf{Ethics.} KAVACH listens only to unknown-number calls the user has chosen to protect and stores no audio; the main app cannot use the network, and the optional family SMS, paired Bluetooth link and DNS-watch app are off unless the user enables them. Role-play recordings are collected only with written consent, and no real victim data is used. Zero false STOPs is a hard target because a false STOP on a genuine bank call could stop a user from acting on a real fraud alert.
 
 \section{Conclusion and Future Work}\label{sec:concl}
-KAVACH shows that a mid-range Arm phone can hear, understand and explain a scam call in Hindi or English while the call is happening, entirely offline: two speech models, a millisecond detector and a 1B-parameter LLM together use about half of one CPU core and under 8\,\% battery per hour, with zero false STOPs on every evaluated set and three real calls handled correctly. Phase~2 will (i)~record 100+ scam and 100+ genuine consented role-play calls as an untouched human test set and adapt the recognisers; (ii)~measure how much Llama raises STOP before payment and lowers false CAUTIONs; (iii)~run the quantisation ladder with KleidiAI on and off, on big and LITTLE cores and on a budget phone, with a 30-minute thermal soak; (iv)~move the speech encoders to the NPU and compare energy with the CPU; and (v)~run a consent-based pilot with 20--30 family volunteers.
+KAVACH shows that a mid-range Arm phone can hear, understand and explain a scam call in Hindi or English while the call is happening, entirely offline: two speech models and a millisecond detector together used about half of one CPU core in a one-minute run, a 1B-parameter LLM explains alerts at 11.5--11.9 tokens/s, no genuine call was stopped in any evaluated set, and three real calls were handled correctly. Phase~2 will (i)~record 100+ scam and 100+ genuine consented role-play calls as an untouched human test set and adapt the recognisers; (ii)~score the deployed 4-bit Llama on independent, ASR and prompt-injection prompts and measure how much it raises STOP before payment; add entity-aware fusion; (iii)~run the quantisation ladder with KleidiAI on and off, on big and LITTLE cores and on a budget phone, with a 30-minute soak and an idle baseline; (iv)~move the speech encoders to the NPU and compare energy with the CPU; and (v)~run a consent-based pilot with 20--30 family volunteers.
 
 \section*{Acknowledgment}
 The authors thank Dr. Rahul Ratnakumar for his guidance, the organisers of the Arm Bharat AI-SoC Challenge 2026--27, and the open-source projects this work builds on: Meta Llama, ExecuTorch, AI4Bharat IndicConformer, NVIDIA Parakeet, sherpa-onnx, Silero VAD, Piper and wordfreq.

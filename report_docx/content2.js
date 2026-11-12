@@ -98,7 +98,7 @@ module.exports = [
   "The advice is cut at the last complete sentence, so a half-finished sentence is never shown.",
   "Advice that copies the example in the prompt is replaced by the vetted playbook text and labelled as such; a copied answer can never raise the warning level.",
   "On invalid output the model is asked once more; if it fails again the playbook text is used."]},
- {p:"Llama may raise CAUTION to STOP when its confidence is at least 0.8 and the stage is isolation or later. It can never lower a STOP raised by the rules."},
+ {p:"Llama may raise CAUTION to STOP when its self-reported confidence is at least 0.8 and the stage is isolation or later. This confidence is the model’s own number, not a calibrated probability. Llama can never lower or clear any warning: an invalid, timed-out or missing answer leaves the rule-based warning exactly as it was. This also limits the damage a caller could do by speaking instructions aimed at the model."},
  {h3:"LoRA Fine-Tuning"},
  {table:{caption:"LoRA fine-tuning configuration", widths:[3600,5400], header:["Setting","Value"], rows:[
   ["Base model","meta-llama/Llama-3.2-1B-Instruct"],
@@ -110,7 +110,7 @@ module.exports = [
   ["Final losses","training 0.111, dev 0.041"],
   ["After training","LoRA merged into the base weights before export"]]}},
  {h3:"Export and Quantisation"},
- {p:"The merged model is exported with ExecuTorch 1.4 to a single .pte file using 8da4w quantisation: 4-bit weights in groups of 32 with 8-bit dynamic activations, and 4-bit embeddings. The file is 820 MB, compared with about 2.5 GB at 16 bits. On the phone it runs on the Arm CPU through the XNNPACK backend, which uses Arm KleidiAI micro-kernels for the 4-bit matrix multiplications. Decoding is greedy and stops as soon as the JSON object closes, with an 8-second time limit."},
+ {p:"The merged model is exported with ExecuTorch 1.4 to a single .pte file using 8da4w quantisation: 4-bit weights in groups of 32 with 8-bit dynamic activations, and 4-bit embeddings. The file is 820 MB, compared with about 2.5 GB at 16 bits. On the phone it runs on the Arm CPU through the XNNPACK backend, which uses Arm KleidiAI micro-kernels for the 4-bit matrix multiplications. Decoding is greedy and stops as soon as the JSON object closes. Each generation is limited to 35 seconds, a value set from the phone measurements (about 15 s on the warm path and about 26 s on the cold path of the fine-tuned file). The timer covers waiting for a background prefix prefill, the prompt prefill and the generation, but not loading the model. Earlier versions of this report wrongly gave 8 seconds."},
  {h2:"Shield"},
  {bullets:[
   "Message Shield reads SMS, WhatsApp and Telegram notifications (so it needs no READ_SMS permission) and runs the SMS classifier, the cues and Link Check on every message.",
@@ -130,7 +130,8 @@ module.exports = [
  {fig:{path:M+'app_ui.jpg', caption:"Main screens of the KAVACH app", w:6.2}},
  {h2:"Privacy and Security Design"},
  {table:{caption:"Privacy measures and how they are enforced", widths:[3200,5800], header:["Measure","How it is enforced"], rows:[
-  ["Nothing leaves the phone","The main app’s manifest has no INTERNET permission; Android blocks every network call"],
+  ["No upload from the main app","The main app’s manifest has no INTERNET permission, so speech, detection and Llama output cannot be sent by it"],
+  ["Optional paths, user-enabled","An SMS warning to one family member; a Bluetooth link to a paired KAVACH phone (encrypted, paired devices only); the separate Network Watch app forwards DNS look-ups unchanged"],
   ["Audio never stored","Audio is held only in a memory buffer for one sentence; no file is ever written"],
   ["Transcript kept briefly","Transcript lives in memory for the session; logs keep only levels and timing"],
   ["No SMS permission","Messages are read from notifications the user allowed"],

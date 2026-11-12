@@ -78,14 +78,6 @@
                 <data android:mimeType="vnd.android.cursor.dir/calls" />
             </intent-filter>
         </activity>
-        <!-- a second launcher icon, "KAVACH Phone", for people who use KAVACH as their phone app -->
-        <activity-alias android:name=".PhoneLauncher" android:targetActivity=".DialerActivity" android:exported="true"
-            android:label="KAVACH Phone">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
         <activity android:name=".InCallActivity" android:exported="false" android:launchMode="singleInstance"
             android:excludeFromRecents="true" android:taskAffinity="io.kavach.incall"
             android:showWhenLocked="true" android:turnScreenOn="true" android:screenOrientation="portrait" />

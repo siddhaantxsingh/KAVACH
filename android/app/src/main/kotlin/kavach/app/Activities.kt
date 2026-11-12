@@ -188,7 +188,8 @@ class MainActivity : Activity(), ShieldHub.Listener {
         }
         val nw = netWatchInstalled()
         body.addView(Ui.group(this,
-            Ui.item(this, Ui.Ic.phoneCall, t("फ़ोन कॉल", "Phone call"), stateWords(ShieldHub.callState)),
+            Ui.item(this, Ui.Ic.phoneCall, t("फ़ोन", "Phone"), stateWords(ShieldHub.callState) + t(" · कीपैड, हाल की कॉल, संपर्क", " · keypad, recents, contacts"), chevron = true) {
+                startActivity(Intent(this, DialerActivity::class.java)) },
             Ui.item(this, Ui.Ic.ear, t("कॉल सुरक्षा", "Call protection"), callWords, chevron = true) { Nav.go(this, Nav.CALLS) },
             Ui.item(this, Ui.Ic.wifi, t("नेटवर्क वॉच", "Network Watch"),
                 if (nw) t("ऐप पर भेजे जा रहे डेटा और संदिग्ध वेबसाइटों पर नज़र", "Watches app uploads and suspicious websites") else t("वैकल्पिक ऐप इंस्टॉल नहीं है", "Optional app not installed"),

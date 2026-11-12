@@ -228,6 +228,7 @@ pie showData title Share of one CPU core while listening (Auto, measured)
 | 💬 SMS / chat scams | notification reader + SMS model (F1 0.945) | `android/app` |
 | 🔗 Phishing links | allow-list, Indian look-alike rules, URL model: 98.5 % of look-alikes flagged, 0 % of genuine Indian domains | `android/core` |
 | 📲 Screen-share and remote-access tricks | payment app opened while a remote-access app is in front | `android/app` |
+| ☎️ KAVACH Phone (optional) | a full phone app: keypad, recents, contacts, a call screen and a call notification with Answer / Decline, mute, hold, keypad tones, dual-SIM choice; unknown callers go on speaker with a spoken notice, and STOP gets a one-tap End call (built 12 Nov; to be checked on the phone) | `android/app` |
 | 🌐 Network threats | Network Watch: per-app traffic, DNS look-ups, risky devices on home Wi-Fi (ADB 5555, Telnet, RDP, SMB, TR-069…) | `android/netwatch` |
 | 🧾 Explanation and remedy | Stop card, 1930 helpline, Llama advice in the caller's language | everywhere |
 

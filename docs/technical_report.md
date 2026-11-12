@@ -158,8 +158,17 @@ accessibility capture exception while the call is on **speaker** (§3.5). The co
   remote-access app is *running*. An installed remote-access app alone is not a warning. A warning
   is advice; KAVACH never blocks a payment.
 * **STOP card**: full screen, a plain reason, a one-tap call to 1930; an optional SMS to one family member.
-* **KAVACH Phone** (opt-in dialer role): big-button call screen with the live level; for an unknown
-  number it announces that it is turning on the speaker.
+* **KAVACH Phone** (opt-in: the user makes KAVACH the phone's call app). A complete phone app: Keypad
+  (pressing Call with nothing typed fills in the last number), Recents from the phone's own call log,
+  Contacts with search, and a call screen with Answer / Decline, mute, speaker, keypad tones, hold, a
+  call timer, the caller's name, a SIM choice on dual-SIM phones, call waiting and screen-off at the ear.
+  Incoming calls also raise a call notification with Answer / Decline and a full-screen intent,
+  because some phones (Xiaomi's "pop-up windows" rule, Android 14's full-screen permission) block a
+  background app from opening the call screen; the Setup tab checks both and opens the right setting.
+  For an unknown number it says it is turning on the speaker, then does so; it shows the live KAVACH
+  level and, on STOP, a one-tap End call. Telecom still rings and writes the call log. History: in the
+  first version, calls rang but could not be answered when KAVACH was the phone app (no call
+  notification, and the call screen was blocked). Status: built 12 Nov and compiled in CI; answering a real call with it on the phone is still to be checked.
 * **Second-phone link** (optional): Bluetooth RFCOMM with Android pairing, authentication and
   encryption, paired devices only, an 8 KB message cap, and only forwarded event kinds accepted
   with clamped weights (hardened on 12 Nov).
@@ -401,6 +410,8 @@ polished, and one earlier Hindi run was replaced by playbook text (now logged).
 * 30-minute listening soak with an idle baseline; 2 vs 4 threads energy; KleidiAI on/off.
 * Fusion with Llama escalation (configuration E of §7.10).
 * Reliability: screen lock, backgrounding, missing/corrupt model, permission revoked, dialer change.
+* KAVACH Phone as the default phone app: answer and decline from the lock screen and from the
+  notification, recents, contacts, a dual-SIM call, call waiting.
 
 ## 7.9 PS3 scope coverage
 

@@ -40,6 +40,7 @@ For each check, write down what the screen shows and whether the app recovered b
 | Permission revoked | revoke the microphone permission, then open the app |
 | Model missing | rename `asr-en-big` on the phone: the app should fall back and say so |
 | Low storage / interrupted copy | stop `push_models.sh` halfway: the app should report a missing or broken model |
+| KAVACH Phone as phone app | KAVACH Phone → Setup: make it the phone app and turn on every row (on Xiaomi also "pop-ups" and "lock screen"). Then: answer a call from the call screen, answer one from the notification with the screen locked, decline one, open Recents and Contacts and call from each, put a call on hold, and if the phone has two SIMs, make a call and pick a SIM |
 
 ## 4. Llama on the phone with harder inputs (about 15 minutes)
 

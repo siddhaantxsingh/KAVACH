@@ -128,6 +128,18 @@ object Dialer {
 
     fun isXiaomi(): Boolean = Build.MANUFACTURER.lowercase().let { it.contains("xiaomi") || it.contains("redmi") || it.contains("poco") }
 
+    /**
+     * Xiaomi's own permissions, which Android's public API cannot see: 10021 = "display pop-up windows while
+     * running in the background", 10020 = "show on lock screen". Read through AppOpsManager's hidden
+     * checkOpNoThrow(int, int, String); null when the phone does not answer (then we cannot tell).
+     */
+    fun miuiOpsAllowed(ctx: Context): Boolean? = try {
+        val ops = ctx.getSystemService(Context.APP_OPS_SERVICE) as android.app.AppOpsManager
+        val m = android.app.AppOpsManager::class.java.getMethod("checkOpNoThrow", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, String::class.java)
+        val uid = android.os.Process.myUid()
+        listOf(10021, 10020).all { (m.invoke(ops, it, uid, ctx.packageName) as Int) == android.app.AppOpsManager.MODE_ALLOWED }
+    } catch (_: Throwable) { null }
+
     /** Xiaomi blocks "pop-up windows while running in the background" and "show on lock screen" by default. */
     fun openPopupPermission(a: Activity) {
         val miui = Intent("miui.intent.action.APP_PERM_EDITOR")
@@ -728,10 +740,18 @@ class DialerActivity : Activity() {
             if (Dialer.canFullScreen(this)) t("चालू", "Allowed") else t("बंद है: लॉक स्क्रीन पर कॉल नहीं दिखेगी", "Off: calls will not show on the lock screen"),
             trailing = if (Dialer.canFullScreen(this)) null else Ui.small(this, t("खोलें", "Open")) { Dialer.openFullScreenPermission(this) },
             fg = if (Dialer.canFullScreen(this)) Ui.P.good else Ui.P.warn, bg = if (Dialer.canFullScreen(this)) Ui.P.goodSoft else Ui.P.warnSoft)
-        if (Dialer.isXiaomi()) rows += Ui.item(this, Ui.Ic.smartphone, t("Xiaomi: पॉप-अप और लॉक स्क्रीन", "Xiaomi: pop-ups and lock screen"),
-            t("\"बैकग्राउंड में पॉप-अप\" और \"लॉक स्क्रीन पर दिखाएँ\" चालू करें, वरना कॉल स्क्रीन नहीं खुलेगी",
-              "Turn on \"Display pop-up windows while running in the background\" and \"Show on lock screen\", or the call screen cannot open"),
-            trailing = Ui.small(this, t("खोलें", "Open")) { Dialer.openPopupPermission(this) })
+        if (Dialer.isXiaomi()) {
+            val ok = Dialer.miuiOpsAllowed(this)
+            rows += Ui.item(this, if (ok == true) Ui.Ic.check else Ui.Ic.smartphone, t("Xiaomi: पॉप-अप और लॉक स्क्रीन", "Xiaomi: pop-ups and lock screen"),
+                when (ok) {
+                    true -> t("चालू", "Allowed")
+                    false -> t("\"बैकग्राउंड में पॉप-अप\" और \"लॉक स्क्रीन पर दिखाएँ\" चालू करें, वरना कॉल स्क्रीन नहीं खुलेगी",
+                               "Turn on \"Display pop-up windows while running in the background\" and \"Show on lock screen\", or the call screen cannot open")
+                    null -> t("यह फ़ोन जाँचने नहीं देता; दोनों चालू हों तो ठीक है", "This phone does not let apps check this; fine if both are on")
+                },
+                trailing = if (ok == true) null else Ui.small(this, t("खोलें", "Open")) { Dialer.openPopupPermission(this) },
+                fg = if (ok == true) Ui.P.good else Ui.P.goldText, bg = if (ok == true) Ui.P.goodSoft else Ui.P.goldSoft)
+        }
         rows += Ui.item(this, Ui.Ic.volume, t("अपने-आप स्पीकर", "Auto speaker"), t("अनजान नंबर की कॉल स्पीकर पर रखें, बोलकर बताता है", "Puts calls from unknown numbers on speaker, with a spoken notice"),
             trailing = Ui.toggle(this, Dialer.autoSpeaker(this), "Auto speaker") { p.edit().putBoolean("auto_speaker", it).apply() })
         col.addView(Ui.group(this, *rows.toTypedArray()))

@@ -68,13 +68,7 @@ python bench/pilot20_report.py --sessions demo/pilot20/sessions.csv --annot demo
 
 Recordings stay on your own drive. **Do not commit the audio.**
 
-## 6. Optional: a quick usability check (about 30 minutes)
-
-Ask 3–5 people who have not seen the app to start protection, explain a STOP card in their own
-words, stop listening, and fix a missing permission. Note who finished each task, where they got
-confused and what help they needed. Report it as a small informal test, not a study.
-
-## 7. Video and submission (21–22 Nov)
+## 6. Video and submission (21–22 Nov)
 
 * Record the demo with `demo/demo_video_script.md`. Show what is live and what is replayed. Keep
   failed takes and do not present the edited video as a reliability test.

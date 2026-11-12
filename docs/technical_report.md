@@ -168,7 +168,7 @@ accessibility capture exception while the call is on **speaker** (§3.5). The co
   For an unknown number it says it is turning on the speaker, then does so; it shows the live KAVACH
   level and, on STOP, a one-tap End call. Telecom still rings and writes the call log. History: in the
   first version, calls rang but could not be answered when KAVACH was the phone app (no call
-  notification, and the call screen was blocked). Status: built 12 Nov and compiled in CI; answering a real call with it on the phone is still to be checked.
+  notification, and the call screen was blocked). Status: verified on the team's phone on 12 Nov (Xiaomi, Android 15): answering from the call screen and from the notification with the screen locked, declining, Recents and Contacts all worked; hold and a dual-SIM choice were not separately tried.
 * **Second-phone link** (optional): Bluetooth RFCOMM with Android pairing, authentication and
   encryption, paired devices only, an 8 KB message cap, and only forwarded event kinds accepted
   with clamped weights (hardened on 12 Nov).
@@ -245,6 +245,9 @@ No real victim audio or personal data is used or committed.
   JSON validation, full replays, Network Watch, LangPick). Porting found two real bugs.
 * **Tests**: 38 pytest tests (one found that `"scam": "maybe"` was read as *not a scam*).
 * **Fail-safe**: if Llama is missing, slow or invalid, the rule path still warns with playbook text.
+* **Design**: dark mode is true black with grey cards and a champagne-gold accent (light mode: ivory
+  and cobalt); every text colour pair passes the 4.5 : 1 contrast check (`docs/design_tokens.md`); risk is
+  always written in words, never shown by colour alone.
 * **What can leave the phone** (full table in `docs/EVIDENCE_LEDGER.md`): nothing from the main app's
   inference (no `INTERNET`); an optional SMS to one family member; an optional Bluetooth link to a
   paired KAVACH phone; the optional Network Watch app's DNS forwarding. Audio is never written to
@@ -410,8 +413,7 @@ polished, and one earlier Hindi run was replaced by playbook text (now logged).
 * 30-minute listening soak with an idle baseline; 2 vs 4 threads energy; KleidiAI on/off.
 * Fusion with Llama escalation (configuration E of §7.10).
 * Reliability: screen lock, backgrounding, missing/corrupt model, permission revoked, dialer change.
-* KAVACH Phone as the default phone app: answer and decline from the lock screen and from the
-  notification, recents, contacts, a dual-SIM call, call waiting.
+* KAVACH Phone: hold, call waiting and a dual-SIM call (basic answering is verified).
 
 ## 7.9 PS3 scope coverage
 

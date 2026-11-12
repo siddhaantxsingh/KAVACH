@@ -144,7 +144,7 @@ const chapters = [
   ["Hindi scams missed in noise","Small streaming Hindi model","IndicConformer, sentence by sentence"],
   ["Weak English on Indian terms (“arbi” for RBI)","Small generic English model","Parakeet 110M; spelled letters joined (“o t p”)"],
   ["Language had to be chosen by hand","One model per call","Auto mode with LangPick"],
-  ["Calls could not be answered with KAVACH as the phone app","No call notification; Xiaomi blocked the call screen","Call notification with Answer / Decline, full call screen, Setup checks (to be verified on the phone)"],
+  ["Calls could not be answered with KAVACH as the phone app","No call notification; Xiaomi blocked the call screen","Call notification with Answer / Decline, full call screen, Setup checks; verified on the phone"],
   ["Empty transcript on a real call","Accessibility service marked crashed after dialer change","Health checks and a Fix button"],
   ["Llama copied the prompt’s example","Base model, no fine-tuning","LoRA; copied advice replaced and labelled"],
   ["Half-finished sentences in advice","Generation cut at the token limit","Validator keeps whole sentences only"],

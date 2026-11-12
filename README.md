@@ -71,8 +71,8 @@
 <details>
 <summary><b>📱 The app and Llama on the phone</b> (click to open)</summary>
 <br>
-<p align="center"><img src="docs/media/app_ui.jpg" alt="Home, call protection, Stop card for a scam SMS, Network Watch Wi-Fi check" width="100%"></p>
-<p align="center"><i>Home with live status · Call protection with Auto language · Stop card for a scam SMS and link · Network Watch finding risky devices on the home Wi-Fi</i></p>
+<p align="center"><img src="docs/media/app_ui.jpg" alt="Home, call protection, Stop card, Network Watch Wi-Fi check (dark mode)" width="100%"></p>
+<p align="center"><i>Dark mode (black and gold): Home with live status and the Phone entry · Call protection with Auto language · Stop card for an unknown caller asking for money · Network Watch finding risky devices on the home Wi-Fi (emulator screenshots of the current build)</i></p>
 <p align="center"><img src="docs/media/llama_phone.jpg" alt="Fine-tuned Llama on the phone in English and Hindi" width="60%"></p>
 <p align="center"><i>Fine-tuned Llama 3.2 1B on the phone: own advice in English (self-test, 11.5 tokens/s) and in Hindi during a Hindi call, with evidence quoted word for word.</i></p>
 </details>
@@ -228,7 +228,7 @@ pie showData title Share of one CPU core while listening (Auto, measured)
 | 💬 SMS / chat scams | notification reader + SMS model (F1 0.945) | `android/app` |
 | 🔗 Phishing links | allow-list, Indian look-alike rules, URL model: 98.5 % of look-alikes flagged, 0 % of genuine Indian domains | `android/core` |
 | 📲 Screen-share and remote-access tricks | payment app opened while a remote-access app is in front | `android/app` |
-| ☎️ KAVACH Phone (optional) | a full phone app: keypad, recents, contacts, a call screen and a call notification with Answer / Decline, mute, hold, keypad tones, dual-SIM choice; unknown callers go on speaker with a spoken notice, and STOP gets a one-tap End call (built 12 Nov; to be checked on the phone) | `android/app` |
+| ☎️ KAVACH Phone (optional) | a full phone app: keypad, recents, contacts, a call screen and a call notification with Answer / Decline, mute, hold, keypad tones, dual-SIM choice; unknown callers go on speaker with a spoken notice, and STOP gets a one-tap End call (verified on the team's phone, 12 Nov) | `android/app` |
 | 🌐 Network threats | Network Watch: per-app traffic, DNS look-ups, risky devices on home Wi-Fi (ADB 5555, Telnet, RDP, SMB, TR-069…) | `android/netwatch` |
 | 🧾 Explanation and remedy | Stop card, 1930 helpline, Llama advice in the caller's language | everywhere |
 

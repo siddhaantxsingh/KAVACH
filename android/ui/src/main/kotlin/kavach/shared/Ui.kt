@@ -33,9 +33,9 @@ import kavach.ui.R
 
 /**
  * KAVACH design system (programmatic, no XML layouts, no AndroidX): "Midnight, Ivory and Gold".
- *  - Dark: midnight #0B1020, surface #151D31, divider #29344B, text #F4F1E8 / #ADB6C8.
+ *  - Dark: true black #000000, surfaces #1C1C1E / #2C2C2E, text #F5F5F7 / #98989F (Apple-style greys).
  *  - Light: ivory #F7F4ED, white surfaces, ink #15213B, gold text #76551D.
- *  - Cobalt #3157D5 for actions; gold #D6B36A only for identity and highlights.
+ *  - Dark actions in champagne gold #D9B66F with near-black text; light mode keeps cobalt #3157D5 actions.
  *  - Amber = caution and red = urgent are STATUS colours, never decoration. Every state is also
  *    carried by an icon and by words, never by colour alone.
  *  - Type: Inter (bundled, SIL OFL), with the system font as fallback for Devanagari.
@@ -51,15 +51,16 @@ object Ui {
         val good: Int, val goodSoft: Int, val warn: Int, val warnSoft: Int, val bad: Int, val badSoft: Int, val dark: Boolean,
     )
 
+    // Dark: true black (OLED) with Apple-style grey surfaces and a champagne-gold accent. No blue.
     val DARK = Palette(
-        bg = 0xFF0B1020.toInt(), card = 0xFF151D31.toInt(), cardHi = 0xFF1C2640.toInt(), stroke = 0xFF29344B.toInt(),
-        text = 0xFFF4F1E8.toInt(), muted = 0xFFADB6C8.toInt(), accent = 0xFF3157D5.toInt(), onAccent = 0xFFFFFFFF.toInt(),
-        accentSoft = 0xFF1A2752.toInt(), accentText = 0xFF9DB4FF.toInt(),
-        gold = 0xFFD6B36A.toInt(), goldText = 0xFFD6B36A.toInt(), goldSoft = 0xFF2A2619.toInt(),
-        ready = 0xFF151D31.toInt(), onReady = 0xFFF4F1E8.toInt(), listen = 0xFF14204A.toInt(), onListen = 0xFFF4F1E8.toInt(), listenStroke = 0xFF3A4E8C.toInt(),
-        caution = 0xFFF2B441.toInt(), onCaution = 0xFF1F1300.toInt(), stop = 0xFFB91C1C.toInt(), onStop = 0xFFFFFFFF.toInt(),
-        good = 0xFF8FD3A6.toInt(), goodSoft = 0xFF15291F.toInt(), warn = 0xFFF2B441.toInt(), warnSoft = 0xFF2B2313.toInt(),
-        bad = 0xFFFCA5A5.toInt(), badSoft = 0xFF341619.toInt(), dark = true,
+        bg = 0xFF000000.toInt(), card = 0xFF1C1C1E.toInt(), cardHi = 0xFF2C2C2E.toInt(), stroke = 0xFF2A2A2D.toInt(),
+        text = 0xFFF5F5F7.toInt(), muted = 0xFF98989F.toInt(), accent = 0xFFD9B66F.toInt(), onAccent = 0xFF14110A.toInt(),
+        accentSoft = 0xFF2A2417.toInt(), accentText = 0xFFE6C887.toInt(),
+        gold = 0xFFD9B66F.toInt(), goldText = 0xFFD9B66F.toInt(), goldSoft = 0xFF241F14.toInt(),
+        ready = 0xFF1C1C1E.toInt(), onReady = 0xFFF5F5F7.toInt(), listen = 0xFF1C1C1E.toInt(), onListen = 0xFFF5F5F7.toInt(), listenStroke = 0xFF5E4E2C.toInt(),
+        caution = 0xFFF5BE4B.toInt(), onCaution = 0xFF1D1400.toInt(), stop = 0xFFC4191F.toInt(), onStop = 0xFFFFFFFF.toInt(),
+        good = 0xFF30D158.toInt(), goodSoft = 0xFF10261A.toInt(), warn = 0xFFFFD60A.toInt(), warnSoft = 0xFF2A2408.toInt(),
+        bad = 0xFFFF6961.toInt(), badSoft = 0xFF2C1314.toInt(), dark = true,
     )
     val LIGHT = Palette(
         bg = 0xFFF7F4ED.toInt(), card = 0xFFFFFFFF.toInt(), cardHi = 0xFFF3EFE5.toInt(), stroke = 0xFFDED7C7.toInt(),
@@ -229,7 +230,7 @@ object Ui {
         init { importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO }
         override fun onDraw(c: Canvas) {
             val w = width.toFloat(); val h = height.toFloat()
-            val tile = if (listening) 0xFF1B2A5C.toInt() else if (P.dark) 0xFF1C2640.toInt() else 0xFF0B1020.toInt()
+            val tile = if (P.dark) (if (listening) 0xFF2A2417.toInt() else 0xFF1C1C1E.toInt()) else if (listening) 0xFF1B2A5C.toInt() else 0xFF0B1020.toInt()
             fill.color = tile
             c.drawRoundRect(RectF(0f, 0f, w, h), w * 0.3f, w * 0.3f, fill)
             val p = Path()
@@ -339,8 +340,8 @@ object Ui {
     fun toggle(ctx: Context, checked: Boolean, description: String, onChange: (Boolean) -> Unit): Switch = Switch(ctx).apply {
         isChecked = checked; contentDescription = description
         val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
-        thumbTintList = ColorStateList(states, intArrayOf(if (P.dark) P.gold else P.accent, if (P.dark) 0xFF8D97AD.toInt() else 0xFFFFFFFF.toInt()))
-        trackTintList = ColorStateList(states, intArrayOf(if (P.dark) 0xFF6E5B33.toInt() else 0xFF9DB0EE.toInt(), if (P.dark) 0xFF3A465F.toInt() else 0xFFC9C3B4.toInt()))
+        thumbTintList = ColorStateList(states, intArrayOf(if (P.dark) P.gold else P.accent, if (P.dark) 0xFF8E8E93.toInt() else 0xFFFFFFFF.toInt()))
+        trackTintList = ColorStateList(states, intArrayOf(if (P.dark) 0xFF6E5B33.toInt() else 0xFF9DB0EE.toInt(), if (P.dark) 0xFF3A3A3C.toInt() else 0xFFC9C3B4.toInt()))
         setOnCheckedChangeListener { _, v -> onChange(v) }
     }
 
@@ -427,8 +428,8 @@ object Ui {
                 b.orb.set(iconRes ?: Ic.octagon, 0xFFFFFFFF.toInt(), 0xFFFFFFFF.toInt(), P.stop, false, true) }
             "caution" -> { b.background = shape(ctx, P.caution, 26f); b.title.setTextColor(P.onCaution); b.subtitle.setTextColor(P.onCaution)
                 b.orb.set(iconRes ?: Ic.triangle, P.onCaution, P.onCaution, P.caution, false, false) }
-            "listen" -> { b.background = shape(ctx, P.listen, 26f, P.listenStroke); b.title.setTextColor(P.onListen); b.subtitle.setTextColor(if (P.dark) 0xFFC5CEE6.toInt() else P.muted)
-                b.orb.set(iconRes ?: Ic.ear, if (P.dark) 0xFF7C9BFF.toInt() else P.accent, P.accent, P.onAccent, false, true) }
+            "listen" -> { b.background = shape(ctx, P.listen, 26f, P.listenStroke); b.title.setTextColor(P.onListen); b.subtitle.setTextColor(if (P.dark) 0xFFC7C7CC.toInt() else P.muted)
+                b.orb.set(iconRes ?: Ic.ear, if (P.dark) P.gold else P.accent, P.accent, P.onAccent, false, true) }
             "off" -> { b.background = shape(ctx, P.card, 26f, P.stroke); b.title.setTextColor(P.text); b.subtitle.setTextColor(P.muted)
                 b.orb.set(iconRes ?: Ic.shieldOff, P.muted, P.cardHi, P.muted, true, false) }
             else -> { b.background = shape(ctx, P.card, 26f, P.stroke); b.title.setTextColor(P.text); b.subtitle.setTextColor(P.muted)
@@ -517,10 +518,10 @@ object Ui {
 
     fun input(ctx: Context, hint: String, type: Int = InputType.TYPE_CLASS_TEXT): EditText = EditText(ctx).apply {
         this.hint = hint; inputType = type; textSize = 16f; typeface = font(400)
-        setTextColor(P.text); setHintTextColor(if (P.dark) 0xFF8C96AB.toInt() else 0xFF5A6378.toInt())
+        setTextColor(P.text); setHintTextColor(if (P.dark) 0xFFA1A1A6.toInt() else 0xFF5A6378.toInt())
         val p = dp(ctx, 16); setPadding(p, p, p, p)
         minHeight = dp(ctx, 54)
-        background = shape(ctx, if (P.dark) P.bg else P.cardHi, 16f, P.stroke)
+        background = shape(ctx, if (P.dark) P.cardHi else P.cardHi, 16f, if (P.dark) null else P.stroke)
         layoutParams = LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = dp(ctx, 4); bottomMargin = dp(ctx, 6) }
     }
 

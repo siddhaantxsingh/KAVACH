@@ -16,8 +16,13 @@ Nothing here is a claim about real victims: all call data is synthetic, hand-wri
 
 ## 1. Challenge requirements
 
-The items below come from the owner's check of the challenge page on 10 Nov 2026 and **must be
-re-verified** on the official page before submission.
+Re-checked on the official page on 12 Nov 2026
+(<https://arm-education.github.io/Arm-Developer-Labs/Bharat_AI_SoC_2026_27.html>): deadline 23 Nov 2026
+(no time or timezone given, so treat 22 Nov as the internal deadline); deliverables are source code,
+application, demonstration video and technical report; the project must be on GitHub and submitted
+through the challenge form; no page or video length limit is stated; a Llama-family model must be used
+for the advisory part, with ExecuTorch. The submission form asks for a team leader: that is a form
+field only and appears in none of our documents.
 
 | Requirement (as reported) | KAVACH implementation | Evidence | Status |
 |---|---|---|---|
@@ -27,7 +32,7 @@ re-verified** on the official page before submission.
 | PS3: SMS / chat scams, phishing | Message Shield, Link Check | host evaluation | host-verified; on-phone paste check works |
 | PS3: local network threats | Network Watch: per-app traffic, DNS watch (separate app), Wi-Fi device check | simulated traces, pcap replay | simulated + host-verified; no phone traffic test |
 | PS3: plain-language explanation and remediation | rule reasons, Stop card with 1930, Llama advice in the call's language | real-call screenshots | verified |
-| Arm optimisation and measurement | int8 speech models, 4-bit Llama (XNNPACK/KleidiAI), thread counts measured | on-phone benchmark | **measured**: Auto listening 54 % of one core, ≈ 7.6 % battery per hour, no heating |
+| Arm optimisation and measurement | int8 speech models, 4-bit Llama (XNNPACK/KleidiAI), thread counts measured | on-phone benchmark | **measured once**: Auto listening 54 % of one core, 385 mA whole-phone in a one-minute run (≈ 7.6 %/h only if extrapolated), no heating; 30-min soak not run |
 
 ## 2. Capability matrix (Android reality)
 
@@ -46,7 +51,9 @@ re-verified** on the official page before submission.
 1. **No human recordings yet.** Every accuracy number except the three real calls uses synthetic text or TTS voices. Planned: 10–20 consented role-play calls on 21 Nov (`demo/recording_protocol.md`).
 2. **Android can silently stop call listening** (seen once tonight after the default phone app changed). Detected and explained in the app since build `1e2be84`; users still have to fix it by hand.
 3. **Llama's Hindi is understandable but not always polished**, and one Hindi run was still replaced by the playbook text. Replacements are now logged with Llama's own words.
-4. **Public demo signing key** in the repo and **no app-level Bluetooth pairing check**: fine for a demo, not for release.
+4. **Public demo signing key** in the repo: fine for a demo, not for release. (Bluetooth link hardened on 12 Nov: paired, encrypted, size-capped, event kinds whitelisted.)
+7. **Fusion is temporal only**: the ablation (`bench/fusion_ablation.py`, report §7.10) shows it can blame a genuine call for an unrelated scam SMS; it adds STOPs at the risky action but no earlier warnings.
+8. **Deployed 4-bit Llama not scored** on independent, ASR or prompt-injection inputs; its confidence is self-reported. Steps in `docs/OWNER_CHECKLIST.md`.
 5. **Light mode, TalkBack, large text** not tested on the phone.
 6. **Network Watch** is tested on simulated traffic only.
 

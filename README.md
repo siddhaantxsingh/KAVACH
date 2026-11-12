@@ -41,14 +41,17 @@
 <table>
 <tr>
 <td width="25%" align="center"><h3>3 / 3</h3>real cellular calls on one phone behaved correctly: Hindi scam <b>STOP</b>, English scam <b>STOP</b>, genuine bank call <b>calm</b></td>
-<td width="25%" align="center"><h3>0 %</h3>false STOPs on every evaluated set (synthetic, through-speaker, hand-written, locked held-out)</td>
-<td width="25%" align="center"><h3>7.6 % / h</h3>battery for listening with <b>both</b> speech models on every sentence, no heating, on a mid-range phone</td>
+<td width="25%" align="center"><h3>0 STOPs</h3>on genuine calls in every evaluated set (489 synthetic, 24 human-written); genuine calls still get CAUTION 5–40 % of the time</td>
+<td width="25%" align="center"><h3>385 mA</h3>whole-phone current in a one-minute run of listening with <b>both</b> speech models (≈ 7.6 % battery/h if it held), no heating</td>
 <td width="25%" align="center"><h3>38 → 89 %</h3>Llama scam accuracy after LoRA; copied advice <b>32 → 0 %</b>, right language <b>55 → 100 %</b></td>
 </tr>
 </table>
 
 > [!IMPORTANT]
-> The main app **does not request Android's `INTERNET` permission**. Audio is processed in memory and never stored. Network Watch, which needs the internet for its DNS check, is a separate optional app.
+> The main app **does not request Android's `INTERNET` permission**: speech, detection and Llama all run on the phone, and audio is never stored. What *can* leave the phone is optional and user-enabled: an SMS to one family member, a Bluetooth link to a paired KAVACH phone, and the separate Network Watch app's DNS forwarding ([`docs/EVIDENCE_LEDGER.md`](docs/EVIDENCE_LEDGER.md#privacy-what-leaves-the-phone)).
+
+> [!NOTE]
+> Every number below has a row in the **[evidence ledger](docs/EVIDENCE_LEDGER.md)** (source file, sample size, and whether it was reproduced, measured once, observed or is still planned). Host results were re-run on 12 Nov 2026 with the shipped models.
 
 ---
 
@@ -158,14 +161,20 @@ stateDiagram-v2
 
 ## 📊 Results
 
-### Call-level detection (host, replayed in call time)
+### Call-level detection (host, replayed in call time, no Llama)
 
-| Evaluation set | Scam → **STOP** | Scam → any warning | Median time to STOP | Genuine wrongly STOPped |
-|---|:-:|:-:|:-:|:-:|
-| Synthetic test, 511 scam / 489 genuine | **90.6 %** | 97.3 % | 12.7 s | **0 %** |
-| Same, caller heard through a speaker | **71.1 %** | 88.8 % | 14.7 s | **0 %** |
-| Hand-written, 16 / 14 | **93.8 %** | 93.8 % | 17.0 s | **0 %** |
-| Locked held-out, 10 / 10 (never tuned on) | **70.0 %** | 80.0 % | 22.6 s | **0 %** |
+| Evaluation set | Scam → **STOP** | STOP before the money/OTP request | Median time to STOP | Genuine STOPped | Genuine at CAUTION |
+|---|:-:|:-:|:-:|:-:|:-:|
+| Synthetic test, 511 scam / 489 genuine | **477 (93.4 %)** | 420 (82.2 %) | 12.6 s | **0** | 29 (5.9 %) |
+| Same, caller heard through a speaker | **375 (74.7 %)** | 304 (60.6 %) | 14.6 s | **0** | 26 (5.2 %) |
+| Hand-written, 16 / 14 | **15** | 10 | 19.0 s | **0** | 3 |
+| Locked held-out, 10 / 10 (never tuned on) | **8** | 5 | 21.3 s | **0** | 4 |
+
+Zero false STOPs on 24 human-written genuine calls does not prove a ≤ 2 % rate (95 % upper bound ≈ 14 %), and warnings before the money step (50–82 %) are below our 90 % target.
+
+### Does cross-channel fusion help? (ablation)
+
+[`bench/fusion_ablation.py`](bench/fusion_ablation.py) replays identical event traces with the call detector alone, the message/app detectors alone, both combined independently, and full fusion. **Fusion turns an ambiguous call into STOP at the risky action** (APK install during a call: 30 → 40 of 40; a call heard only in part + APK: 7 → 40), **but it never warned earlier** than the independent combination, and most of the gain comes from *knowing* an unknown-number call is on. It also has costs: an unrelated scam SMS during a genuine call is blamed on the call (32/40), and work screen-sharing during an unknown-number call is STOP. Full tables: [technical report §7.10](docs/technical_report.md).
 
 ### Hindi speech: the fix that mattered
 
@@ -181,7 +190,7 @@ On held-out sentences LangPick chose the right model **92.7 %** of the time (Hin
 
 <p align="center"><img src="docs/media/llama_lora.png" alt="Llama before and after LoRA" width="85%"></p>
 
-LoRA r = 16 on all projections, 1 epoch over 4,000 KAVACH instruction pairs, trained on a free Colab T4 in 4.1 h ([`notebooks/kavach_llama_lora_colab.ipynb`](notebooks/kavach_llama_lora_colab.ipynb)). Scored on 100 dev examples; the dev data shares the generator with training, so this measures learning of the task, not human speech.
+LoRA r = 16 on all projections, 1 epoch over 4,000 KAVACH instruction pairs, trained on a free Colab T4 in 4.1 h ([`notebooks/kavach_llama_lora_colab.ipynb`](notebooks/kavach_llama_lora_colab.ipynb)). Scored on 100 dev examples with the **full-precision** merged model; the dev data shares the generator with training, so this measures learning of the task, not human speech. The deployed 4-bit file is so far only observed on the phone. Llama can raise CAUTION to STOP but **never lowers or clears a warning**; a timed-out or invalid answer leaves the rule-based warning in place.
 
 ---
 
@@ -194,8 +203,11 @@ Measured on a **Xiaomi 2312DRA50I** · Snapdragon 7s Gen 2 (4 × Cortex-A78 @ 2.
 | 🟠 Detector (cues + classifier + kill chain) | **4.07 ms** per sentence |
 | 🔵 IndicConformer Hindi (sentence) | RTF **0.153** at 2 threads · 0.092 at 4 (6.5× / 10.9× faster than real time) |
 | 🔵 Parakeet 110M English (sentence) | RTF **0.052** at 2 threads · 0.037 at 4 (19× / 27×) |
-| 🔋 Auto listening, both models on every sentence | **54 % of one core · 385 mA · ≈ 7.6 % battery per hour** · 38.0 → 37.9 °C · no throttling |
-| 🦙 Llama 3.2 1B, 4-bit `.pte` (820 MB) | load 4.1 s · +1.1 GB · first token **5.9 s** warm / 12.9 s cold · prefill 56–60 tok/s · decode **11.6–11.9 tok/s** |
+| 🔋 Auto listening, both models on every sentence (**one-minute** run, screen on) | **54 % of one core · 385 mA whole phone** (≈ 7.6 % battery/h if extrapolated) · 38.0 → 37.9 °C · no throttling |
+| 🦙 Llama 3.2 1B, Meta SpinQuant INT4 `.pte` | load 4.1 s · +1.1 GB · first token **5.9 s** warm / 12.9 s cold · full answer 15.1 s / 22.0 s · decode **11.6–11.9 tok/s** |
+| 🦙 Llama 3.2 1B + KAVACH LoRA, 8da4w `.pte` (820 MB) | self-test: first token 18.3 s cold · decode **11.5 tok/s** |
+
+Single runs on one phone. A 30-minute soak with an idle baseline, 2 vs 4 threads energy and KleidiAI on/off are scripted but not yet run.
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"pie1": "#2F5BD3", "pie2": "#E2E8F0", "pieStrokeColor": "#FFFFFF", "pieOuterStrokeColor": "#0F172A", "pieSectionTextColor": "#0F172A", "pieTitleTextSize": "18px"}}}%%
@@ -213,7 +225,7 @@ pie showData title Share of one CPU core while listening (Auto, measured)
 | Threat | KAVACH | Where |
 |---|---|---|
 | 📞 Scam calls (digital arrest, fake KYC, courier, family emergency, …) | live listening on one phone, Hindi/Hinglish/English, STOP during the call | `android/guardian` |
-| 💬 SMS / chat scams | notification reader + SMS model (F1 0.939) | `android/app` |
+| 💬 SMS / chat scams | notification reader + SMS model (F1 0.945) | `android/app` |
 | 🔗 Phishing links | allow-list, Indian look-alike rules, URL model: 98.5 % of look-alikes flagged, 0 % of genuine Indian domains | `android/core` |
 | 📲 Screen-share and remote-access tricks | payment app opened while a remote-access app is in front | `android/app` |
 | 🌐 Network threats | Network Watch: per-app traffic, DNS look-ups, risky devices on home Wi-Fi (ADB 5555, Telnet, RDP, SMB, TR-069…) | `android/netwatch` |
@@ -291,7 +303,8 @@ KAVACH/
 
 ## 🔒 Privacy and safety by design
 
-- **No `INTERNET` permission** in the main app; nothing about a call can leave the phone.
+- **No `INTERNET` permission** in the main app: no audio, transcript or model output can be uploaded by it. Optional, user-enabled paths (family SMS, paired Bluetooth phone, the separate DNS-watch app) are listed in the [evidence ledger](docs/EVIDENCE_LEDGER.md#privacy-what-leaves-the-phone).
+- The second-phone Bluetooth link accepts **paired devices only** over an encrypted channel, caps message size and treats incoming events as evidence, never commands.
 - **Audio is never stored**: it lives in memory for the length of a sentence.
 - The call-listening accessibility service **reads no screen content and performs no actions**; it exists only because Android shares the microphone during a call with accessibility services ([docs](https://developer.android.com/media/platform/sharing-audio-input)).
 - If Android silently stops that service, the app **detects it** and says how to fix it, instead of failing quietly.
@@ -305,10 +318,14 @@ KAVACH/
 - [x] Real calls on one phone: Hindi scam STOP, English scam STOP, genuine calm (3/3)
 - [x] Phone benchmark: speed, memory, battery, heat
 - [x] Llama 3.2 1B fine-tuned and running on the phone in Hindi and English
-- [ ] Consented human-recorded test set (10–20 calls planned for the Phase 1 video; larger set in Phase 2)
+- [x] Cross-channel fusion ablation with counterexamples ([§7.10](docs/technical_report.md))
+- [ ] 20-call locked human pilot, frozen build, two annotators ([`demo/pilot20/`](demo/pilot20/)), planned 21 Nov
+- [ ] Deployed 4-bit Llama scored on independent, ASR and prompt-injection prompts
+- [ ] 30-minute listening soak with an idle baseline; 2 vs 4 threads energy
 - [ ] NPU offload of the speech encoders with CPU-vs-NPU energy measurements
 - [ ] Quantisation ladder and KleidiAI on/off ablations on big and LITTLE cores, and on a budget phone
-- [ ] "Warned before payment" ≥ 90 % (today 50–78 % depending on the set)
+- [ ] "Warned before payment" ≥ 90 % (today 50–82 % depending on the set)
+- [ ] Entity-aware fusion (organisation on the call vs message sender)
 
 All accuracy numbers except the real calls use synthetic text or TTS voices; human voices will score lower. Details: [technical report §7–9](docs/technical_report.md).
 

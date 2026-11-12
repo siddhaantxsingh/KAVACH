@@ -23,5 +23,7 @@ are treated as µA. `PowerProfile` capacity is read by reflection and may be mis
 `bench/results/device/kavach_bench_20261112_013528.json`; summary in `docs/technical_report.md` §7.5.
 Xiaomi 2312DRA50I (Snapdragon 7s Gen 2), Android 15, on battery: detector 4.07 ms per sentence;
 IndicConformer Hindi RTF 0.153 (2 threads) / 0.092 (4); Parakeet English 0.052 / 0.037; Auto
-listening 54 % of one core, 385 mA, ≈ 7.6 % battery per hour, no heating; Llama 3.2 1B first token
-5.9 s warm / 12.9 s cold, decode 11.6–11.9 tok/s, +1.1 GB.
+listening (one-minute run, screen on) 54 % of one core, 385 mA whole-phone current (≈ 7.6 % battery
+per hour only if extrapolated; no idle baseline yet), no heating; Llama 3.2 1B (Meta SpinQuant INT4
+file) first token 5.9 s warm / 12.9 s cold, decode 11.6–11.9 tok/s, +1.1 GB; KAVACH LoRA 8da4w file
+self-test 11.5 tok/s, first token 18.3 s cold. A 30-minute soak (`bench/thermal_soak.sh`) is not run yet.

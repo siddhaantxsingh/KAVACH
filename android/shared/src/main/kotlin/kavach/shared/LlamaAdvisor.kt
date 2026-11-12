@@ -26,7 +26,12 @@ import java.util.concurrent.TimeoutException
  *    verdict has already been spoken, so a slow or throttled phone only loses the refinement.
  * All calls run on one dedicated high-priority thread ("kavach-llm").
  */
-class LlamaAdvisor(private val modelPath: String, private val tokenizerPath: String, private val timeoutMs: Long = 25_000) : LlmFn {
+// Production timeout, per generate() call (a re-prompt after invalid JSON gets its own). It covers waiting
+// for a background warm-prefix prefill, the prompt prefill and generation up to the closing brace; NOT model
+// loading. Measured on the Snapdragon 7s Gen 2 (12 Nov 2026): warm first token 5.9 s and ~105 tokens at
+// ~11.5 tok/s (~15 s total); fine-tuned file cold first token 18.3 s + 92 tokens (~26 s total). 35 s covers the
+// cold path with margin. The rule-based warning is already on screen, so a timeout only loses the explanation.
+class LlamaAdvisor(private val modelPath: String, private val tokenizerPath: String, private val timeoutMs: Long = 35_000) : LlmFn {
     enum class State { MISSING, LOADING, READY, FAILED }
 
     data class Stats(

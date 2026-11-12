@@ -258,12 +258,15 @@ class GuardianService : Service() {
         // The microphone also hears KAVACH's own spoken warning; never treat it as the caller.
         if (speaker?.isSpeakingOrJustSpoke() == true || isEchoOfOurWarning(text)) {
             ignoredOwnVoice++
+            logLine("own_voice_ignored", ignoredOwnVoice)
             GuardianBus.status("ignored our own spoken warning ($ignoredOwnVoice)")
             return
         }
         engine.execute {
             val g = guardian ?: return@execute
             g.onSegment(text, t)
+            // timing only (no words): when each sentence was recognised and in which language
+            logLine("segment", lang, kavach.core.Normalize.tokens(text).size)
             synchronized(finals) { finals.add(text); while (finals.size > 40) finals.removeAt(0) }
             publishTranscript("")
             tickNow()
@@ -389,6 +392,8 @@ class GuardianService : Service() {
         llmQueue.execute {
             val raw = g.askLlm(adv, a.window, active, a.retrieved)
             GuardianBus.llamaLastRun = describeLlamaRun(adv, raw != null)
+            // outcome of every explanation attempt (ok / timeout / error, total ms, valid verdict) for the pilot table
+            logLine("llm_outcome", adv.lastOutcome, adv.lastElapsedMs, raw != null, a.level)
             val v = raw?.let { repairSay(it, a) }
             GuardianBus.status("Llama: " + GuardianBus.llamaLastRun)
             if (v == null) return@execute

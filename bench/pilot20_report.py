@@ -61,6 +61,10 @@ def read_log_sessions(logdir: Path) -> list[dict]:
                 cur["first"].setdefault(lvl, call_s)
             elif kind == "llm":
                 cur["llm"].append({"t": call_s, "ttft_ms": rest[2] if len(rest) > 2 else ""})
+            elif kind == "llm_outcome":
+                cur.setdefault("llm_outcomes", []).append({"outcome": rest[0] if rest else "", "ms": rest[1] if len(rest) > 1 else "", "valid": (rest[2] if len(rest) > 2 else "") == "true"})
+            elif kind == "own_voice_ignored":
+                cur["own_voice_ignored"] = cur.get("own_voice_ignored", 0) + 1
             elif kind == "llm_say_replaced":
                 cur["replaced"] += 1
             elif kind == "mic_blocked":
@@ -82,6 +86,11 @@ def match(sess_row: dict, logs: list[dict], tol_s: int = 120) -> dict | None:
     ms = dt.timestamp() * 1000
     best = min(logs, key=lambda s: abs(s["start_wall_ms"] - ms))
     return best if abs(best["start_wall_ms"] - ms) <= tol_s * 1000 else None
+
+
+def _median(v: list):
+    v = sorted(v)
+    return v[len(v) // 2] if v else None
 
 
 def fnum(x: str):
@@ -123,6 +132,7 @@ def main() -> None:
             "cue_to_stop_s": (first["stop"] - cue) if ("stop" in first and cue is not None) else None,
             "explanation_source": r.get("explanation_source", ""), "llm_replaced": lg["replaced"] if lg else None,
             "mic_blocked_events": lg["mic_blocked"] if lg else None, "log_matched": lg is not None,
+            "llm_outcomes": lg.get("llm_outcomes", []) if lg else [],
         })
 
     ok = [c for c in calls if c["status"] == "ok"]
@@ -155,6 +165,10 @@ def main() -> None:
             else:
                 d["benign"] += 1; d["benign_stop"] += c["level"] == "stop"; d["benign_caution"] += c["level"] == "caution"
         res[f"by_{key}"] = g
+    outs = [o for c in ok for o in c["llm_outcomes"]]
+    res["llama_attempts"] = {"n": len(outs), "ok_valid": sum(o["outcome"] == "ok" and o["valid"] for o in outs),
+                             "timeout": sum(o["outcome"] == "timeout" for o in outs), "error": sum(o["outcome"].startswith("error") for o in outs),
+                             "median_ms": _median([int(o["ms"]) for o in outs if str(o["ms"]).isdigit()])}
     res["explanation_source"] = {s: sum(c["explanation_source"] == s for c in ok) for s in sorted({c["explanation_source"] for c in ok})}
     res["calls"] = calls
     res["note"] = ("Locked pilot: 20 role-played calls, few speakers; calls by the same caller are not independent. "

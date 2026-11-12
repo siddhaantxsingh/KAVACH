@@ -2,11 +2,11 @@
   "rules": {
     "n_scam": 511,
     "n_benign": 489,
-    "stop_recall": 0.8004,
-    "caution_recall": 0.8924,
-    "caught_before_money": 0.6282,
-    "time_to_stop_median_s": 17.6,
-    "time_to_stop_p90_s": 28.3,
+    "stop_recall": 0.8278,
+    "caution_recall": 0.9237,
+    "caught_before_money": 0.6575,
+    "time_to_stop_median_s": 17.3,
+    "time_to_stop_p90_s": 27.9,
     "false_stop_rate": 0.0,
     "false_caution_rate": 0.0,
     "by_type": {
@@ -37,8 +37,8 @@
       },
       "electricity_bill": {
         "n": 44,
-        "stop_recall": 0.3182,
-        "before_money": 0.3182
+        "stop_recall": 0.3864,
+        "before_money": 0.3864
       },
       "family_chat": {
         "n": 54,
@@ -57,18 +57,18 @@
       },
       "investment_trading": {
         "n": 45,
-        "stop_recall": 0.8889,
-        "before_money": 0.8889
+        "stop_recall": 0.9111,
+        "before_money": 0.9111
       },
       "job_task": {
         "n": 29,
-        "stop_recall": 0.6897,
-        "before_money": 0.6897
+        "stop_recall": 0.7586,
+        "before_money": 0.7586
       },
       "kyc_bank": {
         "n": 52,
         "stop_recall": 0.9808,
-        "before_money": 0.6346
+        "before_money": 0.6923
       },
       "lottery_prize": {
         "n": 48,
@@ -92,8 +92,8 @@
       },
       "remote_support": {
         "n": 46,
-        "stop_recall": 0.8043,
-        "before_money": 0.6304
+        "stop_recall": 0.9783,
+        "before_money": 0.7609
       },
       "scam_gossip": {
         "n": 51,
@@ -113,7 +113,7 @@
     },
     "by_lang": {
       "en": {
-        "stop_recall": 0.8895,
+        "stop_recall": 0.907,
         "false_stop": 0.0
       },
       "hi": {
@@ -121,7 +121,7 @@
         "false_stop": 0.0
       },
       "hing": {
-        "stop_recall": 0.7964,
+        "stop_recall": 0.8623,
         "false_stop": 0.0
       }
     },
@@ -135,9 +135,7 @@
       "test-00068",
       "test-00073",
       "test-00083",
-      "test-00119",
       "test-00126",
-      "test-00127",
       "test-00131",
       "test-00134",
       "test-00142",
@@ -145,7 +143,9 @@
       "test-00170",
       "test-00202",
       "test-00205",
-      "test-00206"
+      "test-00209",
+      "test-00214",
+      "test-00216"
     ],
     "false_stops": []
   },
@@ -153,12 +153,12 @@
     "n_scam": 511,
     "n_benign": 489,
     "stop_recall": 0.0,
-    "caution_recall": 0.9452,
+    "caution_recall": 0.9569,
     "caught_before_money": 0.0,
     "time_to_stop_median_s": null,
     "time_to_stop_p90_s": null,
     "false_stop_rate": 0.0,
-    "false_caution_rate": 0.0716,
+    "false_caution_rate": 0.0593,
     "by_type": {
       "bank_fraud_alert": {
         "n": 42,
@@ -173,7 +173,7 @@
       "delivery": {
         "n": 52,
         "false_stop": 0.0,
-        "false_caution": 0.0577
+        "false_caution": 0.0192
       },
       "digital_arrest": {
         "n": 46,
@@ -193,7 +193,7 @@
       "family_chat": {
         "n": 54,
         "false_stop": 0.0,
-        "false_caution": 0.0556
+        "false_caution": 0.0741
       },
       "family_emergency": {
         "n": 52,
@@ -233,7 +233,7 @@
       "police_genuine": {
         "n": 71,
         "false_stop": 0.0,
-        "false_caution": 0.1127
+        "false_caution": 0.0423
       },
       "relative_money": {
         "n": 50,
@@ -302,13 +302,13 @@
   "combined": {
     "n_scam": 511,
     "n_benign": 489,
-    "stop_recall": 0.9061,
-    "caution_recall": 0.9726,
-    "caught_before_money": 0.7828,
-    "time_to_stop_median_s": 12.7,
-    "time_to_stop_p90_s": 20.9,
+    "stop_recall": 0.9335,
+    "caution_recall": 0.9941,
+    "caught_before_money": 0.8219,
+    "time_to_stop_median_s": 12.6,
+    "time_to_stop_p90_s": 20.2,
     "false_stop_rate": 0.0,
-    "false_caution_rate": 0.0716,
+    "false_caution_rate": 0.0593,
     "by_type": {
       "bank_fraud_alert": {
         "n": 42,
@@ -323,12 +323,12 @@
       "delivery": {
         "n": 52,
         "false_stop": 0.0,
-        "false_caution": 0.0577
+        "false_caution": 0.0192
       },
       "digital_arrest": {
         "n": 46,
         "stop_recall": 1.0,
-        "before_money": 0.9783
+        "before_money": 1.0
       },
       "doctor": {
         "n": 51,
@@ -337,18 +337,18 @@
       },
       "electricity_bill": {
         "n": 44,
-        "stop_recall": 0.7955,
-        "before_money": 0.5682
+        "stop_recall": 0.8636,
+        "before_money": 0.7273
       },
       "family_chat": {
         "n": 54,
         "false_stop": 0.0,
-        "false_caution": 0.0556
+        "false_caution": 0.0741
       },
       "family_emergency": {
         "n": 52,
         "stop_recall": 0.9615,
-        "before_money": 0.75
+        "before_money": 0.7885
       },
       "insurance_offer": {
         "n": 53,
@@ -357,18 +357,18 @@
       },
       "investment_trading": {
         "n": 45,
-        "stop_recall": 0.8889,
-        "before_money": 0.8889
+        "stop_recall": 0.9111,
+        "before_money": 0.9111
       },
       "job_task": {
         "n": 29,
-        "stop_recall": 0.6897,
-        "before_money": 0.6897
+        "stop_recall": 0.7586,
+        "before_money": 0.7586
       },
       "kyc_bank": {
         "n": 52,
         "stop_recall": 1.0,
-        "before_money": 0.7885
+        "before_money": 0.8269
       },
       "lottery_prize": {
         "n": 48,
@@ -383,7 +383,7 @@
       "police_genuine": {
         "n": 71,
         "false_stop": 0.0,
-        "false_caution": 0.1127
+        "false_caution": 0.0423
       },
       "relative_money": {
         "n": 50,
@@ -392,8 +392,8 @@
       },
       "remote_support": {
         "n": 46,
-        "stop_recall": 0.8043,
-        "before_money": 0.6522
+        "stop_recall": 0.9783,
+        "before_money": 0.7609
       },
       "scam_gossip": {
         "n": 51,
@@ -413,15 +413,15 @@
     },
     "by_lang": {
       "en": {
-        "stop_recall": 0.9186,
+        "stop_recall": 0.9302,
         "false_stop": 0.0
       },
       "hi": {
-        "stop_recall": 0.9244,
+        "stop_recall": 0.9302,
         "false_stop": 0.0
       },
       "hing": {
-        "stop_recall": 0.8743,
+        "stop_recall": 0.9401,
         "false_stop": 0.0
       }
     },
@@ -433,19 +433,19 @@
       "test-00059",
       "test-00068",
       "test-00083",
-      "test-00119",
-      "test-00127",
       "test-00142",
       "test-00202",
-      "test-00206",
       "test-00240",
-      "test-00284",
       "test-00306",
       "test-00338",
-      "test-00350",
-      "test-00389",
       "test-00390",
-      "test-00400"
+      "test-00417",
+      "test-00419",
+      "test-00449",
+      "test-00491",
+      "test-00501",
+      "test-00505",
+      "test-00512"
     ],
     "false_stops": []
   }

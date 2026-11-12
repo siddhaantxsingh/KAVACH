@@ -2,10 +2,10 @@
   "rules": {
     "n_scam": 10,
     "n_benign": 10,
-    "stop_recall": 0.4,
-    "caution_recall": 0.7,
+    "stop_recall": 0.5,
+    "caution_recall": 0.8,
     "caught_before_money": 0.2,
-    "time_to_stop_median_s": 21.9,
+    "time_to_stop_median_s": 21.2,
     "time_to_stop_p90_s": 22.6,
     "false_stop_rate": 0.0,
     "false_caution_rate": 0.1,
@@ -107,13 +107,13 @@
       },
       "upi_collect_refund": {
         "n": 1,
-        "stop_recall": 0.0,
+        "stop_recall": 1.0,
         "before_money": 0.0
       }
     },
     "by_lang": {
       "en": {
-        "stop_recall": 0.25,
+        "stop_recall": 0.5,
         "false_stop": 0.0
       },
       "hi": {
@@ -128,7 +128,6 @@
     "misses": [
       "ho-s01",
       "ho-s02",
-      "ho-s04",
       "ho-s05",
       "ho-s06",
       "ho-s07"
@@ -278,10 +277,10 @@
   "combined": {
     "n_scam": 10,
     "n_benign": 10,
-    "stop_recall": 0.7,
+    "stop_recall": 0.8,
     "caution_recall": 0.8,
     "caught_before_money": 0.5,
-    "time_to_stop_median_s": 22.6,
+    "time_to_stop_median_s": 21.3,
     "time_to_stop_p90_s": 24.4,
     "false_stop_rate": 0.0,
     "false_caution_rate": 0.4,
@@ -383,13 +382,13 @@
       },
       "upi_collect_refund": {
         "n": 1,
-        "stop_recall": 0.0,
+        "stop_recall": 1.0,
         "before_money": 0.0
       }
     },
     "by_lang": {
       "en": {
-        "stop_recall": 0.5,
+        "stop_recall": 0.75,
         "false_stop": 0.0
       },
       "hi": {
@@ -402,7 +401,6 @@
       }
     },
     "misses": [
-      "ho-s04",
       "ho-s06",
       "ho-s07"
     ],

@@ -123,13 +123,13 @@ const cover = [
   center('Problem Statement 3: Cybersecurity and Digital Safety', { size: 26, after: 200 }), rule,
   center('KAVACH', { bold: true, size: 56, after: 120, color: '1F3864' }),
   center('An On-Device, Multilingual Scam-Call Shield for Indian Phone Users', { bold: true, size: 30, after: 60 }),
-  center('with Llama 3.2 1B on Arm CPUs', { bold: true, size: 30, after: 480 }),
+  center('with Llama 3.2 1B on Arm CPUs', { bold: true, size: 30, after: 1000 }),
   center('A Phase 1 Technical Report', { italics: true, size: 26, after: 60 }),
-  center('submitted to the Arm Bharat AI-SoC Challenge 2026–27', { italics: true, size: 24, after: 600 }),
-  center('Submitted by', { bold: true, size: 26, after: 160 }), teamTable,
-  para([R('')], { after: 400 }),
+  center('submitted to the Arm Bharat AI-SoC Challenge 2026–27', { italics: true, size: 24, after: 1400 }),
+  center('Submitted by', { bold: true, size: 26, after: 160 }), ...team.map(([n]) => center(n, { bold: true, size: 26, after: 80 })),
+  para([R('')], { after: 1000 }),
   center('Under the guidance of', { bold: true, size: 26, after: 100 }),
-  center('Dr. Rahul Ratnakumar', { bold: true, size: 26, after: 40 }), center('Faculty Mentor', { italics: true, after: 900 }),
+  center('Dr. Rahul Ratnakumar', { bold: true, size: 26, after: 40 }), center('Faculty Mentor', { italics: true, after: 2000 }),
   center('NOVEMBER 2026', { bold: true, size: 26 })];
 
 const fmHead = (t, key) => { toc.unshift; return new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, pageBreakBefore: true,

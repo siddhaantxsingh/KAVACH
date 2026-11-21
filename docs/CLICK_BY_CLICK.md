@@ -1,3 +1,5 @@
+> **Fresh-installation reference.** For the final Phase 1 calls, keep the frozen installed build and follow [FINISH_ROUND1.md](FINISH_ROUND1.md). The single submission report is [KAVACH_Phase1_Report.pdf](KAVACH_Phase1_Report.pdf).
+
 # KAVACH: every click (Windows + Git Bash + one Android phone)
 
 Words used below: **KAVACH** = the one KAVACH app (shield icon, gold). **Network Watch** = the

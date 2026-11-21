@@ -1,6 +1,6 @@
 # KAVACH freeze manifest
 
-Written 2026-11-21 16:38 IST by scripts/freeze_manifest.sh. Do not change the build, thresholds or models after this point until the 20-call pilot is scored.
+Written 2026-11-21 16:38 IST by scripts/freeze_manifest.sh. Keep this build, thresholds and models for the Phase 1 evidence calls. Scope updated 22 November: four to five documented live calls and demo video; the 20-call pilot is deferred to Phase 2. The hashes below remain unchanged.
 
 ## Source
 

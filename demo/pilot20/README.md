@@ -1,3 +1,5 @@
+> **Deferred to Phase 2.** This broader protocol is not part of the remaining Phase 1 scope. Use [the current four/five-call and video guide](../../docs/FINISH_ROUND1.md).
+
 # KAVACH 20-call human pilot: recording kit
 
 This is a **locked feasibility pilot**: 20 role-played calls with real human voices, recorded on the

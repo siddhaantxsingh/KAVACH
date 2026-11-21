@@ -1,3 +1,5 @@
+> **Deferred to Phase 2.** This broader protocol is not part of the remaining Phase 1 scope. Use [the current four/five-call and video guide](../docs/FINISH_ROUND1.md).
+
 # Recording protocol: human-recorded evaluation set
 
 Goal: **100+ scam and 100+ genuine** calls in Hindi, Hinglish and English, recorded **on

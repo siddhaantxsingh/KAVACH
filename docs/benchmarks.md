@@ -20,10 +20,17 @@ are treated as µA. `PowerProfile` capacity is read by reflection and may be mis
 
 ## Results on the team's phone (12 Nov 2026)
 
-`bench/results/device/kavach_bench_20261112_013528.json`; summary in `docs/technical_report.md` §7.5.
+`bench/results/device/kavach_bench_20261112_013528.json`; summary in [the single report](KAVACH_Phase1_Report.pdf), §5.12.
 Xiaomi 2312DRA50I (Snapdragon 7s Gen 2), Android 15, on battery: detector 4.07 ms per sentence;
 IndicConformer Hindi RTF 0.153 (2 threads) / 0.092 (4); Parakeet English 0.052 / 0.037; Auto
 listening (one-minute run, screen on) 54 % of one core, 385 mA whole-phone current (≈ 7.6 % battery
-per hour only if extrapolated; no idle baseline yet), no heating; Llama 3.2 1B (Meta SpinQuant INT4
+per hour only if extrapolated; not a sustained measurement), 38.0 to 37.9 °C; Llama 3.2 1B (Meta SpinQuant INT4
 file) first token 5.9 s warm / 12.9 s cold, decode 11.6–11.9 tok/s, +1.1 GB; KAVACH LoRA 8da4w file
-self-test 11.5 tok/s, first token 18.3 s cold. A 30-minute soak (`bench/thermal_soak.sh`) is not run yet.
+self-test 11.5 tok/s, first token 18.3 s cold. A roughly 30-minute listening log and 10-minute idle log were recorded on 21 November.
+
+
+## Sustained workload (21 November)
+
+Raw files: `bench/results/device_idle.csv` and `bench/results/device_listening.csv`; deterministic summary: `bench/results/sustained_summary.json`. Listening gauge 99% to 92%, temperature 35.0 to 37.1 °C (peak 37.3 °C); idle 100% to 99%, 36.9 to 36.1 °C. Current unavailable; thermal status 0 throughout is not direct evidence of no CPU throttling.
+
+The team reports podcast audio with a Hindi dub, screen about 50%, Wi-Fi/wireless adb on and the phone unplugged. This was a sustained workload measurement, not a live-call accuracy test. Different initial conditions and integer gauge readings prevent a justified app-only energy estimate or idle subtraction. No new benchmark run is required for the remaining Phase 1 plan.

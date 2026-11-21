@@ -30,7 +30,7 @@ import java.io.File
  *
  * Hindi/Hinglish: AI4Bharat IndicConformer Hindi (120M, CTC, int8) when its files are on the phone
  *   (models/asr-hi-ic): Silero VAD cuts the audio into sentences and each sentence is recognised as
- *   a whole (far more accurate than the streaming model, docs/technical_report.md section 7.5; a
+ *   a whole (far more accurate than the streaming model, docs/KAVACH_Phase1_Report.pdf section 5.7; a
  *   partial result is refreshed every 2 s while someone is speaking). Otherwise the streaming
  *   Zipformer2-CTC model (models/asr-hi).
  * English: NVIDIA Parakeet TDT-CTC 110M (NeMo CTC, int8) sentence by sentence when its files are on

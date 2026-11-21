@@ -1,11 +1,12 @@
-# KAVACH evidence ledger (Phase 1 freeze candidate, 12 Nov 2026)
+# KAVACH evidence ledger — updated 22 November 2026
 
-Every claim in the README, the reports and the IEEE paper should trace to a row here. Status values:
+The README and the single [Phase 1 report](KAVACH_Phase1_Report.pdf) use this evidence ledger. The editable Word document is the same report. Status values:
 
 * **reproduced 12 Nov**: re-run from the repository on 12 Nov 2026 with the current shipped models; numbers match the results file.
 * **measured once**: a single run on the team's phone; the raw file is in the repository; not repeated.
 * **observed**: seen on the phone and recorded with screenshots; no raw log in the repository.
 * **reported**: the result file is in the repository, from an earlier build; not re-run for the current build.
+* **team-confirmed live call**: the team confirms the test used a live call from a second phone; no independent per-call trace or count has been supplied.
 * **planned / blocked**: not done yet; the reason is given.
 
 Wilson 95 % intervals are given for small samples; they assume independent calls (not true for calls sharing a template or voice).
@@ -26,7 +27,7 @@ Wilson 95 % intervals are given for small samples; they assume independent calls
 | Claim | Source | Conditions | n | Status | Limitation |
 |---|---|---|---|---|---|
 | Synthetic test: STOP 93.4 % (477/511), ≥ CAUTION 99.4 %, STOP before money 82.2 %, median 12.6 s to STOP, false STOP 0/489 (95 % CI 0–0.8 %), false CAUTION 5.9 % (29/489) | `bench/results/calls_test.json` | shipped detector, no Llama, template-disjoint split | 1,000 | reproduced 12 Nov | synthetic text written by the team; no ASR |
-| Caller heard through speaker (3× caller ASR errors): STOP 74.7 % (375/502), STOP before money 60.6 %, false STOP 0/498, false CAUTION 5.2 % | `calls_test_far.json` | as above | 1,000 | reproduced 12 Nov | simulated errors, not real ASR |
+| Simulated caller ASR errors (3× error perturbation): STOP 74.7 % (375/502), STOP before money 60.6 %, false STOP 0/498, false CAUTION 5.2 % | `calls_test_far.json` | as above | 1,000 | reproduced 12 Nov | simulated errors, not real ASR |
 | Hand-written: STOP 15/16, before money 10/16, false STOP 0/14 (CI 0–21.5 %), false CAUTION 3/14 | `calls_handwritten.json` | other author style | 30 | reproduced 12 Nov | tiny; also used for threshold checks (dev role) |
 | Locked held-out: STOP 8/10 (CI 49–94 %), before money 5/10, false STOP 0/10 (CI 0–28 %), false CAUTION 4/10 | `calls_heldout.json` | never used for tuning; scored on each reported build | 20 | reproduced 12 Nov | tiny; scored on several builds, so it is no longer pristine |
 | Earlier builds reported 90.6 % / 71.1 % / 70 % on the same sets | git history of `bench/results/` | before the Hindi lexicon and classifier changes of 11 Nov | | superseded | the documents now use the 12 Nov numbers |
@@ -54,12 +55,12 @@ Wilson 95 % intervals are given for small samples; they assume independent calls
 
 | Claim | Source | Conditions | n | Status | Limitation |
 |---|---|---|---|---|---|
-| Three real cellular calls from an unknown number, one phone, speaker, Auto: Hindi digital arrest STOP, English KYC STOP, genuine Hindi bank call no warning | screenshots in `docs/media/real_calls.jpg`; §7.5 | role-play by a teammate, 12 Nov 03:15–03:53 | 3 | observed | 3 calls, one caller, demonstration only; no session CSV in the repo |
-| KAVACH Phone as the default phone app: answer / decline (screen and notification), recents, contacts, hold, keypad tones, SIM choice | `android/app/.../Dialer.kt` | rewritten 12 Nov after calls rang but could not be answered | | **observed 12 Nov** on the team's phone: answer (screen and locked-screen notification), decline, recents, contacts work | hold, call waiting and dual-SIM choice not separately tried |
-| Six replayed test files behave as expected | §7.5 | laptop speaker 10–30 cm | 6 | observed | acoustic replay, not a phone line |
+| Three real cellular calls from an unknown number, one phone, speaker, Auto: Hindi digital arrest STOP, English KYC STOP, genuine Hindi bank call no warning | screenshots in `docs/media/real_calls.jpg`; report §5.10 | role-play by a teammate, 12 Nov 03:15–03:53 | 3 | observed | 3 calls, one caller, demonstration only; no session CSV in the repo |
+| KAVACH Phone as the default phone app: answer / decline (screen and notification), recents, contacts, hold, keypad tones, SIM choice | `android/app/.../Dialer.kt` | rewritten 12 Nov after calls rang but could not be answered | | **observed 12 Nov** on the team's phone: answer (screen and locked-screen notification), decline, recents, contacts work | hold/second incoming call reported working in the 21 November live-call addendum; dual-SIM remains untested |
+| Six replayed test files behave as expected | report §5.9 | laptop speaker 10–30 cm | 6 | observed | acoustic replay, not a phone line |
 | Detector 4.07 ms per sentence | device JSON | 40 runs × 8 sentences | | measured once | |
 | IndicConformer RTF 0.153 (2 threads) / 0.092 (4); Parakeet 0.052 / 0.037 | device JSON | on battery | | measured once | short clips |
-| Auto listening: 54 % of one core, 385 mA whole-phone current, 235 MB, 38.0 → 37.9 °C | device JSON `listening_60s` | **one minute**, screen on, benchmark screen in front | 1 | measured once | "≈ 7.6 % battery per hour" is this one-minute current extrapolated; whole-phone, not app-only; no idle baseline; 30-min soak not run |
+| Auto listening: 54 % of one core, 385 mA whole-phone current, 235 MB, 38.0 → 37.9 °C | device JSON `listening_60s` | **one minute**, screen on, benchmark screen in front | 1 | measured once | "≈ 7.6 % battery per hour" is this one-minute current extrapolated; whole-phone, not app-only; not a sustained-rate measurement; separate 21 November idle/listening logs are listed below |
 | Llama (Meta SpinQuant INT4 file): load 4.1 s, +1.1 GB; first token 12.9 s cold / 5.9 s warm prefix; total 22.0 s cold / 15.1 s warm; decode 11.6–11.9 tok/s | device JSON `llama` | 768 / 328 prompt tokens | 1 each | measured once | not the fine-tuned file |
 | Fine-tuned 4-bit file: self-test verdict digital_arrest 0.91, own advice, first token 18.3 s cold, 11.5 tok/s; own Hindi advice on a replayed Hindi call | screenshots `docs/media/llama_phone.jpg` | | 2 | observed | one earlier Hindi run was replaced by playbook text |
 | Production Llama timeout | `LlamaAdvisor.kt` | | | code | was 25 s when measured; now 35 s per generate (covers queue wait for warm prefill + prompt prefill + generation, not loading); self-test 60 s; benchmark 90 s. The earlier "8 s" in the documents was wrong |
@@ -70,7 +71,7 @@ Wilson 95 % intervals are given for small samples; they assume independent calls
 |---|---|---|---|---|---|
 | Base → LoRA: valid JSON 71 → 100 %, scam correct 38 → 89 %, type 58 → 76 %, stage 71 → 100 %, verbatim evidence 8 → 96 %, copied example 32 → 0 %, right language 55 → 100 % | `llama_lora_colab.json` | **full-precision merged model**, first 100 dev examples | 100 | reported (Colab) | same generator as training; not the deployed 4-bit `.pte`; no ASR text |
 | Llama authority | `Guardian.kt applyLlmVerdict` | | | code | may raise CAUTION → STOP (self-reported confidence ≥ 0.8, stage ≥ isolation; this threshold is not calibrated); **can never lower or clear a warning**; invalid / timed-out output leaves the rule-based warning unchanged |
-| Deployed 4-bit Llama on independent / ASR / injection prompts | | | | **planned** | needs the `.pte` on a host with ExecuTorch or a phone run (`docs/OWNER_CHECKLIST.md` §4) |
+| Deployed 4-bit Llama on independent / ASR / injection prompts | | | | **planned** | needs the `.pte` on a host with ExecuTorch or a phone run (deferred to Phase 2) |
 
 ## Network Watch
 
@@ -95,11 +96,26 @@ Wilson 95 % intervals are given for small samples; they assume independent calls
 
 ## 21 November evidence update
 
-- `bench/results/sustained_summary.json` summarizes the original idle/listening CSVs, with SHA-256 hashes. Listening: 291 samples, 1,797 s between first and last samples, gauge 99% to 92%, 35.0 to 37.1 C (maximum 37.3 C). Idle: 97 samples, 593 s span, gauge 100% to 99%, 36.9 to 36.1 C. Thermal status 0 throughout both. Current unavailable. The earlier entries saying no sustained log exists are superseded by this row. Conditions are not matched or fully recorded; no app-only consumption claim is established.
-- `INFO` maps to “Listening — worth watching”; it does not trigger the Llama advisor. Short self-read injection observations at INFO do not establish Llama resistance.
-- The 20-call allocation is pending, not completed. Scorer now requires explicit outcomes, separates attempted/evaluable denominators, rejects reused/ambiguous log matches and treats missing request annotations as unknown. Regression checks: `tests/test_pilot20_report.py`.
-- Current authoritative report: `docs/KAVACH_Phase1_Report.pdf` and `.docx`; original layout retained. Earlier short report and manuscript remain historical snapshots. Fresh owner tests: pending in `demo/solo_checks.csv`.
+- `bench/results/sustained_summary.json` summarizes the original idle/listening CSVs, with SHA-256 hashes. Listening: 291 samples, 1,797 s between first and last samples, gauge 99% to 92%, 35.0 to 37.1 C (maximum 37.3 C). Idle: 97 samples, 593 s span, gauge 100% to 99%, 36.9 to 36.1 C. Thermal status 0 throughout both. Current unavailable. The team reports screen on at about 50%, unplugged phone, Wi-Fi/wireless adb enabled and an English podcast with a Hindi dub. These conditions are not encoded in the CSVs and are not matched to idle; no app-only consumption claim is established.
+- `INFO` maps to “Listening — worth watching”; it does not trigger the Llama advisor. The team-confirmed live-call injection observations at INFO do not establish Llama resistance.
+- The 20-call allocation is deferred to Phase 2, not completed. Scorer now requires explicit outcomes, separates attempted/evaluable denominators, rejects reused/ambiguous log matches and treats missing request annotations as unknown. Regression checks: `tests/test_pilot20_report.py`.
+- Current authoritative report: `docs/KAVACH_Phase1_Report.pdf` and `.docx`; original layout retained. Older short-report and manuscript files are removed from the current tree. Final Phase 1 live calls: pending in `demo/live_calls_phase1.csv`.
 
 ## Updated scope and tester addendum (22 November)
 
-See TEST_RESULTS_ADDENDUM.md for supplied observations. Frozen-build functional/reliability checks are tester-reported with no per-call counts or validated Llama trace. Do not infer an injection pass from INFO. Remaining Phase 1 scope is 4–5 documented live human calls and demo video only; the 20-call pilot and further experiments are deferred to Phase 2. New call outcomes are pending.
+See TEST_RESULTS_ADDENDUM.md for supplied observations. The team confirmed that the frozen-build functional/reliability checks used live calls from a second phone. Exact per-call counts and validated Llama traces were not supplied. Do not infer an injection pass from INFO. Remaining Phase 1 scope is 4–5 documented live human calls and demo video only; the 20-call pilot and further experiments are deferred to Phase 2. New call outcomes are pending.
+
+## Frozen-build live-call checks — 21 November, method clarified 22 November
+
+| Check | Team-reported live-call outcome | Evidence limit |
+|---|---|---|
+| Full English fake KYC | STOP; scam named correctly; Urgent / Guardian: stop in Activity | Exact trial count unavailable |
+| Genuine bank and other genuine scripts | No warning | No estimated false-positive rate |
+| English/Hindi OTP plus injection line | INFO, worth watching | INFO does not invoke Llama; no injection-resistance conclusion |
+| Llama after warnings | Explanation appeared | Rule STOP and generated explanation are distinct; no per-call validated JSON supplied |
+| Permission/accessibility disabled | Guidance to restore access | Qualitative check |
+| Screen locked / Home pressed | Listening continued | Qualitative check |
+| Held call with second incoming call / consecutive calls | Reported working | No repeat count; dual-SIM not tested |
+| Quiet-room noise hint | Too noisy appeared in some runs | Cause unresolved |
+
+These supplement the three documented 12 November calls; they are not pooled into a new denominator. The remaining four/five recorded calls are pending. Battery runs used podcast playback; host/TTS benchmarks and earlier acoustic replay remain separate evidence types.

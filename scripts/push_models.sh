@@ -73,7 +73,7 @@ asr() {
 # Hindi, better model: AI4Bharat IndicConformer Hindi (120M, CTC; MIT, ONNX export CC-BY-4.0), int8 for
 # sherpa-onnx, run sentence by sentence behind the VAD. Mirrored on this repo's GitHub release
 # "dev-models" (no Hugging Face account needed). When present, the app uses it instead of the
-# streaming Hindi model (docs/technical_report.md section 7.5).
+# streaming Hindi model (docs/KAVACH_Phase1_Report.pdf section 5.7).
 asr_hi_big() {
   local R=https://github.com/siddhaantxsingh/KAVACH/releases/download/dev-models
   mkdir -p "$CACHE/ic"

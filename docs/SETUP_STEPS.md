@@ -1,3 +1,5 @@
+> **Fresh-installation reference.** For the final Phase 1 calls, keep the frozen installed build and follow [FINISH_ROUND1.md](FINISH_ROUND1.md). The single submission report is [KAVACH_Phase1_Report.pdf](KAVACH_Phase1_Report.pdf).
+
 # KAVACH: exact setup steps (one phone)
 
 KAVACH is **one app on one Android phone**. It checks messages, links, apps and screen sharing,

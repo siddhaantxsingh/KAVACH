@@ -2,6 +2,7 @@
   <img src="docs/media/banner.svg" alt="KAVACH — on-device scam-call protection" width="100%">
 </p>
 <p align="center">
+  <a href="https://github.com/siddhaantxsingh/KAVACH/releases/tag/apks-latest"><img alt="Download APK" src="https://img.shields.io/badge/Android-Download%20APK-2F5BD3?style=for-the-badge&logo=android&logoColor=white"></a>
   <a href="docs/KAVACH_Phase1_Report.pdf"><img alt="Phase 1 report" src="https://img.shields.io/badge/READ_THE_REPORT-Phase_1-C9A24A?style=for-the-badge"></a>
   <a href="docs/FINISH_ROUND1.md"><img alt="Live-call and video guide" src="https://img.shields.io/badge/LIVE_CALLS_%26_DEMO-Finish_Guide-16324F?style=for-the-badge"></a>
   <a href="docs/FREEZE_MANIFEST.md"><img alt="Frozen build" src="https://img.shields.io/badge/FROZEN_BUILD-0.2_phase1-167D67?style=for-the-badge"></a>

@@ -17,6 +17,7 @@ import argparse
 import csv
 import json
 import math
+from statistics import median
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -75,29 +76,145 @@ def read_log_sessions(logdir: Path) -> list[dict]:
     return out
 
 
-def match(sess_row: dict, logs: list[dict], tol_s: int = 120) -> dict | None:
-    t = sess_row.get("start_time_ist", "").strip()
-    if not t or not logs:
+def call_start_ms(row: dict) -> float | None:
+    value = row.get("start_time_ist", "").strip()
+    if not value:
         return None
-    try:
-        dt = datetime.strptime(f"{sess_row['date']} {t}", "%Y-%m-%d %H:%M:%S").replace(tzinfo=IST)
-    except ValueError:
-        dt = datetime.strptime(f"{sess_row['date']} {t}", "%Y-%m-%d %H:%M").replace(tzinfo=IST)
-    ms = dt.timestamp() * 1000
-    best = min(logs, key=lambda s: abs(s["start_wall_ms"] - ms))
-    return best if abs(best["start_wall_ms"] - ms) <= tol_s * 1000 else None
+    # Seconds required: minute-rounded times are unsuitable for lead-time claims.
+    dt = datetime.strptime(f"{row['date']} {value}", "%Y-%m-%d %H:%M:%S").replace(tzinfo=IST)
+    return dt.timestamp() * 1000
+
+
+def match(sess_row: dict, logs: list[dict], tol_s: int = 120) -> dict | None:
+    ms = call_start_ms(sess_row)
+    if ms is None:
+        return None
+    candidates = [s for s in logs if abs(s["start_wall_ms"] - ms) <= tol_s * 1000]
+    if len(candidates) > 1:
+        raise ValueError(f"{sess_row['call_id']}: ambiguous log match; isolate the correct log session")
+    return candidates[0] if candidates else None
 
 
 def _median(v: list):
-    v = sorted(v)
-    return v[len(v) // 2] if v else None
+    return median(v) if v else None
 
 
 def fnum(x: str):
-    try:
-        return float(x)
-    except (TypeError, ValueError):
+    if x is None or str(x).strip() == "":
         return None
+    value = float(x)
+    if not math.isfinite(value) or value < 0:
+        raise ValueError(f"Invalid nonnegative timestamp: {x}")
+    return value
+
+
+def score(rows: list[dict], ann: dict, logs: list[dict]) -> dict:
+    ids = [r["call_id"] for r in rows]
+    if len(set(ids)) != len(ids):
+        raise ValueError("Duplicate call_id in sessions")
+    if set(ann) - set(ids):
+        raise ValueError("Annotation contains unknown call_id")
+    calls, used = [], set()
+    for r in rows:
+        status = r.get("status", "").strip().lower() or "pending"
+        if status not in {"pending", "ok", "unavailable"}:
+            raise ValueError(f"{r['call_id']}: invalid status {status}")
+        if r["label"] not in {"scam", "benign"}:
+            raise ValueError(f"{r['call_id']}: invalid label")
+        state = r.get("end_state", "").strip().lower()
+        if status == "ok" and state not in ORDER:
+            raise ValueError(f"{r['call_id']}: completed call requires explicit end_state")
+        lg = match(r, logs) if status == "ok" else None
+        if lg:
+            key = (lg["file"], lg["start_wall_ms"])
+            if key in used:
+                raise ValueError(f"{r['call_id']}: log session already assigned to another call")
+            used.add(key)
+        # App log seconds are relative to app session start, annotations to call connection.
+        offset = (lg["start_wall_ms"] - call_start_ms(r)) / 1000 if lg else 0
+        first = {k: t + offset for k, t in lg["first"].items()} if lg else {}
+        if any(t < 0 for t in first.values()):
+            raise ValueError(f"{r['call_id']}: alert predates call connection; check clock alignment")
+        top = max([ORDER.get(k, 0) for k in first] + [ORDER.get(state, 0)])
+        level = next(k for k, v in ORDER.items() if v == top) if status == "ok" else None
+        warn_t = min([first[k] for k in ("caution", "stop") if k in first], default=None)
+        an = ann.get(r["call_id"], {})
+        req, cue = fnum(an.get("first_request_s")), fnum(an.get("first_cue_s"))
+        # An ended session plus matching final warning states guards against incomplete logs.
+        warning_states_agree = (not state or ORDER[state] < 2 or state in first)
+        timing_ok = bool(lg and "end_s" in lg and req is not None and warning_states_agree)
+        calls.append({
+            "call_id": r["call_id"], "card": r.get("card", ""), "label": r["label"],
+            "language": r.get("language", ""), "caller": r.get("caller_id", ""),
+            "noise": r.get("noise", ""), "status": status, "level": level,
+            "first_info_s": first.get("info"), "first_caution_s": first.get("caution"),
+            "first_stop_s": first.get("stop"), "first_cue_s": cue, "first_request_s": req,
+            "first_warning_s": warn_t, "timing_evaluable": timing_ok,
+            "warned_before_request": (warn_t is not None and warn_t < req) if timing_ok else None,
+            "lead_s": req - warn_t if timing_ok and warn_t is not None else None,
+            "cue_to_stop_s": first["stop"] - cue if lg and "end_s" in lg and "stop" in first and cue is not None else None,
+            "explanation_source": r.get("explanation_source", ""),
+            "llm_replaced": lg["replaced"] if lg else None,
+            "mic_blocked_events": lg["mic_blocked"] if lg else None,
+            "log_matched": lg is not None, "log_to_call_offset_s": offset if lg else None,
+            "llm_outcomes": lg.get("llm_outcomes", []) if lg else [],
+        })
+    ok = [c for c in calls if c["status"] == "ok"]
+    scam = [c for c in ok if c["label"] == "scam"]
+    ben = [c for c in ok if c["label"] == "benign"]
+    attempted = [c for c in calls if c["status"] != "pending"]
+    attempted_scams = [c for c in attempted if c["label"] == "scam"]
+    timing = [c for c in scam if c["timing_evaluable"]]
+    early = sum(c["warned_before_request"] is True for c in timing)
+    timed = bool(scam) and len(timing) == len(scam)
+    res = {
+        "n_planned": len(calls), "n_pending": sum(c["status"] == "pending" for c in calls),
+        "n_attempted": len(attempted), "n_evaluable": len(ok),
+        "n_unavailable": sum(c["status"] == "unavailable" for c in calls),
+        "pending": [c["call_id"] for c in calls if c["status"] == "pending"],
+        "unavailable": [c["call_id"] for c in calls if c["status"] == "unavailable"],
+        "scam_stop": rate(sum(c["level"] == "stop" for c in scam), len(scam)),
+        "scam_stop_over_attempted": rate(sum(c["level"] == "stop" for c in scam), len(attempted_scams)),
+        "scam_caution_or_stop": rate(sum(ORDER[c["level"]] >= 2 for c in scam), len(scam)),
+        "scam_caution_or_stop_over_attempted": rate(sum(ORDER[c["level"]] >= 2 for c in scam), len(attempted_scams)),
+        "scam_missed": [c["call_id"] for c in scam if ORDER[c["level"]] < 2],
+        "benign_false_stop": rate(sum(c["level"] == "stop" for c in ben), len(ben)),
+        "benign_false_caution_only": rate(sum(c["level"] == "caution" for c in ben), len(ben)),
+        "benign_info": rate(sum(c["level"] == "info" for c in ben), len(ben)),
+        "benign_attempted": sum(c["label"] == "benign" for c in attempted),
+        "timing_available": timed, "n_timing_evaluable_scams": len(timing),
+        "timing_missing_scams": [c["call_id"] for c in scam if not c["timing_evaluable"]],
+        "scam_warned_before_request_timing_evaluable": rate(early, len(timing)),
+        "scam_early_warning_confirmed_over_attempted": rate(early, len(attempted_scams)),
+    }
+    if timed:
+        res["scam_warned_before_first_request_over_all_scams"] = rate(early, len(scam))
+    leads = [c["lead_s"] for c in timing if c["lead_s"] is not None and c["lead_s"] > 0]
+    res["lead_s_among_warned_before_request"] = {"n": len(leads), "median": _median(leads), "min": min(leads) if leads else None, "max": max(leads) if leads else None}
+    cs = [c["cue_to_stop_s"] for c in scam if c["cue_to_stop_s"] is not None]
+    res["cue_to_stop_s"] = {"n": len(cs), "median": _median(cs)}
+    for key in ("language", "caller", "noise"):
+        g = {}
+        for c in ok:
+            d = g.setdefault(c[key], {"scam": 0, "scam_stop": 0, "benign": 0, "benign_stop": 0, "benign_caution": 0})
+            if c["label"] == "scam":
+                d["scam"] += 1; d["scam_stop"] += c["level"] == "stop"
+            else:
+                d["benign"] += 1; d["benign_stop"] += c["level"] == "stop"; d["benign_caution"] += c["level"] == "caution"
+        res[f"by_{key}"] = g
+    outs = [o for c in ok for o in c["llm_outcomes"]]
+    res["llama_attempts"] = {"n": len(outs), "ok_valid": sum(o["outcome"] == "ok" and o["valid"] for o in outs),
+        "timeout": sum(o["outcome"] == "timeout" for o in outs),
+        "error": sum(o["outcome"].startswith("error") for o in outs),
+        "median_ms": _median([int(o["ms"]) for o in outs if str(o["ms"]).isdigit()])}
+    res["explanation_source"] = {s: sum(c["explanation_source"] == s for c in ok) for s in sorted({c["explanation_source"] for c in ok})}
+    res["calls"] = calls
+    res["note"] = ("Feasibility role-play pilot; calls sharing speakers are correlated. Wilson intervals assume independence. "
+        "Detection rates are conditional on evaluable calls; over-attempted detection treats unavailable calls as no confirmed protection. "
+        "Confirmed early-warning/attempted is a conservative evidence rate, not a fully measured timing rate. "
+        "Missing request timestamps are unknown, never successes. Pending calls are not attempts. "
+        "Phone and observer clocks must be aligned before timing; nearest log matching alone does not prove alignment.")
+    return res
 
 
 def main() -> None:
@@ -112,74 +229,19 @@ def main() -> None:
     ann = {r["call_id"]: r for r in csv.DictReader(open(a.annot, encoding="utf-8"))} if a.annot else {}
     logs = read_log_sessions(Path(a.logs)) if a.logs else []
 
-    calls = []
-    for r in rows:
-        lg = match(r, logs)
-        first = lg["first"] if lg else {}
-        top = max([ORDER.get(k, 0) for k in first] + [ORDER.get(r.get("end_state", "").strip().lower(), 0)])
-        level = [k for k, v in ORDER.items() if v == top][0]
-        warn_t = min([first[k] for k in ("caution", "stop") if k in first], default=None)
-        an = ann.get(r["call_id"], {})
-        req = fnum(an.get("first_request_s"))
-        cue = fnum(an.get("first_cue_s"))
-        calls.append({
-            "call_id": r["call_id"], "card": r["card"], "label": r["label"], "language": r["language"], "caller": r["caller_id"],
-            "noise": r["noise"], "status": r.get("status", "ok").strip() or "ok", "level": level,
-            "first_info_s": first.get("info"), "first_caution_s": first.get("caution"), "first_stop_s": first.get("stop"),
-            "first_cue_s": cue, "first_request_s": req, "first_warning_s": warn_t,
-            "warned_before_request": (warn_t is not None and req is not None and warn_t < req) or (warn_t is not None and req is None and r["label"] == "scam"),
-            "lead_s": (req - warn_t) if (warn_t is not None and req is not None) else None,
-            "cue_to_stop_s": (first["stop"] - cue) if ("stop" in first and cue is not None) else None,
-            "explanation_source": r.get("explanation_source", ""), "llm_replaced": lg["replaced"] if lg else None,
-            "mic_blocked_events": lg["mic_blocked"] if lg else None, "log_matched": lg is not None,
-            "llm_outcomes": lg.get("llm_outcomes", []) if lg else [],
-        })
-
-    ok = [c for c in calls if c["status"] == "ok"]
-    scam = [c for c in ok if c["label"] == "scam"]
-    ben = [c for c in ok if c["label"] == "benign"]
-    timed = all(c["log_matched"] for c in ok) and bool(ann)
-    res = {
-        "n_planned": len(calls), "n_unavailable": len(calls) - len(ok),
-        "unavailable": [c["call_id"] for c in calls if c["status"] != "ok"],
-        "scam_stop": rate(sum(c["level"] == "stop" for c in scam), len(scam)),
-        "scam_caution_or_stop": rate(sum(ORDER[c["level"]] >= 2 for c in scam), len(scam)),
-        "scam_missed": [c["call_id"] for c in scam if ORDER[c["level"]] < 2],
-        "benign_false_stop": rate(sum(c["level"] == "stop" for c in ben), len(ben)),
-        "benign_false_caution_only": rate(sum(c["level"] == "caution" for c in ben), len(ben)),
-        "benign_info": rate(sum(c["level"] == "info" for c in ben), len(ben)),
-        "timing_available": timed,
-    }
-    if timed:
-        res["scam_warned_before_first_request_over_all_scams"] = rate(sum(bool(c["warned_before_request"]) for c in scam), len(scam))
-        leads = sorted(c["lead_s"] for c in scam if c["lead_s"] is not None and c["lead_s"] > 0)
-        res["lead_s_among_warned_before_request"] = {"n": len(leads), "median": leads[len(leads) // 2] if leads else None, "min": leads[0] if leads else None, "max": leads[-1] if leads else None}
-        cs = sorted(c["cue_to_stop_s"] for c in scam if c["cue_to_stop_s"] is not None)
-        res["cue_to_stop_s"] = {"n": len(cs), "median": cs[len(cs) // 2] if cs else None}
-    for key in ("language", "caller", "noise"):
-        g = {}
-        for c in ok:
-            d = g.setdefault(c[key], {"scam": 0, "scam_stop": 0, "benign": 0, "benign_stop": 0, "benign_caution": 0})
-            if c["label"] == "scam":
-                d["scam"] += 1; d["scam_stop"] += c["level"] == "stop"
-            else:
-                d["benign"] += 1; d["benign_stop"] += c["level"] == "stop"; d["benign_caution"] += c["level"] == "caution"
-        res[f"by_{key}"] = g
-    outs = [o for c in ok for o in c["llm_outcomes"]]
-    res["llama_attempts"] = {"n": len(outs), "ok_valid": sum(o["outcome"] == "ok" and o["valid"] for o in outs),
-                             "timeout": sum(o["outcome"] == "timeout" for o in outs), "error": sum(o["outcome"].startswith("error") for o in outs),
-                             "median_ms": _median([int(o["ms"]) for o in outs if str(o["ms"]).isdigit()])}
-    res["explanation_source"] = {s: sum(c["explanation_source"] == s for c in ok) for s in sorted({c["explanation_source"] for c in ok})}
-    res["calls"] = calls
-    res["note"] = ("Locked pilot: 20 role-played calls, few speakers; calls by the same caller are not independent. "
-                   "Wilson intervals assume independence and are therefore optimistic. Not a population estimate.")
+    if a.annot:
+        annotations = list(csv.DictReader(open(a.annot, encoding="utf-8")))
+        if len({r["call_id"] for r in annotations}) != len(annotations):
+            raise ValueError("Duplicate call_id in annotations")
+    res = score(rows, ann, logs)
+    timed = res["timing_available"]
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     json.dump(res, open(a.out, "w"), indent=1, ensure_ascii=False)
     print(f"scam STOP {res['scam_stop']['text']}; scam CAUTION-or-STOP {res['scam_caution_or_stop']['text']}")
     print(f"genuine false STOP {res['benign_false_stop']['text']}; genuine CAUTION (not STOP) {res['benign_false_caution_only']['text']}")
     if timed:
         print(f"scam warned before first risky request (all scam calls) {res['scam_warned_before_first_request_over_all_scams']['text']}")
-    print(f"unavailable: {res['unavailable'] or 'none'}; missed scams: {res['scam_missed'] or 'none'}; wrote {a.out}")
+    print(f"pending: {res['n_pending']}; attempted: {res['n_attempted']}; unavailable: {res['unavailable'] or 'none'}; missed scams: {res['scam_missed'] or 'none'}; wrote {a.out}")
 
 
 if __name__ == "__main__":

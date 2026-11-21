@@ -1,6 +1,6 @@
 // KAVACH Phase 1 report: chapters 5-7, references, annexures
-const M = '/home/claude/kavach/docs/media/';
-const P = '/home/claude/kavach/paper/fig/';
+const M = require('path').join(__dirname, '../docs/media/');
+const P = require('path').join(__dirname, '../paper/fig/');
 const chapters = [
 // ---------------------------------------------------------------- CHAPTER 5
 { title: "RESULTS AND DISCUSSION", blocks: [
@@ -29,7 +29,7 @@ const chapters = [
  {table:{caption:"Call-level results (rules only vs shipped detector)", widths:[2100,1100,1000,1000,1100,1000,850,850], header:["Set (scam / genuine)","Config","STOP","≥ CAUTION","STOP before money","Median time to STOP","False STOP","False CAUTION"], rows:[
   ["Synthetic test (511 / 489)","rules","423 (82.8 %)","472 (92.4 %)","336 (65.8 %)","17.3 s","0","0"],
   ["","shipped","477 (93.4 %)","508 (99.4 %)","420 (82.2 %)","12.6 s","0 / 489","29 (5.9 %)"],
-  ["Caller through speaker (502 / 498)","rules","312 (62.2 %)","360 (71.7 %)","218 (43.4 %)","18.9 s","0","0"],
+  ["Simulated caller ASR errors (502 / 498)","rules","312 (62.2 %)","360 (71.7 %)","218 (43.4 %)","18.9 s","0","0"],
   ["","shipped","375 (74.7 %)","466 (92.8 %)","304 (60.6 %)","14.6 s","0 / 498","26 (5.2 %)"],
   ["Hand-written (16 / 14)","rules","12 / 16","14 / 16","7 / 16","24.7 s","2 / 14","3 / 14"],
   ["","shipped","15 / 16","15 / 16","10 / 16","19.0 s","0 / 14","3 / 14"],
@@ -37,7 +37,7 @@ const chapters = [
   ["","shipped","8 / 10","8 / 10","5 / 10","21.3 s","0 / 10","4 / 10"]]}},
  {p:"Three observations follow. First, the shipped detector raises STOP recall by 10 to 30 points on every set, and no genuine call reached STOP in any set; the classifier veto removed both rule-only false STOPs on the hand-written set (people discussing a scam, and an office call about screen sharing and payments). Second, the median time to STOP is below 30 s on every set. Zero false STOPs does not prove the 2 % target, however: on the 24 human-written genuine calls the 95 % Wilson upper bound is about 14 %, and on the 10 held-out genuine calls about 28 %. Third, the target of catching 90 % of scams before the payment step is not met (50 % to 82 %), and false CAUTIONs on the small human-written sets are high (3 of 14 and 4 of 10). Llama cannot reduce these CAUTIONs, because it is only allowed to escalate a warning, never to clear one; reducing them needs better detection, not a more confident explanation. The held-out set has been scored on several builds and is no longer pristine."},
  {h2:"Does Cross-Channel Fusion Help?"},
- {p:"Joining evidence across channels is KAVACH\u2019s main new idea, and the rules-versus-shipped comparison above does not test it. The script bench/fusion_ablation.py therefore replays identical timestamped event traces under five configurations: A, the call detector alone; B, the message, link and app detectors alone, with no knowledge of the call; C, A and B combined independently (the higher level wins, with no correlation); B+, Shield with call awareness but no listening; and D, full fusion exactly as wired in the app. Configuration E (D plus Llama escalation) needs the deployed model and was not run on the host. Calls come from the caller-through-speaker test set; the SMS texts are 8 scam and 4 genuine team-written examples; each template is run on 40 sessions; all thresholds are the shipped ones. The plan was written into the script before the first run (Tables 5.4 and 5.5)."},
+ {p:"Joining evidence across channels is KAVACH\u2019s main new idea, and the rules-versus-shipped comparison above does not test it. The script bench/fusion_ablation.py therefore replays identical timestamped event traces under five configurations: A, the call detector alone; B, the message, link and app detectors alone, with no knowledge of the call; C, A and B combined independently (the higher level wins, with no correlation); B+, Shield with call awareness but no listening; and D, full fusion exactly as wired in the app. Configuration E (D plus Llama escalation) needs the deployed model and was not run on the host. Calls come from the synthetically corrupted transcript test set; the SMS texts are 8 scam and 4 genuine team-written examples; each template is run on 40 sessions; all thresholds are the shipped ones. The plan was written into the script before the first run (Tables 5.4 and 5.5)."},
  {table:{caption:"Fusion ablation, scam sessions: STOPs out of 40 per template", widths:[3400,900,900,900,900,2000], header:["Scam template","A","C","B+","D","Warned before the risky step (C / D)"], rows:[
   ["Scam call alone","37","37","0","37","31 / 31"],
   ["+ scam SMS with a link mid-call","32","40","40","40","38 / 38"],
@@ -98,6 +98,11 @@ const chapters = [
   ["Genuine Hindi bank fraud check (card transaction, card blocked, “never share your OTP or PIN”)","no warning","No warning for the whole call"]]}},
  {fig:{path:M+'real_calls.jpg', caption:"Screens during the real calls: Hindi digital arrest, English fake KYC and the genuine bank call", w:6.3}},
  {p:"All three calls behaved as expected. Before this result, the first real call produced an empty transcript. The cause was that changing the default dialer made Android stop KAVACH and mark the call-listening service as crashed, while its switch still showed “on”; every recording during a call was then silenced. Turning the service off and on fixed it, and the app now detects both conditions and shows a Fix button."},
+ {"h3": "Frozen-Build Checks Reported on 21 November"},
+ {"p": "The tester supplied a results addendum for the frozen 21 November build: source ed541cede0d0567d8627fbd8841b13f742d77d38, APK version 0.2-phase1 (versionCode 2), SHA-256 fd2e7069bb7907bd8edc0a81a823b0dcf888d7f3f318e5d73592f0bb15af25a6. The tester reports that the APK pulled back from the phone was byte-identical and that no reinstall or app change followed the freeze. These observations supplement the earlier three-call demonstration; they are not an independently scored call dataset."},
+ {"p": "The addendum describes scripted reading or playback near the phone and also states that every scripted check used a live call from another phone. Individual call records, exact counts and audio provenance were not supplied. The outcomes below are therefore attributed to the tester; they are not combined with the earlier calls into a success rate. A fresh, separately recorded set of four to five live human role-play calls and a demo video are the remaining Phase 1 scope. The 20-call plan is deferred to Phase 2."},
+ {"table": {"caption": "Frozen-build functional checks reported by the tester (21 November 2026)", "widths": [3700, 5300], "header": ["Check", "Reported observation and interpretation"], "rows": [["English and Hindi OTP plus instruction to declare the call safe", "INFO: Listening — worth watching; no STOP. This does not establish Llama injection resistance because INFO alone does not invoke the advisor."], ["Full English fake-KYC script: urgency, secrecy, OTP and account-block threat", "Red STOP identified Fake KYC / bank account block; Activity showed Urgent, Guardian: stop."], ["Genuine bank lines and genuine scripts", "No warning reported; number of trials was not supplied, so no false-positive rate is estimated."], ["Llama explanation after warning", "Tester reports a Llama 3.2 1B explanation appeared. The rule-based STOP card correctly named Fake KYC; validated model JSON and per-call latency were not supplied."], ["Speech and noise handling", "English was mostly recognised; Auto sometimes used Hindi script or misrecognised English. Too noisy appeared in some quiet-room runs; cause unresolved."]]}},
+ {"p": "The tester also reports that disabling accessibility or microphone permission produced guidance to restore it; listening continued with the screen locked and with Home pressed; a held call with another incoming call worked; and two consecutive calls were heard. These are qualitative reported checks, without a repetition count or timing trace. Missing-model fallback and dual-SIM operation were explicitly not tested. No extra reliability campaign is required by the team’s remaining Phase 1 plan."},
  {h2:"The Llama Advisor"},
  {h3:"Export Verification"},
  {table:{caption:"Checks on the Llama export pipeline", widths:[5400,3600], header:["Check","Result"], rows:[
@@ -106,18 +111,18 @@ const chapters = [
   ["8da4w .pte vs Hugging Face","100 % next-token agreement"],
   ["Real alert prompts","1,361-character constant prefix + 1.7–2.0 k-character suffix"]]}},
  {h3:"Quality Before and After LoRA"},
- {p:"The base and fine-tuned models were scored with models/llama/eval_llama.py on the first 100 development examples (Table 5.13, Figure 5.3)."},
+ {p:"The base and fine-tuned models were scored with models/llama/eval_llama.py on the first 100 development examples (Table 5.14, Figure 5.3)."},
  {table:{caption:"Llama 3.2 1B before and after KAVACH LoRA fine-tuning", widths:[4600,2200,2200], header:["Metric","Base Llama 3.2 1B","+ KAVACH LoRA"], rows:[
   ["Valid JSON verdict","71 %","100 %"],["Scam / not scam correct","38 %","89 %"],["Scam type correct","58 %","76 %"],
   ["Warning stage correct","71 %","100 %"],["Quoted evidence really in the transcript","8 %","96 %"],
   ["Advice copied from the prompt’s example","32 %","0 %"],["Advice in the call’s language","55 %","100 %"]]}},
  {fig:{path:M+'llama_lora.png', caption:"Llama quality metrics before and after LoRA fine-tuning", w:5.8}},
- {p:"Fine-tuning fixed exactly the two problems seen on the phone before training: copied example advice (32 % to 0 %) and English advice in a Hindi call (55 % to 100 % in the right language). The development examples come from the same generator as the training data, and this score is for the full-precision merged model, so it is an upper bound; the locked held-out split was not used."},
+ {p:"Fine-tuning fixed exactly the two problems seen on the phone before training: copied example advice (32 % to 0 %) and English advice in a Hindi call (55 % to 100 % in the right language). The development examples come from the same generator as the training data, and this score is for the full-precision merged model, so it is not an independent estimate of deployed 4-bit quality; the locked held-out split was not used."},
  {h3:"Llama on the Phone"},
  {p:"The fine-tuned 4-bit .pte (820 MB, compared with 1,083 MB for Meta’s SpinQuant file) loaded on the phone and ran the self-test call: verdict digital_arrest, confidence 0.91, with its own advice (“Hang up. Do not transfer any money. Tell a family member. Call 1930 or report at cybercrime.gov.in.”), 92 tokens, first token 18.3 s cold and 11.5 tokens per second. During a replayed Hindi digital-arrest call it wrote its own Hindi advice with verbatim evidence (“साइबर क्राइम”, “इंस्पेक्टर”), labelled on screen as explained by Llama 3.2 1B on this phone (Figure 5.4). The Hindi is understandable but not always polished, and in one earlier run on the same file the answer was replaced by the playbook text; the app now logs Llama’s wording whenever that happens."},
  {fig:{path:M+'llama_phone.jpg', caption:"Llama 3.2 1B explaining a Hindi digital-arrest call on the phone", w:3.6}},
  {h2:"On-Phone Benchmark"},
- {p:"All speed, battery and temperature figures were measured with the app’s Benchmark screen on the team’s phone, on battery: a Xiaomi 2312DRA50I with a Snapdragon 7s Gen 2 (four Cortex-A78 cores at 2.4 GHz and four Cortex-A55 cores at 1.96 GHz), 7.3 GB RAM and Android 15 (Table 5.14, Figure 5.5)."},
+ {p:"All speed, battery and temperature figures were measured with the app’s Benchmark screen on the team’s phone, on battery: a Xiaomi 2312DRA50I with a Snapdragon 7s Gen 2 (four Cortex-A78 cores at 2.4 GHz and four Cortex-A55 cores at 1.96 GHz), 7.3 GB RAM and Android 15 (Table 5.15, Figure 5.5)."},
  {table:{caption:"On-phone benchmark (12 November 2026)", widths:[3600,5400], header:["What","Result"], rows:[
   ["Detector (rules + classifier + kill chain)","4.07 ms per sentence"],
   ["Hindi IndicConformer (sentence)","RTF 0.153 at 2 threads, 0.092 at 4 (6.5× / 10.9× faster than real time)"],
@@ -127,7 +132,9 @@ const chapters = [
   ["Llama 3.2 1B, Meta SpinQuant INT4 file (ExecuTorch, XNNPACK)","Load 4.1 s, +1.1 GB; first token 12.9 s cold (768-token prompt), 5.9 s with warm prefix; prefill 56–60 tok/s; decode 11.6–11.9 tok/s; 858 mA while generating; no throttling"],
   ["KAVACH LoRA 8da4w file (820 MB), self-test","First token 18.3 s cold, decode 11.5 tok/s"]]}},
  {fig:{path:P+'bench_phone.jpg', caption:"Benchmark screen on the phone", w:3.4}},
- {p:"The Llama rows were measured with Meta\u2019s SpinQuant INT4 file before the fine-tuned file was ready; the KAVACH LoRA file decodes at 11.5 tokens per second in the on-phone self-test, so the two are on par. Both recognisers together use about a fifth of real time, so the transcript keeps up with the caller, and a one-minute listening run drew 385 mA for the whole phone with no rise in temperature. That would be under 8 % of the battery per hour if it held, but no sustained run or idle baseline has been measured yet, so this is an estimate, not a measured hourly drain. Llama is the slowest part, which is why its explanation always follows the instant rule-based warning instead of delaying it. Four threads make the big speech models clearly faster; the app uses two to save battery, but whether two threads really use less energy has not been measured. For reference, ExecuTorch reports about 50 tokens per second for Llama 3.2 1B SpinQuant on a flagship phone, so the mid-range result of about 12 tokens per second leaves room for the KleidiAI and NPU work planned for Phase 2."},
+ {p:"The detailed Llama timing rows use Meta’s SpinQuant INT4 file; the fine-tuned KAVACH file has a separate self-test observation of 11.5 tokens/s. These single runs do not establish performance equivalence. The detector latency excludes speech capture, sentence completion and ASR; it is not end-to-end warning latency. Llama explains asynchronously, so the initial warning does not wait for generation. Four speech threads improve RTF, but their energy cost has not been compared with two threads."},
+ {h3:"Sustained Battery and Temperature Logs"},
+ {p:"The repository now includes device_idle.csv (97 samples, t=2 to 595 s) and device_listening.csv (291 samples, t=2 to 1799 s), added on 21 November. The idle battery gauge changed from 100% to 99% and temperature from 36.9 to 36.1 degrees C. The listening gauge changed from 99% to 92%, with temperature rising from 35.0 to 37.1 degrees C and a maximum of 37.3 degrees C. Both logs recorded thermal status 0 throughout. This is a 7-percentage-point whole-phone change over approximately 30 minutes, not the earlier one-minute 7.6%/h extrapolation. Current readings are absent. The addendum reports an unplugged phone, wireless adb, screen on at approximately 50% brightness, Wi-Fi on, room temperature around 30 degrees C, and an English podcast with a Hindi dub for about 15 minutes. The tester reports continued transcription in Auto mode and four taps to keep the screen awake. These conditions are tester-reported, not encoded in the CSVs. The later 91% reading is outside the logged endpoint; the logged change remains 99% to 92%. This is a workload-specific whole-phone gauge observation, not an upper bound for all use or an accuracy test. The differently conditioned runs do not support idle subtraction, app-only energy estimates or a sustained <10%/h claim. Thermal status 0 does not directly establish absence of CPU throttling. Further energy studies are deferred to Phase 2."},
  {h2:"Network Watch"},
  {table:{caption:"Network Watch results", widths:[2400,2600,4000], header:["Part","Test","Result"], rows:[
   ["App traffic watch","200 simulated 2-hour traces per scenario, 30 s polling","Spyware uploads, slow leaks and heartbeats: 100 % detected (uploads in 30–90 s, heartbeats in 10–35 min); chat, video, streaming, backups: 0 % false alarms"],
@@ -136,7 +143,7 @@ const chapters = [
   ["Flow model, NSL-KDD","KDDTest+ used once","F1 0.854; new attack types 65 % vs seen 82 %"],
   ["Flow model on phone-like traffic","Replayed capture","Flags 60/60 normal HTTPS sessions: UNSW-NB15 has no normal TLS flows, so the model raises no alerts"],
   ["Pcap replay demo","Browsing + scan + DGA + look-alike + heartbeat + 2.4 MB upload","Rules find all 5; no alert on normal browsing"],
-  ["Home Wi-Fi check","10 abused services on the /24","254 addresses in 12 s; found an open ADB port and explained the fix"]]}},
+  ["Home Wi-Fi check","Emulator network; 10 services on the /24","254 addresses in 12 s; found an open ADB port and explained the fix"]]}},
  {p:"The flow model is a useful negative result: a model with a good F1 on a public benchmark flagged every normal HTTPS session from a phone, because its training data contains no normal encrypted traffic. It is therefore kept for research only, and alerts come from the rule-based traffic and DNS checks."},
  {h2:"Problems Found and Fixed"},
  {table:{caption:"Problems found during testing and how they were fixed", widths:[3300,2700,3000], header:["Problem","Cause","Fix"], rows:[
@@ -153,7 +160,7 @@ const chapters = [
   ["Colab training failed","torchao version conflict with PEFT","torchao removed in the notebook"]]}},
  {h2:"Targets and Achievements"},
  {table:{caption:"Target specifications compared with what was achieved", widths:[2800,2800,2600,800], header:["Parameter","Target","Achieved","Met?"], rows:[
-  ["Network use","None","No INTERNET permission","Yes"],
+  ["Network use","No cloud inference","Main app has no INTERNET permission","Yes"],
   ["Audio storage","None","Memory only","Yes"],
   ["Languages","Hindi, Hinglish, English, automatic","Auto, 92.7 % per sentence","Yes"],
   ["Detector latency","< 10 ms","4.07 ms","Yes"],
@@ -162,10 +169,10 @@ const chapters = [
   ["False STOP","≤ 2 %","0 observed (0/489 synthetic, 0/24 human-written)","Not shown"],
   ["STOP before money","≥ 90 %","50–82 %","No"],
   ["Explanation on the Arm CPU","Llama 3.2 1B, 4-bit","11.5–11.9 tok/s","Yes"],
-  ["Battery","< 10 % per hour","≈ 7.6 % per hour, one-minute estimate","Partly"],
-  ["Real calls","Correct on one phone","3 / 3","Yes"]]}},
+  ["Battery","< 10 % per hour","7 percentage points over ~30 min; whole phone","Not shown"],
+  ["Real calls","Correct on one phone","3 / 3 observed demonstrations","Demo"]]}},
  {h2:"Summary"},
- {p:"Of the eleven Phase 1 targets, eight are met, the battery target is met only as a one-minute estimate, the 2 % false-STOP target cannot be shown with so few human-written genuine calls even though none was stopped, and catching nine in ten scams before the payment step is missed. Three real cellular calls behaved as expected. Fusion adds STOPs at the risky action but no earlier warnings. The 20-call human pilot, a sustained battery run and scoring the deployed 4-bit Llama are the next measurements."}
+ {p:"The prototype demonstrates local inference, multilingual speech, fast detector execution and on-device explanation. Three previously observed cellular calls demonstrate feasibility only. The <=2% false-STOP target is not established, the >=90% before-request target is not met on the reported sets, and the <10%/h battery target is not established by the available logs. Additional frozen-build functional and reliability observations are tester-reported and uncounted. Four to five documented live human calls and a demo video remain in the Phase 1 plan; the 20-call pilot is deferred to Phase 2. No planned call is counted as a result. Further independent evaluation of the deployed 4-bit Llama is also pending."}
 ]},
 // ---------------------------------------------------------------- CHAPTER 6
 { title: "LIMITATIONS, ETHICS AND THREAT MODEL", blocks: [
@@ -176,11 +183,11 @@ const chapters = [
   "Speech recognition is the largest source of error. Hindi WER on real speaker-phone calls with human voices is not yet measured; most audio results use synthetic TTS voices, which share one voice between training and testing.",
   "A television or other people talking near the phone is the hardest case; the recogniser may transcribe the background instead of the caller.",
   "The call must be on speaker unless a phone maker enables system mode, because the microphone hears the room.",
-  "Training data is synthetic and written by the team. The hand-written and held-out sets reduce but do not remove author bias; the human-recorded test set planned for 21 November is the real measure.",
+  "Training data is synthetic and written by the team. The hand-written and held-out sets reduce but do not remove author bias; the planned human-recorded test set is the real measure.",
   "Catching scams before the payment step is at 50–82 %, below the 90 % target; false CAUTIONs on human-written genuine calls are frequent, and Llama cannot reduce them because it only escalates.",
   "Fusion links events by time only, so an unrelated scam message during a genuine call can be blamed on the call (32 of 40 in the ablation).",
   "The deployed 4-bit Llama has only been observed on the phone; its quality was scored in full precision on generator data, and its confidence is self-reported, not calibrated. Resistance to spoken prompt injection rests on the rules of the contract, not on a measured attack rate.",
-  "Battery use is a one-minute whole-phone sample with no idle baseline; the 30-minute soak is not run yet.",
+  "A roughly 30-minute listening log and a 10-minute idle log are available, but current readings and matched workload conditions are absent. They establish observed battery-gauge and temperature changes only; repeated app-only power measurement remains pending.",
   "Llama’s Hindi is understandable but not always polished, and its explanation arrives several seconds after the rule-based warning.",
   "Network Watch rule numbers come from simulated traces, and the flow model needs real phone traffic before it can raise alerts.",
   "App Inspector and Screen-share Guard are previews and have not been evaluated on public malware data."]},
@@ -208,12 +215,12 @@ const chapters = [
 { title: "CONCLUSION AND FUTURE WORK", blocks: [
  {h2:"Conclusion"},
  {p:"This report presented KAVACH, an Android application that detects a scam phone call while it is happening and explains it in the caller’s language, entirely on the phone. It listens to a call on speaker through Android’s accessibility audio exception, recognises each sentence with IndicConformer for Hindi and Parakeet for English, chooses the language automatically, scores the conversation with a 4 ms detector, joins it with evidence from messages, links, apps and the network, and asks a LoRA-fine-tuned, 4-bit Llama 3.2 1B on the Arm CPU to explain the alert."},
- {p:"On a mid-range Snapdragon 7s Gen 2 phone, speech recognition in both languages runs about five times faster than real time, a one-minute listening run drew 385 mA for the whole phone and Llama decodes about 12 tokens per second. Detection reached STOP on 93.4 % of scams in unseen synthetic calls with no genuine call stopped in any set (a sample too small to prove a rate), Hindi telephone-band detection rose from 0 % to 58 % with IndicConformer, LoRA raised Llama’s scam accuracy from 38 % to 89 %, and three real cellular calls behaved exactly as expected. Joining channels adds STOPs at the risky action but no earlier warnings, and can wrongly blame a genuine call. The main open problems are catching more scams before the payment step, cutting false CAUTIONs, and linking events by the organisation involved rather than by time alone."},
+ {p:"On a mid-range Snapdragon 7s Gen 2 phone, speech recognition in both languages runs about five times faster than real time, a one-minute listening run drew 385 mA for the whole phone and Llama decodes about 12 tokens per second. Detection reached STOP on 93.4 % of scams in unseen synthetic calls with no genuine call stopped in the listed standalone shipped-detector sets (fusion stress tests do produce false STOPs), Hindi telephone-band detection rose from 0 % to 58 % with IndicConformer, LoRA raised Llama’s scam accuracy from 38 % to 89 %, and three real cellular calls behaved exactly as expected. Joining channels adds STOPs at the risky action but no earlier warnings, and can wrongly blame a genuine call. The main open problems are catching more scams before the payment step, cutting false CAUTIONs, and linking events by the organisation involved rather than by time alone."},
  {h2:"Future Work (Phase 2)"},
  {table:{caption:"Phase 2 plan", widths:[2900,6100], header:["Work item","Goal"], rows:[
   ["Human-recorded test set","100+ scam and 100+ genuine consented role-play calls; Hindi WER on speaker-phone audio; adapt the recognisers"],
   ["Llama escalation effect","Measure how much Llama raises STOP before payment and lowers false CAUTIONs on every call set"],
-  ["Arm optimisation","Quantisation ladder with KleidiAI on and off, big vs LITTLE cores, a budget phone, a 30-minute thermal soak"],
+  ["Arm optimisation","Quantisation ladder with KleidiAI on and off, big vs LITTLE cores, a budget phone, repeated matched-condition thermal and energy tests"],
   ["NPU","Export the speech models to the phone’s NPU through ExecuTorch and compare energy with the CPU"],
   ["Better Hindi advice","More Hindi training pairs and a review of Llama’s Hindi wording"],
   ["App and network models","App Inspector on public malware data; flow model retrained on Android traffic; dictionary-DGA detection"],

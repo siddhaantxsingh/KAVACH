@@ -1,0 +1,44 @@
+{
+  "idle": {
+    "source": "bench/results/device_idle.csv",
+    "sha256": "83b58ff86dec1c1fd9228e7c18233e5f8a7bcc6cfc88a502d7026f5454f5ec5f",
+    "samples": 97,
+    "first_t_s": 2.0,
+    "last_t_s": 595.0,
+    "observed_span_s": 593.0,
+    "battery_start_pct": 100,
+    "battery_end_pct": 99,
+    "battery_drop_percentage_points": 1,
+    "temperature_start_c": 36.9,
+    "temperature_end_c": 36.1,
+    "temperature_max_c": 36.9,
+    "thermal_status_values": [
+      "0"
+    ],
+    "current_samples": 0
+  },
+  "listening": {
+    "source": "bench/results/device_listening.csv",
+    "sha256": "80f0213202dd8408ee6207ac4b865be491e7748aafbcf30d31ba829d47ddc09d",
+    "samples": 291,
+    "first_t_s": 2.0,
+    "last_t_s": 1799.0,
+    "observed_span_s": 1797.0,
+    "battery_start_pct": 99,
+    "battery_end_pct": 92,
+    "battery_drop_percentage_points": 7,
+    "temperature_start_c": 35.0,
+    "temperature_end_c": 37.1,
+    "temperature_max_c": 37.3,
+    "thermal_status_values": [
+      "0"
+    ],
+    "current_samples": 0
+  },
+  "limitations": [
+    "Whole-phone battery gauge, not app-only current or energy.",
+    "Different initial battery levels and temperatures; no justified idle subtraction.",
+    "Charging state, screen brightness, workload continuity and build not encoded in CSVs.",
+    "Thermal status zero is not a direct proof of no CPU throttling."
+  ]
+}

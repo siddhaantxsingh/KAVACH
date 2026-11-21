@@ -1,13 +1,13 @@
 // KAVACH Phase 1 report: chapters 3-4
-const M = '/home/claude/kavach/docs/media/';
-const P = '/home/claude/kavach/paper/fig/';
+const M = require('path').join(__dirname, '../docs/media/');
+const P = require('path').join(__dirname, '../paper/fig/');
 module.exports = [
 // ---------------------------------------------------------------- CHAPTER 3
 { title: "METHODOLOGY AND SYSTEM DESIGN", blocks: [
  {h2:"Introduction"},
  {p:"This chapter describes how KAVACH is designed. It starts with the overall architecture, then explains how one phone can hear its own call, how speech becomes text in two languages, how the detector decides, how Llama explains the decision, and how the Shield and Network Watch pipelines feed the same decision engine. It ends with the privacy design and the tools used."},
  {h2:"Overall Architecture"},
- {p:"KAVACH is one Android application with three on-device pipelines and one decision engine (Figure 3.1). The pipelines produce small, structured events such as “the caller asked for an OTP” or “a dangerous link arrived during an unknown-number call”. The kill chain combines these events over time and across channels and decides the warning level. Llama is called only when the level rises, so it never slows down the always-on path."},
+ {p:"KAVACH is one Android application with three on-device pipelines and one decision engine (Figure 3.1). The pipelines produce small, structured events such as “the caller asked for an OTP” or “a dangerous link arrived during an unknown-number call”. The kill chain combines these events over time and across channels and decides the warning level. Llama is called when the level rises to CAUTION or STOP, so it never slows down the always-on path."},
  {fig:{path:M+'diagrams/arch_td.png', caption:"Overall architecture of KAVACH: three on-device pipelines feed one kill chain; Llama explains alerts", w:4.1}},
  {bullets:[
   "Pipeline A, Call listening: microphone → voice-activity detection → Hindi and English speech recognition → Auto language choice → cue lexicon and classifier.",
@@ -23,6 +23,7 @@ module.exports = [
   "Speaker mode: the microphone hears the room, so the caller is heard only when the call is on speaker. The KAVACH Phone dialer (optional) turns the speaker on by itself for unknown numbers.",
   "Silent warnings during a call: a spoken warning would be sent into the call and would also block KAVACH’s own listening, so during a real call the phone vibrates and shows the full-screen STOP card instead.",
   "Health checks: if Android stops the app (for example after the default dialer is changed), it can mark the accessibility service as crashed while its switch still shows “on”. KAVACH checks that the service is really running and whether its recording is being silenced during a call, and shows a Fix button when either goes wrong."]},
+ {p:"Warning states are NONE, INFO, CAUTION and STOP. The text \"Listening - worth watching\" corresponds to INFO, not CAUTION. INFO alone does not invoke the Llama advisor. A self-read OTP or injection line remaining at INFO is therefore not evidence of Llama prompt-injection resistance. A validated inference outcome and the displayed explanation source are needed to establish advisor behaviour."},
  {h2:"Speech Front-End"},
  {p:"Audio is captured at 16 kHz mono in 100 ms chunks with automatic gain control and noise suppression turned off. Silero VAD marks where speech begins and ends, and each complete sentence is handed to the recognisers. Audio exists only in a memory buffer for the length of one sentence and is never written to storage (Table 3.1)."},
  {table:{caption:"Stages of the speech front-end", widths:[2000,3800,3200], header:["Stage","Implementation","Notes"], rows:[
@@ -110,7 +111,7 @@ module.exports = [
   ["Final losses","training 0.111, dev 0.041"],
   ["After training","LoRA merged into the base weights before export"]]}},
  {h3:"Export and Quantisation"},
- {p:"The merged model is exported with ExecuTorch 1.4 to a single .pte file using 8da4w quantisation: 4-bit weights in groups of 32 with 8-bit dynamic activations, and 4-bit embeddings. The file is 820 MB, compared with about 2.5 GB at 16 bits. On the phone it runs on the Arm CPU through the XNNPACK backend, which uses Arm KleidiAI micro-kernels for the 4-bit matrix multiplications. Decoding is greedy and stops as soon as the JSON object closes. Each generation is limited to 35 seconds, a value set from the phone measurements (about 15 s on the warm path and about 26 s on the cold path of the fine-tuned file). The timer covers waiting for a background prefix prefill, the prompt prefill and the generation, but not loading the model. Earlier versions of this report wrongly gave 8 seconds."},
+ {p:"The merged model is exported with ExecuTorch 1.4 to a single .pte file using 8da4w quantisation: 4-bit weights in groups of 32 with 8-bit dynamic activations, and 4-bit embeddings. The file is 820 MB, compared with about 2.5 GB at 16 bits. On the phone it runs on the Arm CPU through the XNNPACK backend, which includes Arm KleidiAI support for eligible 4-bit matrix multiplications; actual kernel selection has not been profiled on this phone. Decoding is greedy and stops as soon as the JSON object closes. Each generation is limited to 35 seconds, a value set from the phone measurements (about 15 s on the warm path and about 26 s on the cold path of the fine-tuned file). The timer covers waiting for a background prefix prefill, the prompt prefill and the generation, but not loading the model. Earlier versions of this report wrongly gave 8 seconds."},
  {h2:"Shield"},
  {bullets:[
   "Message Shield reads SMS, WhatsApp and Telegram notifications (so it needs no READ_SMS permission) and runs the SMS classifier, the cues and Link Check on every message.",
@@ -186,7 +187,7 @@ module.exports = [
  {p:"No real victim audio or personal data is used. Call transcripts are generated by data/synth/generate_calls.py from 11 scam scripts and 9 genuine scenarios, built from 47 utterance pools paraphrased from I4C, RBI and bank advisories. Each pool has English, Hinglish and Devanagari versions, and the generator adds ASR-style errors and realistic timing (Table 4.2)."},
  {table:{caption:"Data used for training and evaluation", widths:[2500,4300,2200], header:["Set","Source","Size / use"], rows:[
   ["Synthetic calls","Generator; template-disjoint splits","train 8,000 / dev 600 / test 1,000"],
-  ["Caller through speaker","Test calls with 3× ASR errors on caller lines","1,000; reported only"],
+  ["Simulated caller ASR errors","Test calls with 3× ASR errors on caller lines","1,000; reported only"],
   ["Hard negatives","Genuine bank alerts, delivery OTPs, relatives asking money, people discussing scams","in every split"],
   ["Hand-written calls","Written by a different author style","30; reported only"],
   ["Locked held-out calls","Written before any tuning","20; reported once"],

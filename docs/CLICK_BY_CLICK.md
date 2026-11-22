@@ -1,4 +1,4 @@
-> **Fresh-installation reference.** For the final Phase 1 calls, keep the frozen installed build and follow [FINISH_ROUND1.md](FINISH_ROUND1.md). The single submission report is [KAVACH_Phase1_Report.pdf](KAVACH_Phase1_Report.pdf).
+> **Installation reference.** Tested build: [freeze manifest](FREEZE_MANIFEST.md). Completed live-call results: [demo evidence](../demo/README.md). Final report: [PDF](KAVACH_Phase1_Report.pdf).
 
 # KAVACH: every click (Windows + Git Bash + one Android phone)
 

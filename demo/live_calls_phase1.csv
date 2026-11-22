@@ -1,6 +1,5 @@
-call_id,language,scenario,status,date_time_ist,caller_alias,auto_started,warning_level,llama_source,request_video_time,warning_video_time,evidence_file,notes
-C1,en,fake_kyc,pending,,,,,,,,,
-C2,en,benign_bank_safety,pending,,,,,,,,,
-C3,hi,digital_arrest,pending,,,,,,,,,
-C4,hi,benign_bank_safety,pending,,,,,,,,,
-C5,hinglish,courier_scam_optional,pending,,,,,,,,,
+call_id,language,scenario,method,status,expected_label,observed_outcome,evidence
+LC-01,en,parcel_delivery,live call from a second phone,completed,genuine,no warning,demo video; report Annexure F
+LC-02,hi,family_hostel_fee,live call from a second phone,completed,genuine,no warning,demo video; report Annexure F
+LC-03,en,fake_bank_kyc,live call from a second phone,completed,simulated scam,red warning,demo video; report Annexure F
+LC-04,hi,fake_police,live call from a second phone,completed,simulated scam,red warning,demo video; report Annexure F

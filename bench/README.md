@@ -10,12 +10,11 @@
 | Kotlin `EngineBench` (android/core tests) | per-tick cost of the shipped fast path, message and URL check | `results/kotlin_engine_host.json` |
 | `../models/llama/tiny_pipeline_check.py` | Llama conversion + export correctness | `results/llama_pipeline_check.json` |
 
-## On device (Phase 2 week 1, Arm phones)
+## On-device measurement tools
 1. **Llama speed matrix** (KleidiAI on/off × big/LITTLE/all cores × 2/4 threads):
    `ANDROID_NDK=... bench/build_llama_runner.sh <executorch checkout>` then
    `bench/llama_bench.sh <model.pte> <tokenizer.model>`. The prompt is a real KAVACH alert
-   (`prompts/alert_hi.txt`). Adjust the `BIG`/`LITTLE` core masks for the SoC. Run it for each
-   ladder rung and on both phone tiers.
+   (`prompts/alert_hi.txt`). Adjust the `BIG`/`LITTLE` core masks for the SoC. Use the masks and model configuration for the device being measured.
 2. **Guarding session** (battery, temperature, clocks, ASR RTF, Llama TTFT in the real app):
    guard a call or a demo replay, then
    `adb pull /sdcard/Android/data/io.kavach.guardian/files/bench/ bench/device/` and

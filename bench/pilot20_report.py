@@ -1,7 +1,7 @@
-"""Score the 20-call human pilot (demo/pilot20/README.md).
+"""Score annotated human-call records (demo/pilot20/README.md).
 
-  python bench/pilot20_report.py --sessions demo/pilot20/sessions.csv \
-      --annot demo/pilot20/annotation_final.csv --logs ./pilot_logs --out bench/results/pilot20.json
+  python bench/pilot20_report.py --sessions /path/to/sessions.csv \
+      --annot /path/to/annotations.csv --logs ./pilot_logs --out bench/results/pilot20.json
 
 Inputs
   sessions.csv   one row per call, filled in during recording (status, end_state, start_time_ist, ...)

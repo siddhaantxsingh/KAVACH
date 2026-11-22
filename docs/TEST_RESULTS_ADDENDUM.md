@@ -28,6 +28,6 @@ This run used an English podcast and about 15 minutes of Hindi dub, with continu
 
 These are whole-phone gauge observations, not app-only consumption, normal-use estimates or accuracy measurements. The CSVs are the authoritative logged values; setup details are team-reported.
 
-## Remaining Phase 1 scope
+## Completed final live-call set
 
-Four live human calls plus an optional fifth and the demo video. Those planned calls have no outcomes yet. The 20-call protocol and further experiments are deferred to Phase 2. Historical synthetic/TTS, acoustic-playback and model self-test results retain their actual methods.
+We completed four additional documented scenarios using live calls: English parcel delivery and Hindi family/hostel-fee conversations produced no warnings; English fake KYC and Hindi fake police turned red. All calls were recorded and included in our submitted demo video. See [the scripts and results](../demo/README.md) and Annexure F of the final report.

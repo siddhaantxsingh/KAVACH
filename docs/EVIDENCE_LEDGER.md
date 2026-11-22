@@ -7,7 +7,6 @@ The README and the single [Phase 1 report](KAVACH_Phase1_Report.pdf) use this ev
 * **observed**: seen on the phone and recorded with screenshots; no raw log in the repository.
 * **reported**: the result file is in the repository, from an earlier build; not re-run for the current build.
 * **team-confirmed live call**: the team confirms the test used a live call from a second phone; no independent per-call trace or count has been supplied.
-* **planned / blocked**: not done yet; the reason is given.
 
 Wilson 95 % intervals are given for small samples; they assume independent calls (not true for calls sharing a template or voice).
 
@@ -71,7 +70,6 @@ Wilson 95 % intervals are given for small samples; they assume independent calls
 |---|---|---|---|---|---|
 | Base → LoRA: valid JSON 71 → 100 %, scam correct 38 → 89 %, type 58 → 76 %, stage 71 → 100 %, verbatim evidence 8 → 96 %, copied example 32 → 0 %, right language 55 → 100 % | `llama_lora_colab.json` | **full-precision merged model**, first 100 dev examples | 100 | reported (Colab) | same generator as training; not the deployed 4-bit `.pte`; no ASR text |
 | Llama authority | `Guardian.kt applyLlmVerdict` | | | code | may raise CAUTION → STOP (self-reported confidence ≥ 0.8, stage ≥ isolation; this threshold is not calibrated); **can never lower or clear a warning**; invalid / timed-out output leaves the rule-based warning unchanged |
-| Deployed 4-bit Llama on independent / ASR / injection prompts | | | | **planned** | needs the `.pte` on a host with ExecuTorch or a phone run (deferred to Phase 2) |
 
 ## Network Watch
 
@@ -98,12 +96,6 @@ Wilson 95 % intervals are given for small samples; they assume independent calls
 
 - `bench/results/sustained_summary.json` summarizes the original idle/listening CSVs, with SHA-256 hashes. Listening: 291 samples, 1,797 s between first and last samples, gauge 99% to 92%, 35.0 to 37.1 C (maximum 37.3 C). Idle: 97 samples, 593 s span, gauge 100% to 99%, 36.9 to 36.1 C. Thermal status 0 throughout both. Current unavailable. The team reports screen on at about 50%, unplugged phone, Wi-Fi/wireless adb enabled and an English podcast with a Hindi dub. These conditions are not encoded in the CSVs and are not matched to idle; no app-only consumption claim is established.
 - `INFO` maps to “Listening — worth watching”; it does not trigger the Llama advisor. The team-confirmed live-call injection observations at INFO do not establish Llama resistance.
-- The 20-call allocation is deferred to Phase 2, not completed. Scorer now requires explicit outcomes, separates attempted/evaluable denominators, rejects reused/ambiguous log matches and treats missing request annotations as unknown. Regression checks: `tests/test_pilot20_report.py`.
-- Current authoritative report: `docs/KAVACH_Phase1_Report.pdf` and `.docx`; original layout retained. Older short-report and manuscript files are removed from the current tree. Final Phase 1 live calls: pending in `demo/live_calls_phase1.csv`.
-
-## Updated scope and tester addendum (22 November)
-
-See TEST_RESULTS_ADDENDUM.md for supplied observations. The team confirmed that the frozen-build functional/reliability checks used live calls from a second phone. Exact per-call counts and validated Llama traces were not supplied. Do not infer an injection pass from INFO. Remaining Phase 1 scope is 4–5 documented live human calls and demo video only; the 20-call pilot and further experiments are deferred to Phase 2. New call outcomes are pending.
 
 ## Frozen-build live-call checks — 21 November, method clarified 22 November
 
@@ -118,4 +110,17 @@ See TEST_RESULTS_ADDENDUM.md for supplied observations. The team confirmed that 
 | Held call with second incoming call / consecutive calls | Reported working | No repeat count; dual-SIM not tested |
 | Quiet-room noise hint | Too noisy appeared in some runs | Cause unresolved |
 
-These supplement the three documented 12 November calls; they are not pooled into a new denominator. The remaining four/five recorded calls are pending. Battery runs used podcast playback; host/TTS benchmarks and earlier acoustic replay remain separate evidence types.
+These supplement the three documented 12 November calls; they are not pooled into a new denominator. The four final recorded live calls are complete; see the results below. Battery runs used podcast playback; host/TTS benchmarks and earlier acoustic replay remain separate evidence types.
+
+## Final four live-call tests
+
+We used live calls from a second phone. The completed [call record](../demo/live_calls_phase1.csv) and [scripts](../demo/live_call_scripts.md) correspond to Annexure F of the final report.
+
+| Scenario | Outcome |
+|---|---|
+| English parcel delivery | No warning |
+| Hindi family / hostel fee | No warning |
+| English fake bank KYC | Red warning |
+| Hindi fake police | Red warning |
+
+All calls were recorded and supplied in our demo video. We keep these four scenarios separate from historical trials. The observations do not establish a population-level accuracy or a cue-to-alert timing distribution.

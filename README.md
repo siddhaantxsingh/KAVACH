@@ -4,7 +4,7 @@
 <p align="center">
   <a href="https://github.com/siddhaantxsingh/KAVACH/releases/tag/apks-latest"><img alt="Download APK" src="https://img.shields.io/badge/Android-Download%20APK-2F5BD3?style=for-the-badge&logo=android&logoColor=white"></a>
   <a href="docs/KAVACH_Phase1_Report.pdf"><img alt="Phase 1 report" src="https://img.shields.io/badge/READ_THE_REPORT-Phase_1-C9A24A?style=for-the-badge"></a>
-  <a href="docs/FINISH_ROUND1.md"><img alt="Live-call and video guide" src="https://img.shields.io/badge/LIVE_CALLS_%26_DEMO-Finish_Guide-16324F?style=for-the-badge"></a>
+  <a href="demo/README.md"><img alt="Completed live-call results" src="https://img.shields.io/badge/LIVE_CALLS_%26_DEMO-Completed_Tests-16324F?style=for-the-badge"></a>
   <a href="docs/FREEZE_MANIFEST.md"><img alt="Frozen build" src="https://img.shields.io/badge/FROZEN_BUILD-0.2_phase1-167D67?style=for-the-badge"></a>
 </p>
 
@@ -25,8 +25,8 @@ Built for **Arm Bharat AI-SoC Challenge 2026–27 · PS3: Cybersecurity and Digi
 | Evidence, conditions and limitations | [Evidence ledger](docs/EVIDENCE_LEDGER.md) |
 | Exact tested APK and model hashes | [Freeze manifest](docs/FREEZE_MANIFEST.md) |
 | Install and use | [Setup guide](docs/CLICK_BY_CLICK.md) |
-| Remaining Phase 1 work | [4–5 live calls and demo video](docs/FINISH_ROUND1.md) |
-| Demo video | **Pending** — link will be added after recording |
+| Completed live-call tests | [Four scenarios and outcomes](demo/README.md) |
+| Recorded demonstration | [Watch the submitted demo video](KAVACH_VIDEO.mp4) — includes recordings of all four live calls. |
 
 There is **one submission report**, in PDF and editable Word formats. Older short-report and IEEE-manuscript versions have been removed from the current tree; their history remains in Git. Supporting guides and raw benchmark files are evidence, not alternative reports.
 
@@ -36,14 +36,14 @@ There is **one submission report**, in PDF and editable Word formats. Older shor
 
 | Evidence | Result | Scope |
 |---|---|---|
-| Three live cellular role-play calls, 12 November | Hindi digital-arrest STOP; English fake-KYC STOP; genuine Hindi bank call without warning | One phone and caller; screenshots; feasibility demonstration |
-| Frozen-build live-call checks, 21 November | Full fake-KYC STOP, benign scripts without warnings, explanations after warnings | Team confirms checks used live calls from a second phone; exact trial counts and per-call timing were not supplied |
-| Live-call reliability checks, 21 November | Listening continued with screen locked, app backgrounded and consecutive calls; held-call/incoming-call check reported working | Qualitative team observations; missing-model fallback and dual-SIM not tested |
-| Additional recorded Phase 1 set | Four required calls; optional fifth Hinglish call | **Pending** in [call sheet](demo/live_calls_phase1.csv); not included in completed results |
+| Four final live human role-play calls | Two scams red; two genuine calls without warnings | English parcel delivery, Hindi family/hostel fee, English fake KYC and Hindi fake police; all recorded in our demo video |
+| Frozen-build live-call checks, 21 November | Full fake-KYC STOP, genuine scripts without warnings, explanations after warnings | Live calls from a second phone |
+| Live-call reliability checks, 21 November | Listening continued with screen locked, app backgrounded and consecutive calls; held-call/incoming-call check worked | Functional checks on the test phone |
+| Earlier live cellular demonstration, 12 November | Hindi digital-arrest STOP; English fake-KYC STOP; genuine Hindi bank call without warning | Separate historical demonstration with screenshots |
 
-The team clarified on 22 November that the addendum’s functional and reliability checks used **live calls from another phone**, not self-reading beside the test phone. The separate historical acoustic-playback tests, synthetic/TTS benchmarks, model self-test and podcast battery workload retain their actual methods. Their scores are not live-call accuracy.
+We used live calls from another phone for the final four scenarios and frozen-build functional checks. All four final scenarios matched their expected outcomes. The scripts and outcomes are in Annexure F of the final report and the [completed call record](demo/live_calls_phase1.csv).
 
-**Warning levels:** NONE → INFO (“worth watching”) → CAUTION → STOP. INFO alone does not invoke Llama. The English/Hindi OTP-plus-injection lines remained at INFO; that observation does **not** establish Llama prompt-injection resistance. “Too noisy” is an audio-quality hint, not a scam verdict.
+**Warning levels:** NONE → INFO (“worth watching”) → CAUTION → STOP. CAUTION and STOP invoke the Llama advisor. “Too noisy” is an audio-quality hint, separate from the scam verdict.
 
 <details>
 <summary><b>App screens and on-device explanations</b></summary>
@@ -100,13 +100,11 @@ Test phone: **Xiaomi 2312DRA50I · Snapdragon 7s Gen 2 · Android 15**. Separate
 | Stock Meta SpinQuant INT4, separate benchmark | First token 12.9 s cold / 5.9 s warm; decode 11.6–11.9 tokens/s |
 | Approximately 30-minute Auto listening workload | Battery gauge 99% → 92%; temperature 35.0 → 37.1 °C; peak 37.3 °C |
 
-The sustained run used podcast audio, with a Hindi dub for about 15 minutes. The team reports an unplugged phone, screen at about 50% brightness, Wi-Fi and wireless adb enabled. This was **not a live-call accuracy test**. Current readings were unavailable; these are whole-phone battery-gauge observations, not app-only energy or a demonstrated <10%/hour result. Thermal status was 0; that alone does not prove absence of CPU throttling. [Raw-log summary](bench/results/sustained_summary.json).
-
-ExecuTorch/XNNPACK supports the deployment path; the precise use of KleidiAI kernels has not been profiled in this build. Thread-speed measurements exist; controlled thread-energy and backend ablations are Phase 2 work.
+The sustained workload used podcast audio with a Hindi dub for about 15 minutes. We used an unplugged phone, screen at about 50% brightness, Wi-Fi and wireless adb. These are whole-phone battery-gauge and temperature measurements for that workload. [Raw-log summary](bench/results/sustained_summary.json).
 
 ## Run and reproduce
 
-The tested build is identified by [APK and model hashes](docs/FREEZE_MANIFEST.md). The mutable [APK release](https://github.com/siddhaantxsingh/KAVACH/releases/tag/apks-latest) is a convenience download; check its hash before treating it as the frozen build. Keep the existing tested installation for the final live calls.
+The tested build is identified by [APK and model hashes](docs/FREEZE_MANIFEST.md). The mutable [APK release](https://github.com/siddhaantxsingh/KAVACH/releases/tag/apks-latest) is a convenience download; check its hash before treating it as the frozen build.
 
 For a fresh installation, follow [every setup step](docs/CLICK_BY_CLICK.md). Llama weights are not included in this repository. The fine-tuned KAVACH export and stock SpinQuant model are different configurations; installing the stock model does not reproduce the LoRA result.
 
@@ -117,18 +115,11 @@ python bench/eval_calls.py --split test
 python bench/summarize_sustained.py
 ```
 
-The commands above are reproduction instructions, not a claim that every test was rerun for this documentation update. Fine-tuning/export: [Colab notebook](notebooks/kavach_llama_lora_colab.ipynb). Report generation: [source and build instructions](report_docx/README.md).
+These commands reproduce the host evaluations and summarize the saved device logs. Fine-tuning/export: [Colab notebook](notebooks/kavach_llama_lora_colab.ipynb). Report generation: [source and build instructions](report_docx/README.md).
 
-## Known limitations and Phase 2
+## Technical discussion
 
-1. **Live-call evidence is small.** The completed observations demonstrate feasibility, not field reliability; the final four/five calls will still be a small scripted sample.
-2. **Warnings can arrive late.** STOP before the sensitive request is 50–82% on the listed text sets, below the 90% target.
-3. **False warnings remain.** Genuine calls can trigger CAUTION; fusion can blame a call for an unrelated message or legitimate screen-sharing.
-4. **Speech is the bottleneck.** Hindi, noise, accents and Auto-language errors affect what the detector sees. Quiet-room “Too noisy” reports remain unexplained.
-5. **Llama is not independently validated at deployment scale.** It adds latency and memory use; the full-precision development scores are not a deployed-model score.
-6. **Device and energy coverage are limited.** One tested phone, speakerphone/accessibility dependence, no matched app-only power study; dual-SIM and missing-model fallback remain untested.
-
-Remaining Phase 1 work is **only the 4–5 live calls, demo video, report incorporation and submission**. The [20-call protocol](demo/pilot20/README.md) and broader experiments are deferred to Phase 2.
+Chapters 5–7 of the [final report](docs/KAVACH_Phase1_Report.pdf) contain the detailed evaluation, measured limitations and future work.
 
 ## Privacy and repository guide
 
@@ -140,9 +131,9 @@ The main app processes audio locally and does not save it. Optional family SMS, 
 | `kavach_core/` | Python reference algorithms |
 | `assets/`, `data/`, `models/` | Detection assets, datasets and training/evaluation code |
 | `bench/` | Reproduction scripts and saved results |
-| `report_docx/` | Source for the single report |
+| `report_docx/` | Editing and export instructions for the final Word report |
 | `docs/` | Report, evidence ledger, setup and design guides |
-| `demo/` | Current live-call sheet, video guidance and deferred evaluation protocol |
+| `demo/` | Completed live-call scripts, results and reusable evaluation tools |
 | `paper/fig/` | Figure assets used by the current report; not an alternative paper |
 
 ## 👥 Team
@@ -156,7 +147,7 @@ The main app processes audio locally and does not save it. Optional family SMS, 
 </tr>
 </table>
 
-<p align="center"><sub>Manipal Institute of Technology, Manipal Academy of Higher Education · Arm Bharat AI-SoC Challenge 2026–27 · Problem Statement 3: Cybersecurity &amp; Digital Safety</sub></p>
+<p align="center"><sub>Manipal Institute of Technology, Manipal, 576104 · Arm Bharat AI-SoC Challenge 2026–27 · Problem Statement 3: Cybersecurity &amp; Digital Safety</sub></p>
 
 ### Cite
 

@@ -1,21 +1,13 @@
-> **Deferred to Phase 2.** This broader protocol is not part of the remaining Phase 1 scope. Use [the current four/five-call and video guide](../docs/FINISH_ROUND1.md).
+# Recorded-audio evaluation reference
 
-# Recording protocol: human-recorded evaluation set
+Our completed Phase 1 tests used live calls from another phone; see [the results](README.md). This page describes the input format for the separate `bench/eval_recorded.py` audio-evaluation utility.
 
-Goal: **100+ scam and 100+ genuine** calls in Hindi, Hinglish and English, recorded **on
-speaker-phone in real rooms**, held out from day one and used only for the final report.
+Use consented fictional role-play audio and keep private recordings outside the repository. KAVACH does not save call audio. Record the audio path and conditions with each sample so live calls and acoustic playback remain distinguishable.
 
-1. **Consent first**: every speaker signs `consent_form.md`. Use role-play only; never record real victims or real scam calls.
-2. **Setup**: two phones on a real call; the "victim" phone on speaker at 50–80 cm from the Guardian phone.
-   Vary rooms (bedroom, living room with TV, office, outdoors), distance, speaker volume and phone models.
-3. **Speakers**: at least 8 different speakers, mixed gender and age; elderly volunteers where possible.
-4. **Content**: use `roleplay_scripts.md` as an outline, not a script; let speakers improvise. Each scam type ≥ 6 calls,
-   each genuine scenario ≥ 8 calls. Mark the time of the first OTP/PIN/payment/remote-access request.
-5. **Capture**: the KAVACH apps never store audio, by design. Record with a separate recorder app on the
-   Guardian phone (16 kHz mono WAV), placed exactly where the Guardian would sit.
-6. **Labels** (`data/recorded/labels.csv`, not committed): file, label, type, language, speaker ids, room,
-   SNR estimate, money_t (seconds), notes. Transcribe 30 calls by hand for WER.
-7. **Split**: 30 % for ASR adaptation/dev, 70 % **locked** test, split by speaker (no speaker in both).
-8. **Storage**: on the team drive only; never commit audio to git (`.gitignore` covers `*.wav`).
-9. **Evaluation**: `python bench/eval_recorded.py --dir data/recorded --lang hi` runs the files through the same ASR + engine and reports
-   per-scam-type recall, false STOP, time-to-warning, WER.
+Place evaluation WAV files and `labels.csv` under a local dataset directory. Labels include file, label, type, language, speaker IDs, room, SNR estimate, money_t and notes. A reference transcript supports word-error-rate scoring. Keep any train/dev/test partition speaker-disjoint.
+
+```bash
+python bench/eval_recorded.py --dir data/recorded --lang hi
+```
+
+The utility evaluates the supplied audio through ASR and the detector. Its output describes that supplied dataset, separately from the completed live-call results.

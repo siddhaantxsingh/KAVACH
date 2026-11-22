@@ -33,4 +33,4 @@ self-test 11.5 tok/s, first token 18.3 s cold. A roughly 30-minute listening log
 
 Raw files: `bench/results/device_idle.csv` and `bench/results/device_listening.csv`; deterministic summary: `bench/results/sustained_summary.json`. Listening gauge 99% to 92%, temperature 35.0 to 37.1 °C (peak 37.3 °C); idle 100% to 99%, 36.9 to 36.1 °C. Current unavailable; thermal status 0 throughout is not direct evidence of no CPU throttling.
 
-The team reports podcast audio with a Hindi dub, screen about 50%, Wi-Fi/wireless adb on and the phone unplugged. This was a sustained workload measurement, not a live-call accuracy test. Different initial conditions and integer gauge readings prevent a justified app-only energy estimate or idle subtraction. No new benchmark run is required for the remaining Phase 1 plan.
+The team reports podcast audio with a Hindi dub, screen about 50%, Wi-Fi/wireless adb on and the phone unplugged. This was a sustained workload measurement, not a live-call accuracy test. Different initial conditions and integer gauge readings prevent a justified app-only energy estimate or idle subtraction.

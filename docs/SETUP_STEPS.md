@@ -1,4 +1,4 @@
-> **Fresh-installation reference.** For the final Phase 1 calls, keep the frozen installed build and follow [FINISH_ROUND1.md](FINISH_ROUND1.md). The single submission report is [KAVACH_Phase1_Report.pdf](KAVACH_Phase1_Report.pdf).
+> **Installation reference.** Tested build: [freeze manifest](FREEZE_MANIFEST.md). Completed live-call results: [demo evidence](../demo/README.md). Final report: [PDF](KAVACH_Phase1_Report.pdf).
 
 # KAVACH: exact setup steps (one phone)
 
@@ -80,11 +80,8 @@ Calls → **Setup & tools → Measure performance** (3–4 minutes, unplug USB/c
 measures every model on this phone's Arm CPU and saves a JSON file; the screen shows the `adb pull`
 command.
 
-## Before the final test (checklist)
+## Confirm installation readiness
 
-- [ ] Home says **Protection is on**; Calls says **Ready for calls**
-- [ ] Calls → Setup & tools → Readiness: microphone, call listening, both speech models, Llama all ticked
-- [ ] One real speaker-phone call with a scam script reaches yellow or red
-- [ ] One genuine-style call stays calm
-- [ ] Placement chip says *Hearing the call clearly* at your demo spot
-- [ ] Optional: Network Watch on; Wi-Fi check run once
+Home displays **Protection is on** and Calls displays **Ready for calls**. In Calls → Setup & tools → Readiness, check the microphone, call-listening permission, both speech models and Llama. The placement chip reads *Hearing the call clearly* when the phone can hear the conversation.
+
+Our completed live-call outcomes are documented in [the demo results](../demo/README.md).

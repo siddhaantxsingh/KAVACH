@@ -1,15 +1,15 @@
 # KAVACH documentation
 
-**[Read the single Phase 1 report](KAVACH_Phase1_Report.pdf)** · [Editable Word version](KAVACH_Phase1_Report.docx)
+**[Final Phase 1 report — PDF](KAVACH_Phase1_Report.pdf)** · **[Editable Word report](KAVACH_Phase1_Report.docx)**
 
-PDF and Word are two formats of the same report. Superseded short reports and manuscript sources are removed from the current tree and remain in Git history.
+The 69-page report includes our completed live-call tests, full scripts, device measurements and demo evidence, with Manipal Institute of Technology, Manipal, 576104 on the title page.
 
-- [Evidence ledger](EVIDENCE_LEDGER.md): measurements, live-call observations and limitations.
-- [Live-call results note](TEST_RESULTS_ADDENDUM.md): 21 November observations and 22 November clarification.
-- [Finish Phase 1](FINISH_ROUND1.md): four/five live calls and demo video.
-- [Frozen build](FREEZE_MANIFEST.md): exact tested APK and model hashes.
+- [Completed live calls](../demo/README.md): two scams red; two genuine calls without warnings.
+- [Evidence ledger](EVIDENCE_LEDGER.md): measurements and their methods.
+- [Frozen-build results](TEST_RESULTS_ADDENDUM.md): functional and reliability checks using live calls.
+- [Freeze manifest](FREEZE_MANIFEST.md): tested APK and model hashes.
 - [Installation](CLICK_BY_CLICK.md): fresh-device setup.
-- [Submission audit](AUDIT_AND_COMPLIANCE.md): deliverable status and evidence boundaries.
+- [Submission overview](AUDIT_AND_COMPLIANCE.md): completed deliverables.
 - [Benchmark methods](benchmarks.md), [data card](data_card.md), [model cards](model_cards.md), [threat model](threat_model.md).
 
-Supporting documents are not competing submission reports. Pending calls and video are not completed results.
+Chapter 7 of the report describes future work.
